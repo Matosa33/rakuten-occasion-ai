@@ -49,8 +49,10 @@ rakuten-ai/
 
 ## Documentation
 
-- **Cadrage projet** (1 page, public) : [docs/PROJECT.md](docs/PROJECT.md)
-- **Mémoire opérationnelle** (9 fichiers, équipe technique) : [BRAIN/bios.md](BRAIN/bios.md) en premier
+- **Cadrage projet** (1 page, lisible par tout le monde) : [docs/PROJECT.md](docs/PROJECT.md)
+- **Mémoire opérationnelle** (9 fichiers maintenus par l'agent IA) : [BRAIN/bios.md](BRAIN/bios.md) en premier — voir note ci-dessous
+
+> 🤖 **À propos du dossier `BRAIN/`** : il est **maintenu exclusivement par l'agent IA** (Claude Code, Cursor, ou équivalent) qui assiste le développement. Si tu travailles sans agent IA, tu peux ignorer ce dossier — le projet reste utilisable via `docs/PROJECT.md` et le code source. Si tu utilises un agent IA, demande-lui de faire les phases INIT/RESTIT à chaque tâche, ne touche pas aux fichiers à la main.
 
 ## Stack technique cible
 
@@ -71,18 +73,18 @@ rakuten-ai/
 | Observabilité | Prometheus + Grafana + Evidently | P15 |
 | CI/CD | GitHub Actions + GHCR | P16 |
 
-## Méthodologie
+## Méthodologie (côté agent IA)
 
-Le projet suit le **protocole 4 phases** par sous-tâche :
+Si tu utilises un agent IA pour développer, le pattern de travail par sous-tâche est :
 
 ```
-INIT     → relire les 9 fichiers BRAIN dans l'ordre bios.md (~5 min)
-LECTURE  → identifier les fichiers projet à lire pour la sous-tâche
-RUN      → exécuter (code, tests, doc)
-RESTIT   → update BRAIN/state.md + append decisions/learnings/erreurs + cocher to-do
+INIT     → l'agent relit les 9 fichiers BRAIN dans l'ordre bios.md
+LECTURE  → l'agent identifie les fichiers projet à lire pour la sous-tâche
+RUN      → l'agent exécute (code, tests, doc)
+RESTIT   → l'agent update BRAIN/state.md + append decisions/learnings/erreurs + cocher to-do
 ```
 
-Détails dans [BRAIN/bios.md](BRAIN/bios.md).
+Côté humain, ton rôle est de **donner les directions** (quelle sous-tâche, quels critères de succès) et de **valider les livrables** produits. Pas de saisie manuelle dans le BRAIN. Détails dans [BRAIN/bios.md](BRAIN/bios.md).
 
 ## Tests
 
