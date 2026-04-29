@@ -1,0 +1,79 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+
+# === Virtual envs ===
+.venv/
+venv/
+env/
+
+# === Test / coverage ===
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+# === Linters ===
+.ruff_cache/
+.mypy_cache/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Secrets ===
+.env
+.env.local
+*.pem
+*.key
+secrets.yaml
+
+# === Notebooks ===
+.ipynb_checkpoints/
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Data lourde (DVC géré plus tard) ===
+data/raw/*.parquet
+data/raw/*.csv
+data/processed/*.parquet
+data/embeddings/*.npy
+data/embeddings/*.bin
+data/fine_tuning/*.jsonl
+data/images/
+models/
+
+# === MLflow / DVC ===
+mlruns/
+mlartifacts/
+mlruns.db
+.dvc/cache
+.dvc/tmp
+dvc_storage/
+
+# === Autres ===
+*.tmp
+*.bak
+catboost_info/
+
+# === Exceptions : on garde les .dvc metadata files en Git ===
+!data/raw/*.dvc
+!data/processed/*.dvc
+!data/embeddings/*.dvc
+!models/**/*.dvc
