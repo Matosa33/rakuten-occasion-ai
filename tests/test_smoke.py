@@ -23,7 +23,7 @@ def test_imports_basic():
 
 
 def test_project_md_exists():
-    """docs/PROJECT.md doit exister (livrable du cours C01)."""
+    """docs/PROJECT.md doit exister (livrable de la phase de cadrage)."""
     from pathlib import Path
 
     root = Path(__file__).parent.parent

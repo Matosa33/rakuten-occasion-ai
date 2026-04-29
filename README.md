@@ -1,8 +1,8 @@
 # Rakuten AI
 
-Assistant IA pour vendeurs particuliers Rakuten : génération automatique de fiches produit d'occasion (catégorie, attributs, titre, description, prix indicatif) à partir de photos.
+Assistant IA pour vendeurs particuliers sur marketplace généraliste : génération automatique de fiches produit d'occasion (catégorie, attributs, titre, description, prix indicatif) à partir de photos.
 
-Ce projet est construit **from scratch** en suivant le cursus pédagogique structuré (16 phases, 51 cours) — voir `cours/` du dépôt parent pour le matériel d'apprentissage.
+Le cœur ML du projet est un **modèle multimodal vision-langage (VLM) fine-tuné** sur des données produits annotées, capable d'extraire un JSON structuré depuis une ou plusieurs photos.
 
 ## Démarrage rapide
 
@@ -51,7 +51,6 @@ rakuten-ai/
 
 - **Cadrage projet** (1 page, public) : [docs/PROJECT.md](docs/PROJECT.md)
 - **Mémoire opérationnelle** (9 fichiers, équipe technique) : [BRAIN/bios.md](BRAIN/bios.md) en premier
-- **Cursus pédagogique** (matériel d'apprentissage, externe au repo) : `d:/Python/rakuten/cours/`
 
 ## Stack technique cible
 
