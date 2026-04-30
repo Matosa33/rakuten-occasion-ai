@@ -8,6 +8,7 @@ Pour l'instant, juste un sanity check de l'environnement.
 def test_python_version():
     """Python 3.11 minimum (requis par pyproject.toml)."""
     import sys
+
     assert sys.version_info >= (3, 11), f"Python 3.11+ requis, got {sys.version_info}"
 
 

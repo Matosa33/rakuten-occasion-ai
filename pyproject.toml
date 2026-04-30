@@ -31,6 +31,34 @@ dev = [
     "pre-commit>=3.5.0",
 ]
 
+# Phase P02 - audit & cleaning
+#
+# Choix de stack pour le FULL audit (35 GB de JSONL sur 3 catégories Amazon Reviews 2023) :
+#  - polars  : moteur d'audit principal (lazy / streaming, ~10-100× plus rapide
+#              que pandas sur ces volumes, capable de tenir 200 M+ lignes hors RAM).
+#  - pandas  : conservé pour le notebook compagnon et l'interop, pas pour les
+#              opérations lourdes (qui passeraient en swap).
+#  - hf_hub  : `hf_hub_download` pour télécharger les 6 .jsonl complets avec
+#              gestion native du resume et du cache.
+#  - requests: conservé pour debug / inspection rapide d'un fichier distant.
+#
+# NB: on n'utilise PAS `datasets.load_dataset` pour Amazon-Reviews-2023 car le repo
+# embarque un loading script rejeté par datasets 3.x/4.x.
+# Voir BRAIN/decisions.md D-004/D-005 + erreur_a_ne_plus_faire.md →
+# datasets-4-loading-script-rejected.
+data = [
+    "polars>=1.0.0",
+    "pandas>=2.2.0",
+    "pyarrow>=15.0.0",
+    "requests>=2.31.0",
+    "huggingface-hub>=0.20.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "tqdm>=4.66.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.29.0",
+]
+
 # Les extras [training], [api], [frontend] seront ajoutés au fil des phases.
 # Voir BRAIN/to-do.md pour le plan d'enrichissement.
 
