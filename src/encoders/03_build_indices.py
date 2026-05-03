@@ -59,25 +59,35 @@ def _load_embeddings(npy_path) -> np.ndarray:
     return np.ascontiguousarray(arr)
 
 
-def _build_hnsw_index(embeddings: np.ndarray, name: str) -> "faiss.Index":  # noqa: F821
+def _build_hnsw_index(embeddings: np.ndarray, name: str) -> faiss.Index:  # noqa: F821
     """Build FAISS HNSW index (INNER_PRODUCT métrique)."""
     import faiss
 
     n, d = embeddings.shape
-    log.info("  Build HNSW M=%d efC=%d : %s vecteurs × %d dim…",
-             HNSW_M, HNSW_EF_CONSTRUCTION, f"{n:_}", d)
+    log.info(
+        "  Build HNSW M=%d efC=%d : %s vecteurs × %d dim…",
+        HNSW_M,
+        HNSW_EF_CONSTRUCTION,
+        f"{n:_}",
+        d,
+    )
     t0 = time.time()
     index = faiss.IndexHNSWFlat(d, HNSW_M, faiss.METRIC_INNER_PRODUCT)
     index.hnsw.efConstruction = HNSW_EF_CONSTRUCTION
     index.hnsw.efSearch = HNSW_EF_SEARCH
     index.add(embeddings)
     duration = time.time() - t0
-    log.info("  HNSW %s built : %s vecteurs en %.1f sec (%.0f items/sec)",
-             name, f"{n:_}", duration, n / duration)
+    log.info(
+        "  HNSW %s built : %s vecteurs en %.1f sec (%.0f items/sec)",
+        name,
+        f"{n:_}",
+        duration,
+        n / duration,
+    )
     return index
 
 
-def _build_flat_index(embeddings: np.ndarray, name: str) -> "faiss.Index":  # noqa: F821
+def _build_flat_index(embeddings: np.ndarray, name: str) -> faiss.Index:  # noqa: F821
     """Build FAISS Flat index (référence exacte, baseline pour mesure recall)."""
     import faiss
 
@@ -107,8 +117,14 @@ def _sanity_check(index, embeddings: np.ndarray, name: str) -> dict:
     mean_top1_score = float(distances[:, 0].mean())
     mean_top5_score = float(distances[:, :SANITY_TOP_K].mean())
 
-    log.info("  Sanity %s : top-1 = self pour %d/%d queries (cible %d/%d)",
-             name, n_top1_self, N_SANITY_QUERIES, N_SANITY_QUERIES, N_SANITY_QUERIES)
+    log.info(
+        "  Sanity %s : top-1 = self pour %d/%d queries (cible %d/%d)",
+        name,
+        n_top1_self,
+        N_SANITY_QUERIES,
+        N_SANITY_QUERIES,
+        N_SANITY_QUERIES,
+    )
     log.info("  Sanity %s : mean top-1 score = %.4f (cible ≈ 1.0)", name, mean_top1_score)
     log.info("  Sanity %s : mean top-5 score = %.4f", name, mean_top5_score)
     log.info("  Sanity %s : latence = %.2f ms par query", name, latency_ms)
@@ -158,7 +174,9 @@ def main() -> None:
         faiss.write_index(idx_hnsw_vision, str(out_path))
         log.info("  → %s écrit (%.1f MB)", out_path.name, out_path.stat().st_size / 1_048_576)
 
-        results["vision_siglip_hnsw"] = _sanity_check(idx_hnsw_vision, embeddings_vision, "vision_hnsw")
+        results["vision_siglip_hnsw"] = _sanity_check(
+            idx_hnsw_vision, embeddings_vision, "vision_hnsw"
+        )
     else:
         log.warning("vision_siglip_v1.npy non trouvé, skip VISION (à générer en sous-todo 2.2)")
 
@@ -168,9 +186,14 @@ def main() -> None:
 
     log.info("\n=== Synthèse ===")
     for name, r in results.items():
-        log.info("  [%s] top-1=self : %d/%d, mean_top1_score=%.4f, latency=%.2fms",
-                 name, r["n_top1_self"], N_SANITY_QUERIES,
-                 r["mean_top1_score"], r["latency_ms_per_query"])
+        log.info(
+            "  [%s] top-1=self : %d/%d, mean_top1_score=%.4f, latency=%.2fms",
+            name,
+            r["n_top1_self"],
+            N_SANITY_QUERIES,
+            r["mean_top1_score"],
+            r["latency_ms_per_query"],
+        )
 
     log.info("\nSous-todo 2.4 OK.")
 
