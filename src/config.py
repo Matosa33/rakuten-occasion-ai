@@ -27,6 +27,9 @@ DATA_RAW_FULL = DATA_RAW / "full"
 DATA_RAW_FULL_REVIEWS = DATA_RAW_FULL / "reviews"
 DATA_RAW_FULL_META = DATA_RAW_FULL / "meta"
 DATA_PROCESSED = DATA_DIR / "processed"  # P02 sortie cleaning + split
+DATA_PROCESSED_PRODUCTS = DATA_PROCESSED / "products"  # product-level enrichi (M1-M8 carburant)
+DATA_PROCESSED_REVIEWS_INDEX = DATA_PROCESSED / "reviews_index"  # index split-aware (RAG Cycle 6)
+DATA_PROCESSED_INTERMEDIATE = DATA_PROCESSED / "intermediate"  # parquets intermédiaires entre étapes 01..05
 DATA_EMBEDDINGS = DATA_DIR / "embeddings"  # P03 sortie encoders
 DATA_INDEX = DATA_DIR / "index"  # P05 sortie FAISS
 DATA_MODELS = DATA_DIR / "models"  # P04+ artefacts entraînés (sklearn, etc.)
@@ -66,6 +69,9 @@ __all__ = [
     "DATA_RAW_FULL_REVIEWS",
     "DATA_RAW_FULL_META",
     "DATA_PROCESSED",
+    "DATA_PROCESSED_PRODUCTS",
+    "DATA_PROCESSED_REVIEWS_INDEX",
+    "DATA_PROCESSED_INTERMEDIATE",
     "DATA_EMBEDDINGS",
     "DATA_INDEX",
     "DATA_MODELS",
