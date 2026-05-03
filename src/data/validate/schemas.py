@@ -104,12 +104,8 @@ ProductSchema = DataFrameSchema(
         "pct_verified": Column(pl.Float64, nullable=True, checks=pa.Check.in_range(0, 1)),
         "pct_5stars": Column(pl.Float64, nullable=True, checks=pa.Check.in_range(0, 1)),
         "pct_1stars": Column(pl.Float64, nullable=True, checks=pa.Check.in_range(0, 1)),
-        "year_first_review": Column(
-            pl.Int32, nullable=True, checks=pa.Check.in_range(1996, 2023)
-        ),
-        "year_last_review": Column(
-            pl.Int32, nullable=True, checks=pa.Check.in_range(1996, 2023)
-        ),
+        "year_first_review": Column(pl.Int32, nullable=True, checks=pa.Check.in_range(1996, 2023)),
+        "year_last_review": Column(pl.Int32, nullable=True, checks=pa.Check.in_range(1996, 2023)),
         "n_unique_users": Column(
             pl.UInt32, nullable=True, checks=pa.Check.greater_than_or_equal_to(0)
         ),
@@ -134,9 +130,7 @@ ProductSchema = DataFrameSchema(
             checks=pa.Check.isin(["low", "mid", "high"]),
         ),
         "length_title": Column(pl.UInt32, nullable=False, checks=pa.Check.in_range(0, 1024)),
-        "length_description": Column(
-            pl.UInt32, nullable=False, checks=pa.Check.in_range(0, 8192)
-        ),
+        "length_description": Column(pl.UInt32, nullable=False, checks=pa.Check.in_range(0, 8192)),
         "n_reviews_log": Column(
             pl.Float64, nullable=True, checks=pa.Check.greater_than_or_equal_to(0)
         ),

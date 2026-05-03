@@ -34,9 +34,7 @@ SKIP_REASON = "data/processed/products/ vide — lance d'abord sous-todo 1.2"
 def _products_available() -> bool:
     if not PRODUCTS_DIR.exists():
         return False
-    return all(
-        (PRODUCTS_DIR / f"{split}.parquet").exists() for split in ("train", "val", "test")
-    )
+    return all((PRODUCTS_DIR / f"{split}.parquet").exists() for split in ("train", "val", "test"))
 
 
 @pytest.mark.skipif(not _products_available(), reason=SKIP_REASON)
@@ -44,11 +42,15 @@ def test_p1_no_parent_asin_overlap_train_test():
     """P1 — 0 overlap parent_asin train/test (group split strict)."""
     import polars as pl
 
-    train = pl.scan_parquet(PRODUCTS_DIR / "train.parquet").select("parent_asin").collect(
-        engine="streaming"
+    train = (
+        pl.scan_parquet(PRODUCTS_DIR / "train.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
     )
-    test = pl.scan_parquet(PRODUCTS_DIR / "test.parquet").select("parent_asin").collect(
-        engine="streaming"
+    test = (
+        pl.scan_parquet(PRODUCTS_DIR / "test.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
     )
     overlap = set(train["parent_asin"].to_list()) & set(test["parent_asin"].to_list())
     assert len(overlap) == 0, (
@@ -62,11 +64,15 @@ def test_p1_no_parent_asin_overlap_train_val():
     """P1 — 0 overlap parent_asin train/val."""
     import polars as pl
 
-    train = pl.scan_parquet(PRODUCTS_DIR / "train.parquet").select("parent_asin").collect(
-        engine="streaming"
+    train = (
+        pl.scan_parquet(PRODUCTS_DIR / "train.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
     )
-    val = pl.scan_parquet(PRODUCTS_DIR / "val.parquet").select("parent_asin").collect(
-        engine="streaming"
+    val = (
+        pl.scan_parquet(PRODUCTS_DIR / "val.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
     )
     overlap = set(train["parent_asin"].to_list()) & set(val["parent_asin"].to_list())
     assert len(overlap) == 0, f"P1 cassé : {len(overlap)} parent_asin train ∩ val"

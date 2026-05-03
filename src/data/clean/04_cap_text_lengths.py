@@ -63,12 +63,12 @@ def main() -> None:
         pl.col("title").str.slice(0, TITLE_CAP_CHARS).alias("title"),
     ).with_columns(
         # Flags qualité (calculés après cap)
-        (pl.col("description").str.len_chars() < SHORT_TEXT_THRESHOLD).fill_null(True).alias(
-            "description_too_short"
-        ),
-        (pl.col("title").str.len_chars() < SHORT_TEXT_THRESHOLD).fill_null(True).alias(
-            "title_too_short"
-        ),
+        (pl.col("description").str.len_chars() < SHORT_TEXT_THRESHOLD)
+        .fill_null(True)
+        .alias("description_too_short"),
+        (pl.col("title").str.len_chars() < SHORT_TEXT_THRESHOLD)
+        .fill_null(True)
+        .alias("title_too_short"),
         pl.col("description").is_not_null().alias("has_description"),
         pl.col("title").is_not_null().alias("has_title"),
     )

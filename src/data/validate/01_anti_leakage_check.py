@@ -72,15 +72,21 @@ SOURCE_FE = REPO_ROOT / "src" / "data" / "clean" / "05_feature_engineering.py"
 def check_p1_parent_asin_overlap() -> dict:
     """P1 — Doublons parent_asin train/test (cible : 0)."""
     log.info("P1 — Doublons parent_asin train/test…")
-    train_pa = pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "train.parquet").select(
-        "parent_asin"
-    ).collect(engine="streaming")
-    test_pa = pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "test.parquet").select(
-        "parent_asin"
-    ).collect(engine="streaming")
-    val_pa = pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "val.parquet").select(
-        "parent_asin"
-    ).collect(engine="streaming")
+    train_pa = (
+        pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "train.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
+    )
+    test_pa = (
+        pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "test.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
+    )
+    val_pa = (
+        pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "val.parquet")
+        .select("parent_asin")
+        .collect(engine="streaming")
+    )
 
     train_set = set(train_pa["parent_asin"].to_list())
     test_set = set(test_pa["parent_asin"].to_list())
@@ -142,7 +148,11 @@ def check_p2_metadata_contains_label() -> dict:
             train_lf.filter(pl.col("_source_category") == cat)
             .select(
                 pl.len().alias("n_total"),
-                pl.col("title").str.contains(pattern).fill_null(False).sum().alias("n_title_has_kw"),
+                pl.col("title")
+                .str.contains(pattern)
+                .fill_null(False)
+                .sum()
+                .alias("n_title_has_kw"),
                 pl.col("description")
                 .str.contains(pattern)
                 .fill_null(False)
@@ -164,13 +174,9 @@ def check_p2_metadata_contains_label() -> dict:
             "alert_title": pct_title > 80,
             "alert_description": pct_desc > 80,
         }
-        log.info(
-            "  %-30s title %.1f %% / desc %.1f %% (kws: %s)", cat, pct_title, pct_desc, kws
-        )
+        log.info("  %-30s title %.1f %% / desc %.1f %% (kws: %s)", cat, pct_title, pct_desc, kws)
 
-    n_alerts = sum(
-        1 for v in by_cat.values() if v["alert_title"] or v["alert_description"]
-    )
+    n_alerts = sum(1 for v in by_cat.values() if v["alert_title"] or v["alert_description"])
     return {
         "label": "P2 — Metadata contient le label",
         "severity": "high" if n_alerts > 5 else ("medium" if n_alerts > 0 else "ok"),

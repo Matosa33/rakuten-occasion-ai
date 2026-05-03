@@ -74,33 +74,42 @@ def _aggregate_reviews_per_product(reviews_lf: pl.LazyFrame) -> pl.LazyFrame:
     rating = pl.col("rating").cast(pl.Float64, strict=False)
 
     verified_truthy = (
-        pl.col("verified_purchase").cast(pl.Utf8, strict=False).str.to_lowercase().is_in(["true", "1"])
+        pl.col("verified_purchase")
+        .cast(pl.Utf8, strict=False)
+        .str.to_lowercase()
+        .is_in(["true", "1"])
     )
 
     ts_str = pl.col("timestamp").cast(pl.Utf8, strict=False)
     year_expr = pl.coalesce(
         ts_str.str.to_datetime(strict=False).dt.year(),
-        ts_str.cast(pl.Int64, strict=False).cast(pl.Datetime(time_unit="ms"), strict=False).dt.year(),
+        ts_str.cast(pl.Int64, strict=False)
+        .cast(pl.Datetime(time_unit="ms"), strict=False)
+        .dt.year(),
     )
 
     helpful_int = pl.col("helpful_vote").cast(pl.Int64, strict=False)
 
-    return reviews_lf.with_columns(
-        rating.alias("_rating"),
-        verified_truthy.alias("_verified"),
-        year_expr.alias("_year"),
-        helpful_int.alias("_helpful"),
-    ).group_by("parent_asin").agg(
-        pl.len().alias("n_reviews"),
-        pl.col("_rating").mean().alias("mean_rating"),
-        pl.col("_rating").std().alias("std_rating"),
-        pl.col("_verified").mean().alias("pct_verified"),
-        (pl.col("_rating").round(0).cast(pl.Int64) == 5).mean().alias("pct_5stars"),
-        (pl.col("_rating").round(0).cast(pl.Int64) == 1).mean().alias("pct_1stars"),
-        pl.col("_year").min().alias("year_first_review"),
-        pl.col("_year").max().alias("year_last_review"),
-        pl.col("user_id").n_unique().alias("n_unique_users"),
-        pl.col("_helpful").mean().alias("mean_helpful_vote"),
+    return (
+        reviews_lf.with_columns(
+            rating.alias("_rating"),
+            verified_truthy.alias("_verified"),
+            year_expr.alias("_year"),
+            helpful_int.alias("_helpful"),
+        )
+        .group_by("parent_asin")
+        .agg(
+            pl.len().alias("n_reviews"),
+            pl.col("_rating").mean().alias("mean_rating"),
+            pl.col("_rating").std().alias("std_rating"),
+            pl.col("_verified").mean().alias("pct_verified"),
+            (pl.col("_rating").round(0).cast(pl.Int64) == 5).mean().alias("pct_5stars"),
+            (pl.col("_rating").round(0).cast(pl.Int64) == 1).mean().alias("pct_1stars"),
+            pl.col("_year").min().alias("year_first_review"),
+            pl.col("_year").max().alias("year_last_review"),
+            pl.col("user_id").n_unique().alias("n_unique_users"),
+            pl.col("_helpful").mean().alias("mean_helpful_vote"),
+        )
     )
 
 

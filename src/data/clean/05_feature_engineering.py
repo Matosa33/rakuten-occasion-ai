@@ -87,9 +87,7 @@ def main() -> None:
     n_reviews_log = pl.col("n_reviews").cast(pl.Float64).log1p()
 
     # 6. years_active et recency_year
-    years_active = (
-        pl.col("year_last_review") - pl.col("year_first_review") + 1
-    ).cast(pl.Int32)
+    years_active = (pl.col("year_last_review") - pl.col("year_first_review") + 1).cast(pl.Int32)
     recency_year = (DATASET_LAST_YEAR - pl.col("year_last_review")).cast(pl.Int32)
 
     features_lf = lf.with_columns(

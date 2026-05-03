@@ -76,18 +76,16 @@ def _stratified_split_one_category(df: pl.DataFrame, cat: str) -> pl.DataFrame:
     n_val = int(n * VAL_FRAC)
     # n_test = n - n_train - n_val (le reste)
 
-    splits = (
-        ["train"] * n_train
-        + ["val"] * n_val
-        + ["test"] * (n - n_train - n_val)
-    )
+    splits = ["train"] * n_train + ["val"] * n_val + ["test"] * (n - n_train - n_val)
     return df_shuffled.with_columns(pl.Series("_split", splits))
 
 
 def main() -> None:
     log.info("=== Étape 6/6 cleaning : split stratifié 70/15/15 ===")
     log.info("Stratégie : group=parent_asin (anti-L1), stratify=_source_category (anti-B1)")
-    log.info("Seed=%d, fractions=%.0f/%.0f/%.0f", SEED, TRAIN_FRAC * 100, VAL_FRAC * 100, TEST_FRAC * 100)
+    log.info(
+        "Seed=%d, fractions=%.0f/%.0f/%.0f", SEED, TRAIN_FRAC * 100, VAL_FRAC * 100, TEST_FRAC * 100
+    )
 
     if not IN_PATH.exists():
         raise FileNotFoundError(f"{IN_PATH.name} introuvable. Lance d'abord les étapes 01-05.")
@@ -154,9 +152,9 @@ def main() -> None:
     # Inner join → ne garde que les reviews dont le parent_asin est dans le split mapping.
     # Coverage attendue : ~99,98 % (cf. audit D-008), donc on perd ~80k reviews orphelines.
     log.info("  Inner join reviews × parent_asin_to_split (lazy + streaming)…")
-    indexed_df = all_reviews_lf.join(
-        parent_asin_to_split, on="parent_asin", how="inner"
-    ).collect(engine="streaming")
+    indexed_df = all_reviews_lf.join(parent_asin_to_split, on="parent_asin", how="inner").collect(
+        engine="streaming"
+    )
     log.info("  Total reviews indexées : %s", f"{indexed_df.height:_}")
 
     # Partition par split + write

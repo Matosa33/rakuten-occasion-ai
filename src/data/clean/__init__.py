@@ -37,4 +37,18 @@ Voir BRAIN/decisions.md D-008 (périmètre) + D-009 (archi RAG-grounded).
 Stack : polars lazy + streaming engine (cf. ADR D-006). Tous les scripts
 utilisent `engine="streaming"` au .collect() pour tenir les volumes
 (348 M reviews + 26 M items) sans saturer la RAM.
+
+Politique de rétention des intermediate (R20 cleanup fin de cycle)
+------------------------------------------------------------------
+Les fichiers `data/processed/intermediate/01..04_*.parquet` sont des
+sorties intermédiaires entre étapes. Après l'exécution complète du
+pipeline 1.2, **seul `05_meta_features.parquet` est conservé** comme
+input direct du split (étape 06). Les 4 autres sont supprimés au
+cleanup de fin de cycle (R20 / sous-todo 1.99) car régénérables en
+~5 min depuis `data/raw/full/` et coûteux en disque (24 GB).
+
+Si on veut relancer juste une étape (ex: changer la regex normalisation
+en étape 03), il faut re-générer les intermediate amont en relançant
+les étapes 01..02 d'abord. Les scripts ont un check `if OUT_PATH.exists()
+→ skip` qui rend les re-runs idempotents.
 """
