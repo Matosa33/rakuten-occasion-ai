@@ -1,12 +1,12 @@
-"""Étape 2/4 — Audit qualité sur les 3 catégories COMPLÈTES (polars lazy).
+"""Étape 2/4 — Audit qualité sur le périmètre actif D-008 (polars lazy + streaming).
 
-Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet (3 reviews + 3 meta)
+Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet (15 reviews + 15 meta)
 Écrit:
-  - reports/figures/02a_nan_par_colonne_reviews.png
-  - reports/figures/02b_nan_par_colonne_meta.png
-  - reports/figures/02_length_<col>_reviews.png  (×2)
-  - reports/figures/02_length_<col>_meta.png     (×2)
-  - reports/audit_qualite_metrics.json
+  - reports/01_audit/figures/02a_nan_par_colonne_reviews.png
+  - reports/01_audit/figures/02b_nan_par_colonne_meta.png
+  - reports/01_audit/figures/02_length_<col>_reviews.png  (×2)
+  - reports/01_audit/figures/02_length_<col>_meta.png     (×2)
+  - reports/01_audit/audit_qualite_metrics.json
 
 Pourquoi polars lazy
 --------------------
@@ -26,16 +26,21 @@ import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
 
+from src.config import (
+    DATA_RAW_FULL_META as META_DIR,
+)
+from src.config import (
+    DATA_RAW_FULL_REVIEWS as REVIEWS_DIR,
+)
+from src.config import (
+    REPORTS_AUDIT as REPORTS_DIR,
+)
 from src.data.audit import CATEGORIES, scan_concat  # source unique de vérité (D-008)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-REVIEWS_DIR = REPO_ROOT / "data" / "raw" / "full" / "reviews"
-META_DIR = REPO_ROOT / "data" / "raw" / "full" / "meta"
-FIG_DIR = REPO_ROOT / "reports" / "figures"
-REPORTS_DIR = REPO_ROOT / "reports"
+FIG_DIR = REPORTS_DIR / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 sns.set_theme(style="whitegrid", context="notebook")

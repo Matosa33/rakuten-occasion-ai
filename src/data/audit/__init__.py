@@ -12,10 +12,11 @@ Voir BRAIN/decisions.md D-006 (polars), D-007 (full vs sample, superseded by D-0
 D-008 (périmètre = 15 cat evergreen-occasion choisies par méta-first).
 
 La constante `CATEGORIES` ci-dessous est la **source unique de vérité** du périmètre,
-importée par 01..04. Pour changer le périmètre, éditer ici uniquement.
+importée par 01..04 et re-exportée depuis `src/config.py`. Pour changer le
+périmètre, éditer ici uniquement.
 
-Chaque script lit/écrit dans data/raw/full/ et reports/figures/, et
-produit une section du rapport reports/audit_v1_amazon_reviews_2023.md.
+Chaque script lit dans `data/raw/full/{reviews,meta}/` et écrit dans
+`reports/01_audit/` (cf. `src/config.py` pour les chemins centralisés).
 """
 
 # Périmètre D-008 — 15 catégories evergreen-occasion (Tier 1 + Books physiques).

@@ -18,7 +18,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AUDIT_DIR = REPO_ROOT / "src" / "data" / "audit"
-REPORT_PATH = REPO_ROOT / "reports" / "audit_v1_amazon_reviews_2023.md"
+REPORT_PATH = REPO_ROOT / "reports" / "01_audit" / "audit_v1_amazon_reviews_2023.md"
 
 EXPECTED_SCRIPTS = [
     "01_load_full.py",

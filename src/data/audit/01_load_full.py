@@ -1,4 +1,4 @@
-"""Étape 1/4 — Télécharger les 3 catégories COMPLÈTES d'Amazon Reviews 2023.
+"""Étape 1/4 — Télécharger les N catégories COMPLÈTES du périmètre actif D-008.
 
 Source : McAuley-Lab/Amazon-Reviews-2023 (HuggingFace).
 Doc    : https://amazon-reviews-2023.github.io/data_loading/huggingface.html
@@ -6,14 +6,14 @@ Doc    : https://amazon-reviews-2023.github.io/data_loading/huggingface.html
 POURQUOI le full (et pas un sample)
 -----------------------------------
 Un sample (premier N lignes) introduit deux biais qui rendent l'audit non-concluant :
-  - les `parent_asin` du sample reviews et du sample meta sont disjoints (~98 % NaN
-    après merge — finding majeur de l'audit v1 sample) ;
+  - les `parent_asin` du sample reviews et du sample meta sont disjoints (~99 % NaN
+    après merge — finding majeur de l'audit v1 sample superseded D-007/D-008) ;
   - les premières lignes sont concentrées sur peu d'utilisateurs et peu d'années,
     donc les distributions calculées ne reflètent pas la réalité du dataset.
 
-On télécharge donc les 6 fichiers complets pour les 3 catégories choisies :
-  Electronics, Toys_and_Games, All_Beauty (~35,7 GB de JSONL).
-Inscrit dans `BRAIN/decisions.md` D-007 (full vs sample).
+On télécharge donc les 2N fichiers complets pour les N catégories du périmètre
+défini par `CATEGORIES` (cf. `src/data/audit/__init__.py`, single source of vérité).
+Inscrit dans `BRAIN/decisions.md` D-007 (full vs sample) + D-008 (périmètre).
 
 Mécanique
 ---------
@@ -48,16 +48,13 @@ from pathlib import Path
 import polars as pl
 from huggingface_hub import hf_hub_download
 
+from src.config import DATA_RAW
+from src.config import DATA_RAW_FULL_META as META_DIR
+from src.config import DATA_RAW_FULL_REVIEWS as REVIEWS_DIR
 from src.data.audit import CATEGORIES  # source unique de vérité (D-008)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DATA_RAW = REPO_ROOT / "data" / "raw"
-DATA_FULL = DATA_RAW / "full"
-REVIEWS_DIR = DATA_FULL / "reviews"
-META_DIR = DATA_FULL / "meta"
 
 HF_REPO_ID = "McAuley-Lab/Amazon-Reviews-2023"
 

@@ -1,13 +1,13 @@
-"""Étape 3/4 — Audit distributions sur les 3 catégories COMPLÈTES (polars lazy).
+"""Étape 3/4 — Audit distributions sur le périmètre actif D-008 (polars lazy + streaming).
 
 Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet
 Écrit:
-  - reports/figures/03a_distribution_reviews_par_cat.png
-  - reports/figures/03b_distribution_meta_par_cat.png
-  - reports/figures/03c_distribution_prix_meta.png
-  - reports/figures/03d_distribution_ratings_reviews.png
-  - reports/figures/03e_distribution_temporelle_reviews.png
-  - reports/audit_distributions_metrics.json
+  - reports/01_audit/figures/03a_distribution_reviews_par_cat.png
+  - reports/01_audit/figures/03b_distribution_meta_par_cat.png
+  - reports/01_audit/figures/03c_distribution_prix_meta.png
+  - reports/01_audit/figures/03d_distribution_ratings_reviews.png
+  - reports/01_audit/figures/03e_distribution_temporelle_reviews.png
+  - reports/01_audit/audit_distributions_metrics.json
 """
 
 from __future__ import annotations
@@ -22,16 +22,22 @@ import numpy as np
 import polars as pl
 import seaborn as sns
 
+from src.config import (
+    DATA_RAW_FULL_META as META_DIR,
+)
+from src.config import (
+    DATA_RAW_FULL_REVIEWS as REVIEWS_DIR,
+)
+from src.config import (
+    REPORTS_AUDIT as REPORTS_DIR,
+)
 from src.data.audit import scan_concat  # source unique de vérité (D-008)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-REVIEWS_DIR = REPO_ROOT / "data" / "raw" / "full" / "reviews"
-META_DIR = REPO_ROOT / "data" / "raw" / "full" / "meta"
-FIG_DIR = REPO_ROOT / "reports" / "figures"
-REPORTS_DIR = REPO_ROOT / "reports"
+FIG_DIR = REPORTS_DIR / "figures"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 sns.set_theme(style="whitegrid", context="notebook")
 
 
@@ -144,14 +150,12 @@ def temporal_distribution(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     # (Int64 ms) ou par fallback pandas chunked (string ISO type "2019-08-01 03:21:10.757000").
     # Le concat diagonal_relaxed promeut tout en string → on tente les deux chemins de parse.
     ts_str = pl.col("timestamp").cast(pl.Utf8, strict=False)
-    year_expr = (
-        pl.coalesce(
-            ts_str.str.to_datetime(strict=False).dt.year(),
-            ts_str.cast(pl.Int64, strict=False)
-            .cast(pl.Datetime(time_unit="ms"), strict=False)
-            .dt.year(),
-        ).alias("year")
-    )
+    year_expr = pl.coalesce(
+        ts_str.str.to_datetime(strict=False).dt.year(),
+        ts_str.cast(pl.Int64, strict=False)
+        .cast(pl.Datetime(time_unit="ms"), strict=False)
+        .dt.year(),
+    ).alias("year")
     by_year = (
         reviews_lf.with_columns(year_expr)
         .group_by("year")

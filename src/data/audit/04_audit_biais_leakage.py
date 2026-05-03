@@ -1,32 +1,37 @@
-"""Étape 4/4 — Audit biais & leakage sur les 3 catégories COMPLÈTES (polars lazy).
+"""Étape 4/4 — Audit biais & leakage sur le périmètre actif D-008 (polars lazy + streaming).
 
 Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet
 Écrit:
-  - reports/audit_biais_leakage_metrics.json
+  - reports/01_audit/audit_biais_leakage_metrics.json
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
 from typing import Any
 
 import polars as pl
 
+from src.config import (
+    DATA_RAW_FULL_META as META_DIR,
+)
+from src.config import (
+    DATA_RAW_FULL_REVIEWS as REVIEWS_DIR,
+)
+from src.config import (
+    REPORTS_AUDIT as REPORTS_DIR,
+)
 from src.data.audit import scan_concat  # source unique de vérité (D-008)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-REVIEWS_DIR = REPO_ROOT / "data" / "raw" / "full" / "reviews"
-META_DIR = REPO_ROOT / "data" / "raw" / "full" / "meta"
-REPORTS_DIR = REPO_ROOT / "reports"
-
 
 def detect_category_imbalance(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
-    counts = reviews_lf.group_by("_source_category").agg(pl.len().alias("n")).collect(engine="streaming")
+    counts = (
+        reviews_lf.group_by("_source_category").agg(pl.len().alias("n")).collect(engine="streaming")
+    )
     n_min = int(counts["n"].min() or 1)
     n_max = int(counts["n"].max() or 1)
     ratio = n_max / max(n_min, 1)
@@ -88,7 +93,9 @@ def detect_price_bias(meta_lf: pl.LazyFrame) -> dict[str, Any]:
             "reason": "aucun prix exploitable",
             "n_valid_prices": 0,
         }
-    n_below_50 = valid.filter(pl.col("_price_num") < 50).select(pl.len()).collect(engine="streaming").item()
+    n_below_50 = (
+        valid.filter(pl.col("_price_num") < 50).select(pl.len()).collect(engine="streaming").item()
+    )
     pct = round(100 * n_below_50 / n_valid, 1)
     return {
         "label": "B3 — biais de prix (concentration low-end, meta FULL)",
@@ -103,14 +110,12 @@ def detect_temporal_bias(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
         return {"label": "B4 — temporel", "severity": "n/a"}
     # Format mixte (cf. 03_audit_distributions.py temporal_distribution).
     ts_str = pl.col("timestamp").cast(pl.Utf8, strict=False)
-    year_expr = (
-        pl.coalesce(
-            ts_str.str.to_datetime(strict=False).dt.year(),
-            ts_str.cast(pl.Int64, strict=False)
-            .cast(pl.Datetime(time_unit="ms"), strict=False)
-            .dt.year(),
-        ).alias("year")
-    )
+    year_expr = pl.coalesce(
+        ts_str.str.to_datetime(strict=False).dt.year(),
+        ts_str.cast(pl.Int64, strict=False)
+        .cast(pl.Datetime(time_unit="ms"), strict=False)
+        .dt.year(),
+    ).alias("year")
     by_year = (
         reviews_lf.with_columns(year_expr)
         .group_by("year")
@@ -159,7 +164,9 @@ def detect_user_leakage(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     if "user_id" not in reviews_lf.collect_schema().names():
         return {"label": "L2 — user_id", "severity": "n/a"}
     n_total = reviews_lf.select(pl.len()).collect(engine="streaming").item()
-    n_unique_users = reviews_lf.select(pl.col("user_id").n_unique()).collect(engine="streaming").item()
+    n_unique_users = (
+        reviews_lf.select(pl.col("user_id").n_unique()).collect(engine="streaming").item()
+    )
     # Combien d'users ont > 1 review : on group_by puis filter
     multi = (
         reviews_lf.group_by("user_id")
