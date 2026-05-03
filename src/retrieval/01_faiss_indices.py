@@ -78,8 +78,9 @@ def _load_val_queries() -> np.ndarray:
 def _build_flat(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
     import faiss
 
-    log.info("  Build Flat IP : %s vecteurs × %d dim…",
-             f"{embeddings.shape[0]:_}", embeddings.shape[1])
+    log.info(
+        "  Build Flat IP : %s vecteurs × %d dim…", f"{embeddings.shape[0]:_}", embeddings.shape[1]
+    )
     t0 = time.time()
     index = faiss.IndexFlatIP(embeddings.shape[1])
     index.add(embeddings)
@@ -104,10 +105,13 @@ def _build_ivfpq(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
     import faiss
 
     d = embeddings.shape[1]
-    log.info("  Build IVF_PQ nlist=%d M=%d nprobe=%d…", IVFPQ_NLIST, IVFPQ_M_SUBQUANTIZER, IVFPQ_NPROBE)
+    log.info(
+        "  Build IVF_PQ nlist=%d M=%d nprobe=%d…", IVFPQ_NLIST, IVFPQ_M_SUBQUANTIZER, IVFPQ_NPROBE
+    )
     quantizer = faiss.IndexFlatIP(d)
-    index = faiss.IndexIVFPQ(quantizer, d, IVFPQ_NLIST, IVFPQ_M_SUBQUANTIZER, 8,
-                             faiss.METRIC_INNER_PRODUCT)
+    index = faiss.IndexIVFPQ(
+        quantizer, d, IVFPQ_NLIST, IVFPQ_M_SUBQUANTIZER, 8, faiss.METRIC_INNER_PRODUCT
+    )
     t_train = time.time()
     log.info("  IVF_PQ : training quantizer (~ minute)…")
     index.train(embeddings)
@@ -143,8 +147,7 @@ def _bench_index(index, queries: np.ndarray, name: str, ground_truth: np.ndarray
             if k > EVAL_TOP_K:
                 continue
             n_match = sum(
-                len(set(indices[i, :k]) & set(ground_truth[i, :k]))
-                for i in range(len(queries))
+                len(set(indices[i, :k]) & set(ground_truth[i, :k])) for i in range(len(queries))
             )
             recall = n_match / (len(queries) * k)
             recalls[f"recall_at_{k}"] = round(recall, 4)
@@ -171,8 +174,9 @@ def main() -> None:
 
     # Sample N queries du val
     rng = np.random.default_rng(SEED)
-    query_idx = rng.choice(embeddings_val.shape[0], size=min(EVAL_N_QUERIES, embeddings_val.shape[0]),
-                           replace=False)
+    query_idx = rng.choice(
+        embeddings_val.shape[0], size=min(EVAL_N_QUERIES, embeddings_val.shape[0]), replace=False
+    )
     queries = embeddings_val[query_idx]
     log.info("Sample %d queries du val", len(queries))
 
@@ -207,10 +211,12 @@ def main() -> None:
         log.warning("IVF_PQ build a échoué : %s. Skip.", e)
 
     # Tailles fichiers
-    sizes = {p.name: round(p.stat().st_size / 1_048_576, 1)
-             for p in [flat_path, hnsw_path] + ([Path(str(DATA_INDEX / "text_arctic_ivfpq.index"))]
-                                                 if ivfpq_result else [])
-             if p.exists()}
+    sizes = {
+        p.name: round(p.stat().st_size / 1_048_576, 1)
+        for p in [flat_path, hnsw_path]
+        + ([Path(str(DATA_INDEX / "text_arctic_ivfpq.index"))] if ivfpq_result else [])
+        if p.exists()
+    }
 
     bench = {
         "n_train": int(embeddings_train.shape[0]),
@@ -246,14 +252,16 @@ def main() -> None:
             f"{r['latency_ms_per_query']:.2f} | {size} MB |"
         )
 
-    lines.extend([
-        "",
-        "## Décision",
-        "",
-        "Pour le serving (Cycle 9 API) : **HNSW** (rapide + recall ≥ 95 %).",
-        "Pour la référence d'évaluation : **Flat IP** (recall 100 %).",
-        "Pour scale-up futur (>20 M vecteurs) : envisager **IVF_PQ** si recall acceptable (>0.85).",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Décision",
+            "",
+            "Pour le serving (Cycle 9 API) : **HNSW** (rapide + recall ≥ 95 %).",
+            "Pour la référence d'évaluation : **Flat IP** (recall 100 %).",
+            "Pour scale-up futur (>20 M vecteurs) : envisager **IVF_PQ** si recall acceptable (>0.85).",
+        ]
+    )
 
     OUT_BENCH_MD.write_text("\n".join(lines), encoding="utf-8")
     log.info("→ %s", OUT_BENCH_MD.name)
