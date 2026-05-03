@@ -57,7 +57,9 @@ data/raw/*.json
 data/raw/cache/
 data/raw/full/
 data/processed/*.parquet
+data/processed/**/*.parquet
 data/processed/*.json
+data/processed/**/*.json
 data/embeddings/*.npy
 data/embeddings/*.bin
 data/embeddings/*.parquet

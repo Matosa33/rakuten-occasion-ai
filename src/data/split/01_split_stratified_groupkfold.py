@@ -132,43 +132,43 @@ def main() -> None:
     # Construction reviews_index : (parent_asin, asin, _split) joint depuis
     # reviews bruts. Permet au RAG Cycle 6 de retrouver toutes les reviews
     # d'un produit dans le bon split sans dupliquer le contenu reviews.
-    log.info("Construction reviews_index split-aware…")
-    parent_asin_to_split = full_split.select("parent_asin", "_split")
+    #
+    # Stratégie : 1 inner join polars (lazy + streaming) entre tous les reviews
+    # concat et le mapping parent_asin → _split (26 M lignes en RAM, ~500 MB).
+    # Le join est ~10× plus rapide que pl.col("parent_asin").is_in(big_list)
+    # qui doit hasher 18-26 M strings et faire un lookup par ligne.
+    log.info("Construction reviews_index split-aware (1 inner join)…")
+    parent_asin_to_split = full_split.select("parent_asin", "_split").lazy()
 
+    # Concat lazy de tous les reviews (15 cat) avec _source_category
+    all_reviews_lf = pl.concat(
+        [
+            pl.scan_parquet(DATA_RAW_FULL_REVIEWS / f"{cat}.parquet")
+            .select("parent_asin", "asin", "user_id", "timestamp")
+            .with_columns(pl.lit(cat).alias("_source_category"))
+            for cat in CATEGORIES
+        ],
+        how="diagonal_relaxed",
+    )
+
+    # Inner join → ne garde que les reviews dont le parent_asin est dans le split mapping.
+    # Coverage attendue : ~99,98 % (cf. audit D-008), donc on perd ~80k reviews orphelines.
+    log.info("  Inner join reviews × parent_asin_to_split (lazy + streaming)…")
+    indexed_df = all_reviews_lf.join(
+        parent_asin_to_split, on="parent_asin", how="inner"
+    ).collect(engine="streaming")
+    log.info("  Total reviews indexées : %s", f"{indexed_df.height:_}")
+
+    # Partition par split + write
     for split_name in ("train", "val", "test"):
-        parent_asins_in_split = parent_asin_to_split.filter(
-            pl.col("_split") == split_name
-        )["parent_asin"].to_list()
-
-        log.info(
-            "  reviews_index/%s : %s parent_asins, scan reviews + join lazy…",
-            split_name,
-            f"{len(parent_asins_in_split):_}",
-        )
-
-        # Scan tous les reviews de toutes les cat, join sur parent_asin du split
-        index_parts = []
-        for cat in CATEGORIES:
-            reviews_lf = pl.scan_parquet(DATA_RAW_FULL_REVIEWS / f"{cat}.parquet")
-            cat_index = (
-                reviews_lf.select("parent_asin", "asin", "user_id", "timestamp")
-                .filter(pl.col("parent_asin").is_in(parent_asins_in_split))
-                .with_columns(
-                    pl.lit(cat).alias("_source_category"),
-                    pl.lit(split_name).alias("_split"),
-                )
-                .collect(engine="streaming")
-            )
-            index_parts.append(cat_index)
-
-        index_df = pl.concat(index_parts, how="diagonal_relaxed")
+        df_split = indexed_df.filter(pl.col("_split") == split_name)
         out = DATA_PROCESSED_REVIEWS_INDEX / f"{split_name}.parquet"
-        index_df.write_parquet(out, compression="zstd", compression_level=3)
+        df_split.write_parquet(out, compression="zstd", compression_level=3)
         size_gb = out.stat().st_size / 1_073_741_824
         log.info(
             "  → reviews_index/%s.parquet : %s lignes (%.2f GB)",
             split_name,
-            f"{index_df.height:_}",
+            f"{df_split.height:_}",
             size_gb,
         )
 
