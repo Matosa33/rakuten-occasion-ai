@@ -1,8 +1,8 @@
 # Rakuten AI — Document de cadrage
 
-> Version 2.0 — 2026-04-30
+> Version 2.1 — 2026-05-04
 > Auteur(s) : Mathieu Klopp
-> Statut : active (supersede v1 du 2026-04-29 sur F0 et hors-scope, cf. ADR D-010)
+> Statut : active (supersede v1 du 2026-04-29 sur F0 et hors-scope, cf. ADR D-010 ; périmètre opérationnel réduit à 4 cat MVP cf. ADR D-011)
 
 > **Note méthodologique** : ce document distingue **chiffres sourcés** (web,
 > études, mesures internes) et **hypothèses à valider** (à confirmer par tests
@@ -38,7 +38,7 @@ Le différentiateur vs les outils AI existants type VintyLook : **un seul flux e
 
 > **F0** est le cœur du projet. F1-F7 sont les fonctionnalités produit. F8 est optionnel.
 
-- **F0 — Cœur d'identification grounded** : pipeline **retrieval-first** qui identifie un produit à partir d'une ou plusieurs photos en cherchant son **plus proche voisin** dans un catalogue indexé (~26 M items issus du dataset proxy Amazon Reviews 2023, périmètre evergreen-occasion D-008). Étapes :
+- **F0 — Cœur d'identification grounded** : pipeline **retrieval-first** qui identifie un produit à partir d'une ou plusieurs photos en cherchant son **plus proche voisin** dans un catalogue indexé (~4,5 M items issus du dataset proxy Amazon Reviews 2023, périmètre **MVP focused 4 cat** Electronics + Cell_Phones_and_Accessories + Video_Games + Tools_and_Home_Improvement, cf. ADR D-011 supersede partiel D-008). Étapes :
   1. Encodage vision (SigLIP frozen) + texte (Arctic Embed L v2 frozen) → embeddings.
   2. Recherche FAISS HNSW multi-view + RRF (Reciprocal Rank Fusion) → top-K candidats avec score de confiance.
   3. Si ambiguïté (top1-top2 < seuil) → **Akinator backend** : observation dirigée (vue à demander, OCR ciblé sur étiquette) plutôt que question textuelle.
@@ -79,6 +79,7 @@ Le différentiateur vs les outils AI existants type VintyLook : **un seul flux e
 - **Pas de scraping Rakuten / Vinted / Leboncoin** — risque légal et instable (ADR D-004 documente le rejet). On s'appuie sur le dataset public Amazon Reviews 2023 (cf. D-004 / D-007 / D-008) comme catalogue proxy d'identification.
 - **Pas de live video stream temps réel** dans le scope nominal — l'UX cible est "stable shot" (capture quand la frame est nette + bien éclairée détectée), pas de tracking continu YOLO. Un cycle dynamique pourra explorer le live video si le projet le justifie après MVP.
 - **Pas de fine-tuning VLM dans le scope nominal** — F8 est explicitement optionnel, ne s'active que sur preuve de bénéfice mesurable (cf. ADR D-009).
+- **Périmètre opérationnel restreint à 4 catégories** (cf. ADR D-011) — Electronics, Cell_Phones_and_Accessories, Video_Games, Tools_and_Home_Improvement (~4,5 M items meta + ~96 M reviews). Les 11 autres cat de D-008 (Clothing, Home, Books, Automotive, Sports, Movies_and_TV, Toys, CDs_and_Vinyl, Baby_Products, Musical_Instruments, Appliances) restent téléchargées dans `data/raw/full/` mais hors-périmètre actif. Justification : focus MVP démontrable, vision via CDN faisable (~3-4 h vs jours), FAISS RAM ~9 GB confortable. Extension à plus de cat = trivial via édition `CATEGORIES` dans `src/data/audit/__init__.py` (single source of truth).
 
 ## 7. Contraintes techniques structurantes
 

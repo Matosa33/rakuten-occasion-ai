@@ -17,10 +17,10 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | | C02 | Le poste de dev prêt | 0.2 | 🟡 à valider humain |
 | | C03 | Le repo bien né | 0.3 | ✅ done |
 | | C04 | BRAIN system (optionnel) | 0.4 | ✅ done (9 fichiers + 32 tests) |
-| **P02 Données** | C05 | Auditer un dataset brut | **1.1** | ✅ done (D-008, audit FULL 348M reviews) |
-| | C06 | Cleaning + features + split | **1.2** | not_started |
-| | C07 | Anti-leakage 5 patterns | **1.3** | not_started |
-| | C08 | Validation Pandera | **1.4** | not_started |
+| **P02 Données** | C05 | Auditer un dataset brut | **1.1** | ✅ done (D-008 puis D-011 4 cat MVP) |
+| | C06 | Cleaning + features + split | **1.2** | ✅ done (4d2509b puis b338555 sur 4 cat) |
+| | C07 | Anti-leakage 5 patterns | **1.3** | ✅ done (2107cb8) |
+| | C08 | Validation Pandera | **1.4** | ✅ done (6ed4393) |
 | **P03 Représentations** | C09 | Embeddings concept + similarité | **2.1** | not_started |
 | | C10 | Vision encoders CLIP/SigLIP | **2.2** | not_started (E1 SigLIP) |
 | | C11 | Text encoders Arctic | **2.3** | not_started (E2 Arctic) |

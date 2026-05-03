@@ -44,8 +44,10 @@ log = logging.getLogger(__name__)
 
 MODEL_NAME = "Snowflake/snowflake-arctic-embed-l-v2.0"
 EMBED_DIM = 1024
-BATCH_SIZE = 64  # ajuster selon VRAM (RTX 4080 16GB : 64-128 OK pour XLM-R-large FP16)
-MAX_SEQ_LENGTH = 512  # tokens — couvre largement title + description courts (médiane 75 + 71 chars)
+BATCH_SIZE = 128  # RTX 4080 16GB : 128 OK pour XLM-R-large FP16 + max_seq 256
+# Tokens : descriptions médianes 71 chars (~25 tokens), title 75 (~30 tokens),
+# concat ≈ 55 tokens médian. 256 couvre p99. Attention en O(seq²) → 256 = 4× plus rapide que 512.
+MAX_SEQ_LENGTH = 256
 DTYPE_OUT = np.float16  # économie disque ~2× vs float32, perte précision négligeable pour retrieval
 
 OUT_DIR = DATA_EMBEDDINGS / "text"
