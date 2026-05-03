@@ -49,7 +49,7 @@ secrets.yaml
 # === Docker ===
 docker-compose.override.yml
 
-# === Data lourde (DVC géré plus tard) ===
+# === Data lourde (DVC géré plus tard, cf. ADR D-006/D-007/D-008) ===
 data/raw/*.parquet
 data/raw/*.csv
 data/raw/*.jsonl
@@ -57,21 +57,33 @@ data/raw/*.json
 data/raw/cache/
 data/raw/full/
 data/processed/*.parquet
+data/processed/*.json
 data/embeddings/*.npy
 data/embeddings/*.bin
+data/embeddings/*.parquet
+data/index/*.index
+data/index/*.faiss
 data/fine_tuning/*.jsonl
 data/images/
+data/models/*.joblib
+data/models/*.pkl
+data/models/*.pt
+data/models/*.bin
 models/
 
 # === HuggingFace cache (téléchargements lourds, hors data/raw/cache) ===
 ~/.cache/huggingface/
 
-# === Audit reports — on garde le markdown commit (synthèse humaine), mais pas
-# les artefacts lourds régénérables. dataset_meta_inventory.json reste commité
-# pour figer la trace de la décision méta-first (ADR D-008).
+# === Audit reports — on garde les .md commit (synthèse humaine), mais pas
+# les artefacts lourds régénérables. *_inventory.json reste commité pour
+# figer la trace des décisions (méta-first, choix périmètre, etc.).
+reports/**/figures/*.png
+reports/**/figures/*.svg
 reports/figures/*.png
 reports/figures/*.svg
+!reports/**/.gitkeep
 !reports/figures/.gitkeep
+reports/**/*_metrics.json
 reports/audit_*_metrics.json
 
 # === MLflow / DVC ===
@@ -81,6 +93,25 @@ mlruns.db
 .dvc/cache
 .dvc/tmp
 dvc_storage/
+
+# === Frontend (P11 — React + Vite à venir) ===
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+frontend/.env.local
+frontend/.env.*.local
+
+# === Infra (P14 — Docker / Compose / k8s à venir) ===
+infra/**/.env
+infra/**/secrets/
+infra/minio/data/
+infra/postgres/data/
+
+# === Monitoring (P15) ===
+monitoring/prometheus/data/
+monitoring/grafana/data/
+monitoring/evidently/reports/
 
 # === Autres ===
 *.tmp
