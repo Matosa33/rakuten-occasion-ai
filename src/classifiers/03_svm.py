@@ -1,0 +1,167 @@
+"""M2 — LinearSVC + Platt sur embeddings text (Cycle 3.1 / C12).
+
+LinearSVC sur les embeddings text Arctic (1024 dim) avec calibration Platt
+pour avoir des probabilités. Comparable à M5 (TF-IDF + LinearSVC) mais
+sur un input dense sémantique au lieu d'un input sparse lexical.
+
+Sortie :
+- `data/models/m2_svm_v1.joblib`
+- `reports/04_classifiers_bench/m2_svm.json`
+
+Lance :
+
+    python -m src.classifiers.03_svm
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import time
+
+import joblib
+import numpy as np
+import polars as pl
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.svm import LinearSVC
+
+from src.classifiers.metrics import (
+    compute_calibration_ece,
+    compute_classification_metrics,
+    compute_per_class_f1,
+)
+from src.config import (
+    CATEGORIES,
+    DATA_EMBEDDINGS,
+    DATA_MODELS,
+    DATA_PROCESSED_PRODUCTS,
+    REPORTS_CLASSIFIERS,
+    SEED,
+)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
+
+MODEL_NAME = "m2_svm_v1"
+C_PARAM = 1.0
+CALIBRATION_CV = 3
+
+OUT_MODEL = DATA_MODELS / f"{MODEL_NAME}.joblib"
+OUT_METRICS = REPORTS_CLASSIFIERS / f"{MODEL_NAME}.json"
+
+
+def _load_split(split_name: str) -> tuple[np.ndarray, np.ndarray]:
+    emb_path = DATA_EMBEDDINGS / "text" / f"text_arctic_{split_name}.npy"
+    if not emb_path.exists():
+        raise FileNotFoundError(f"{emb_path} introuvable.")
+    X = np.load(emb_path).astype(np.float32)
+    df = pl.read_parquet(
+        DATA_PROCESSED_PRODUCTS / f"{split_name}.parquet", columns=["_source_category"]
+    )
+    y = df["_source_category"].to_numpy()
+    return X, y
+
+
+def main() -> None:
+    log.info("=== M2 LinearSVC + Platt sur embeddings text Arctic ===")
+    DATA_MODELS.mkdir(parents=True, exist_ok=True)
+    REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
+
+    if OUT_MODEL.exists():
+        log.info("→ %s déjà présent, skip", OUT_MODEL.name)
+        return
+
+    log.info("Lecture embeddings…")
+    t0 = time.time()
+    X_train, y_train = _load_split("train")
+    X_val, y_val = _load_split("val")
+    X_test, y_test = _load_split("test")
+    log.info(
+        "  train=%s, val=%s, test=%s, dim=%d (%.1fs)",
+        f"{X_train.shape[0]:_}",
+        f"{X_val.shape[0]:_}",
+        f"{X_test.shape[0]:_}",
+        X_train.shape[1],
+        time.time() - t0,
+    )
+
+    log.info("Train LinearSVC C=%g balanced + Platt CV=%d…", C_PARAM, CALIBRATION_CV)
+    t_train = time.time()
+    clf = CalibratedClassifierCV(
+        estimator=LinearSVC(
+            C=C_PARAM,
+            class_weight="balanced",
+            random_state=SEED,
+            max_iter=2000,
+            dual="auto",
+        ),
+        cv=CALIBRATION_CV,
+        method="sigmoid",
+    )
+    clf.fit(X_train, y_train)
+    duration_train = time.time() - t_train
+    log.info("  Train OK en %.1fs", duration_train)
+
+    results = {}
+    for split_name, X_eval, y_eval in [("val", X_val, y_val), ("test", X_test, y_test)]:
+        log.info("Eval sur %s…", split_name)
+        t_eval = time.time()
+        y_pred = clf.predict(X_eval)
+        y_proba = clf.predict_proba(X_eval)
+        duration_eval = time.time() - t_eval
+
+        labels_sorted = sorted(set(y_train))
+        y_eval_idx = np.array([labels_sorted.index(y) for y in y_eval])
+
+        metrics = compute_classification_metrics(
+            y_true=y_eval_idx,
+            y_pred=np.array([labels_sorted.index(y) for y in y_pred]),
+            y_proba=y_proba,
+            top_k=(1, 3),
+            labels=list(range(len(labels_sorted))),
+        )
+        ece = compute_calibration_ece(y_eval_idx, y_proba)
+        per_class_f1 = compute_per_class_f1(y_eval, y_pred, labels=labels_sorted)
+
+        log.info(
+            "  %s : F1_w=%.4f, F1_m=%.4f, acc=%.4f, ECE=%.4f (%.1fs)",
+            split_name,
+            metrics["f1_weighted"],
+            metrics["f1_macro"],
+            metrics["accuracy"],
+            ece,
+            duration_eval,
+        )
+
+        results[split_name] = {
+            **metrics,
+            "ece": round(ece, 4),
+            "per_class_f1": {k: round(v, 4) for k, v in per_class_f1.items()},
+            "duration_eval_sec": round(duration_eval, 2),
+        }
+
+    joblib.dump(clf, OUT_MODEL)
+    full_metrics = {
+        "model": MODEL_NAME,
+        "type": "LinearSVC + Platt sur embeddings text Arctic",
+        "perimeter": list(CATEGORIES),
+        "n_train": X_train.shape[0],
+        "n_val": X_val.shape[0],
+        "n_test": X_test.shape[0],
+        "embed_dim": X_train.shape[1],
+        "hyperparams": {
+            "C": C_PARAM,
+            "class_weight": "balanced",
+            "calibration_cv": CALIBRATION_CV,
+            "seed": SEED,
+        },
+        "duration_train_sec": round(duration_train, 1),
+        "results": results,
+    }
+    OUT_METRICS.write_text(json.dumps(full_metrics, indent=2, ensure_ascii=False), encoding="utf-8")
+    log.info("→ %s + %s", OUT_MODEL.name, OUT_METRICS.name)
+    log.info("\nM2 LinearSVC OK.")
+
+
+if __name__ == "__main__":
+    main()
