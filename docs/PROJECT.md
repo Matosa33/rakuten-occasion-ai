@@ -1,12 +1,13 @@
 # Rakuten AI — Document de cadrage
 
-> Version 1.0 — 2026-04-29
+> Version 2.0 — 2026-04-30
 > Auteur(s) : Mathieu Klopp
-> Statut : draft
+> Statut : active (supersede v1 du 2026-04-29 sur F0 et hors-scope, cf. ADR D-010)
 
-> Note méthodologique : ce document distingue **chiffres sourcés** (web, études)
-> et **hypothèses à valider** (à confirmer par tests utilisateurs ou benchmark).
-> Les hypothèses non sourcées seront mesurées plus tard, jamais inventées.
+> **Note méthodologique** : ce document distingue **chiffres sourcés** (web,
+> études, mesures internes) et **hypothèses à valider** (à confirmer par tests
+> utilisateurs ou benchmark). Les hypothèses non sourcées seront mesurées plus
+> tard, jamais inventées.
 
 ---
 
@@ -22,86 +23,100 @@ L'utilisateur cible est **le vendeur particulier occasionnel** : pas un revendeu
 
 Pour les **vendeurs particuliers occasionnels** (cible : ceux qui mettent en ligne moins de 50 articles par an), qui **butent sur les étapes manuelles de catégorisation, rédaction et estimation prix**, notre solution est une **app web** qui **génère la fiche produit complète (catégorie, attributs, titre, description, prix indicatif) à partir de quelques photos**, contrairement aux **interfaces actuelles** qui demandent au vendeur d'effectuer toutes ces tâches manuellement.
 
-Le différentiateur vs les outils AI existants type VintyLook : **un seul flux end-to-end** (photo → fiche complète) au lieu d'un assistant à insérer dans une boucle Vinted, et un **pricing transparent avec breakdown** plutôt qu'une suggestion opaque.
+Le différentiateur vs les outils AI existants type VintyLook : **un seul flux end-to-end** (photo → fiche complète), un **pipeline d'identification ancré dans un catalogue de référence** (anti-hallucination par design), et un **pricing transparent avec breakdown** plutôt qu'une suggestion opaque.
 
 ## 3. Hypothèses-clés
 
 > Ces hypothèses **ne sont pas encore validées**. Elles sont **mesurables** et seront vérifiées par tests utilisateurs ou benchmark.
 
 - **H1** : Nous croyons qu'auto-générer la fiche depuis les photos permettra aux vendeurs particuliers de **réduire significativement le temps de création d'annonce**. *Mesure cible* : temps médian < 5 min sur un panel de 10 utilisateurs vs leur baseline personnelle. *Note* : aucune source publique fiable ne donne le temps moyen actuel de création d'annonce — à mesurer en interne avant et après.
-- **H2** : Nous croyons qu'afficher une **barre de complétude dynamique** augmentera la qualité moyenne des fiches. *Mesure cible* : taux de complétude (champs renseignés / champs possibles) > 75 %.
+- **H2** : Nous croyons qu'afficher une **barre de complétude dynamique** + un **score de confiance d'identification** augmentera la qualité moyenne des fiches. *Mesure cible* : taux de complétude (champs renseignés / champs possibles) > 75 %.
 - **H3** : Nous croyons qu'un **pricing transparent avec breakdown** sera plus accepté qu'un pricing ML opaque. *Mesure cible* : taux de validation du prix suggéré par le vendeur > 60 %.
-- **H4** : Nous croyons qu'un **VLM fine-tuné** sur le domaine produit-marketplace battra un VLM zero-shot grand public sur l'extraction d'attributs structurés (catégorie, marque, modèle, couleur). *Mesure cible* : F1 macro per-attribute > +0.10 vs baseline Gemini Flash zero-shot.
+- **H4** : Nous croyons qu'un **pipeline d'identification grounded** (retrieval ancré sur catalogue + VLM validateur) battra un VLM zero-shot pur en précision et en absence d'hallucination. *Mesure cible* : Recall@5 retrieval > 80 % sur un panel de produits réels, taux d'hallucination < 5 % (faux positifs identification mesurés à la main).
 
 ## 4. Récquis fonctionnels (in-scope)
 
-- **F0 — Cœur multimodal** : entraîner ou fine-tuner un **modèle multimodal vision-langage** (VLM type Qwen2.5-VL ou équivalent) sur des données produits annotées, en QLoRA 4-bit pour tenir sur 16 GB VRAM. C'est **la valeur technique principale** du projet.
-- **F1 — Classification automatique** : prédire la catégorie L2 du produit depuis 1 ou plusieurs photos avec F1 weighted ≥ 0.90 (cible mesurable en cours de projet).
-- **F2 — Extraction d'attributs visuels** : peupler marque, modèle, couleur, matière, connectivité depuis les photos avec un taux d'hallucination borné.
-- **F3 — Génération texte ancrée** : produire titre + description en français vendeur particulier, ancrés sur des annonces voisines réelles (RAG), pour réduire l'hallucination.
-- **F4 — Pricing transparent** : prix indicatif avec **niveau de confiance** et **fourchette explicable** selon la complétude des informations fournies.
-- **F5 — UI progressive multi-modes** : express (30 s, photo seule), assisté (avec quelques questions ciblées), batch déménagement (queue de N photos avec persistance navigateur).
-- **F6 — Garde-fous OOD** : détecter les produits hors-catalogue d'entraînement et basculer en mode dégradé "produit non reconnu" plutôt que d'inventer.
-- **F7 — Cycle de vie modèle automatisé** : retraining hebdomadaire, drift detection, hot-reload du modèle servi sans downtime de l'API.
+> **F0** est le cœur du projet. F1-F7 sont les fonctionnalités produit. F8 est optionnel.
+
+- **F0 — Cœur d'identification grounded** : pipeline **retrieval-first** qui identifie un produit à partir d'une ou plusieurs photos en cherchant son **plus proche voisin** dans un catalogue indexé (~26 M items issus du dataset proxy Amazon Reviews 2023, périmètre evergreen-occasion D-008). Étapes :
+  1. Encodage vision (SigLIP frozen) + texte (Arctic Embed L v2 frozen) → embeddings.
+  2. Recherche FAISS HNSW multi-view + RRF (Reciprocal Rank Fusion) → top-K candidats avec score de confiance.
+  3. Si ambiguïté (top1-top2 < seuil) → **Akinator backend** : observation dirigée (vue à demander, OCR ciblé sur étiquette) plutôt que question textuelle.
+  4. **VLM zero-shot validateur** (Gemini Flash, Qwen-VL, etc.) sur le top-1 : "l'image montre-t-elle ce produit ?" → garde-fou anti-hallucination.
+  5. Garde-fous OOD si aucun candidat ne dépasse le seuil → mode dégradé "produit non identifié, saisie assistée".
+- **F1 — Classification automatique** : prédire la catégorie L2 du produit avec F1 weighted ≥ 0.90 (mesurable en P04). Plusieurs modèles benchmarkés (k-NN, SVM, RF, MLP) + baseline TF-IDF + fusion adaptive multimodale.
+- **F2 — Extraction d'attributs** : peupler marque, modèle, couleur, matière, version depuis la fiche meta du produit identifié, **complétée par observations dirigées** si la fiche ne contient pas l'info (OCR étiquette, code-barres). Pas d'extraction par hallucination VLM.
+- **F3 — Génération texte ancrée** : produire titre + description en français vendeur particulier, **ancrés sur les reviews Amazon réelles du produit identifié** (RAG : retrieval des phrases vendeur → augmentation prompt LLM → génération style-cohérente). BLEU-4 ≥ +5 % vs zero-shot mesurable en P07.
+- **F4 — Pricing transparent** : prix indicatif **algorithmique** (KNN voisins prix + dépréciation par catégorie + pénalité état + ajustement complétude info) avec **niveau de confiance** et **fourchette explicable**. Pas de ML opaque pour le prix (cf. hors-scope §6).
+- **F5 — UI progressive multi-modes** : express (30 s, photo seule), assisté (avec quelques observations ciblées par l'Akinator backend), batch déménagement (queue de N photos avec persistance navigateur).
+- **F6 — Garde-fous OOD** : détecter les produits hors-catalogue d'identification et basculer en mode dégradé "produit non reconnu, saisie assistée" plutôt que d'inventer.
+- **F7 — Cycle de vie modèle automatisé** : retraining hebdomadaire des classifieurs benchmarks, drift detection sur embeddings et distribution catégorielle, hot-reload du modèle servi sans downtime de l'API.
+- **F8 — [OPTIONNEL] Fine-tuning VLM en QLoRA** : à activer **uniquement** si les benchmarks du Cycle 5 (VLM zero-shot grounded) montrent un gain mesurable > +0.05 F1 macro vs baseline. Cf. ADR D-009.
 
 ## 5. Métriques de succès
 
 | Dimension | Métrique | Seuil cible | Statut |
 |-----------|----------|-------------|--------|
+| Identification | Recall@5 retrieval (FAISS) | ≥ 0.80 | à mesurer P05 |
+| Identification | Hit rate top-1 (avec validation VLM) | ≥ 0.70 | à mesurer P05/P06 |
+| Identification | Taux d'hallucination (faux positifs) | < 5 % | à mesurer P06 |
 | Classification | F1 weighted (test set) | ≥ 0.90 | à mesurer P04 |
-| VLM extraction | Parse rate JSON valide | ≥ 95 % | à mesurer P06 |
-| VLM extraction | F1 macro per-attribute | > +0.10 vs zero-shot | à mesurer P06 |
 | Génération texte | BLEU-4 vs zero-shot | gain ≥ +5 % | à mesurer P07 |
 | Pricing | 4 niveaux de confiance distincts | mécanisme implémenté | à coder P08 |
+| Latence | P95 identification end-to-end | < 5 s | à mesurer P10 |
 | Démo | `make` sur VM Ubuntu vierge | stack UP en < 15 min | à valider P14 |
 | Tests | Couverture pytest | 100 % passent (sans gpu/slow) | maintenu en continu |
 
 ## 6. Hors-scope (explicite)
 
-- **Pas de pricing par ML supervisé** — sans données de vente marketplace réelles (historique Rakuten ou équivalent), une régression ML reste un *leurre* : on a constaté lors d'une exploration v2 qu'un XGBoost atteignait MAPE ~38 % vs cible 20 %, plafond imposé par l'absence de signal véritable. Remplacé par un algo déterministe transparent (dépréciation par catégorie + médiane KNN voisins + pénalité état).
-- **Pas de fine-tuning d'un LLM texte pur** (type Qwen3.5-4B local) — gain marginal mesuré en exploration vs Gemini Flash + RAG (ordre de +0.06 BLEU pour 8h+ de training), pas rentable. Le **VLM**, lui, est in-scope (F0).
-- **Pas de re-entraînement du vision encoder** (SigLIP est figé, utilisé en feature extractor) — hors scope d'un projet 3 mois.
+- **Pas de pricing par ML supervisé** — sans données de vente marketplace réelles (historique Rakuten ou équivalent), une régression ML reste un *leurre*. Remplacé par un algo déterministe transparent (dépréciation par catégorie + médiane KNN voisins + pénalité état).
+- **Pas de fine-tuning d'un LLM texte pur** (type Qwen3.5-4B local) — gain marginal mesuré en exploration vs LLM frontier + RAG (ordre de +0.06 BLEU pour 8h+ de training), pas rentable. Le **LLM rédacteur grounded** (F3) utilise un modèle frontier en zero-shot avec retrieval, pas de fine-tune.
+- **Pas de re-entraînement du vision encoder** (SigLIP est figé, utilisé en feature extractor — cf. ADR D-009) — hors scope d'un projet 3 mois.
 - **Pas d'application mobile native** — React responsive web couvre le besoin démo.
 - **Pas d'intégration API Rakuten réelle** — projet école, démo locale suffit. Intégration prod hors scope.
-- **Pas de support multi-langue** — focus français uniquement.
+- **Pas de support multi-langue à l'UI** — focus français uniquement (mais l'encoder texte est multilingue pour absorber le biais B5 anglais des reviews Amazon).
 - **Pas d'authentification utilisateurs réelle** — JWT stub pour la démo. Auth IAM = autre projet.
-- **Pas de scraping Rakuten** — risque légal et instable. On s'appuie sur un dataset public proxy (à choisir en P02 selon disponibilité : Amazon Reviews, eBay scrapes publics, datasets HuggingFace dédiés…).
+- **Pas de scraping Rakuten / Vinted / Leboncoin** — risque légal et instable (ADR D-004 documente le rejet). On s'appuie sur le dataset public Amazon Reviews 2023 (cf. D-004 / D-007 / D-008) comme catalogue proxy d'identification.
+- **Pas de live video stream temps réel** dans le scope nominal — l'UX cible est "stable shot" (capture quand la frame est nette + bien éclairée détectée), pas de tracking continu YOLO. Un cycle dynamique pourra explorer le live video si le projet le justifie après MVP.
+- **Pas de fine-tuning VLM dans le scope nominal** — F8 est explicitement optionnel, ne s'active que sur preuve de bénéfice mesurable (cf. ADR D-009).
 
 ## 7. Contraintes techniques structurantes
 
-- **Hardware fixe** : RTX 4080 16 GB VRAM. Tout doit tenir → quantization 4-bit (NF4 / bitsandbytes) obligatoire pour VLM 7B+.
+- **Hardware fixe** : RTX 4080 16 GB VRAM + 96 GB RAM. Le **catalogue indexé** (26 M items × 1024 dim float16 ≈ 54 GB embeddings) tient en RAM, ce qui rend le retrieval instantané (FAISS HNSW < 10 ms à confirmer en C16).
 - **Soutenance** : à supposer une VM vierge fournie par le jury. La commande `make` doit suffire pour démarrer la stack, pas de manipulation manuelle.
 - **Latence perçue** : streaming SSE obligatoire sur le parcours vendeur, pour que l'utilisateur voie les éléments arriver au lieu d'attendre un spinner. Cible P95 < 5 s pour les premiers tokens.
 - **Pas de marketplace data réelle** : pricing ML impossible (cf. hors-scope).
 - **Délai** : ~3 mois jusqu'à soutenance. Discipline stricte sur l'out-of-scope (R16 dans `BRAIN/golden_rules.md`).
 - **Reproductibilité** : DVC pour les données + MLflow Registry pour les modèles + dvc.lock + seeds fixes. Doit pouvoir tourner identique sur 2 machines.
+- **Anti-hallucination par design** : R19 grounded-avant-génératif (`golden_rules.md`) est la règle structurante du pipeline d'identification.
 
 ## 8. Stakeholders
 
 | Rôle | Personne / Entité | Attente principale |
 |------|-------------------|---------------------|
-| Lead ML moderne | Mathieu Klopp | Pipeline ML SOTA + UX progressive démontrable |
+| Lead ML moderne | Mathieu Klopp | Pipeline ML SOTA grounded + UX progressive démontrable |
 | Lead MLOps + classification baseline | Jean-Baptiste Quéméneur | Infra Bento + Prometheus + Grafana + classifieur classique exploité |
 | Mentor externe | Sébastien (Liora) | Architecture défendable, pattern API découplée du modèle, gateway, closed-loop DAG |
-| Jury final | DataScientest | Couverture sprints 17-20 (MLOps complet), démo `make` sur VM, soutenance 20 min + Q&A |
-| Utilisateur cible (imaginé) | Vendeur particulier occasionnel | UX < 5 min de création annonce, pas de saisie manuelle inutile, prix transparent |
+| Jury final | DataScientest | Couverture sprints (MLOps complet), démo `make` sur VM, soutenance 20 min + Q&A |
+| Utilisateur cible (imaginé) | Vendeur particulier occasionnel | UX < 5 min de création annonce, pas de saisie manuelle inutile, prix transparent, **sentiment de fiabilité** (pas d'invention) |
 
 ## 9. Livrables attendus
 
-- **Repo Git public ou privé** avec branche `main` à jour, démontrable en `make` sur VM vierge
-- **Démo live** parcours vendeur : mode express (1 photo) + mode batch déménagement (N photos)
-- **Script oral 8 sections + slides** pour soutenance 20 min
-- **Diagramme architecture interactif** (HTML)
-- **Modèles fine-tunés** trackés dans MLflow Registry avec alias `@Production`
-- **Datasets versionnés** dans DVC (avec remote local ou MinIO bonus)
-- **Documentation BRAIN/** complète (9 fichiers canoniques + blocs techniques)
-- **Tests pytest** automatisés avec couverture mesurée
+- **Repo Git** avec branche `main` à jour, démontrable en `make` sur VM vierge, **autonome** (aucune dépendance à un autre repo local).
+- **Démo live** parcours vendeur : mode express (1 photo) + mode batch déménagement (N photos) + mode assisté (avec observations dirigées Akinator-backend).
+- **Script oral 8 sections + slides** pour soutenance 20 min.
+- **Diagramme architecture interactif** (HTML) avec les 8 modèles (M1-M8) + 4 modèles externes (E1-E4) du pipeline (cf. `docs/architecture.md` et `docs/modeles.md`).
+- **Modèles** trackés dans MLflow Registry avec alias `@Production`.
+- **Datasets versionnés** dans DVC (avec remote local ou MinIO bonus).
+- **Documentation BRAIN/** complète (9 fichiers canoniques + archive si besoin).
+- **Tests pytest** automatisés avec couverture mesurée.
+- **Documentation produit** : `docs/PROJECT.md` (cadrage), `docs/architecture.md` (vue système), `docs/modeles.md` (fiche par modèle), `docs/exigences_coverage.md` (matrice cycles × exigences).
 
 ---
 
 > **Convention** : ce document tient en 1 page A4 imprimable.
 > Si on ajoute une section, on doit en couper une autre.
-> Toute révision majeure → nouveau document, l'ancien marqué `superseded`.
+> Toute révision majeure → nouvelle ADR dans `BRAIN/decisions.md` qui supersede.
 
 ---
 
