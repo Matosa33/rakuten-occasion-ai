@@ -19,25 +19,22 @@ Chaque script lit dans `data/raw/full/{reviews,meta}/` et écrit dans
 `reports/01_audit/` (cf. `src/config.py` pour les chemins centralisés).
 """
 
-# Périmètre D-008 — 15 catégories evergreen-occasion (Tier 1 + Books physiques).
-# Voir BRAIN/decisions.md D-008 pour la justification critère par critère.
-# Volume mesuré : ~227 GB JSONL → ~57 GB parquet zstd, ~285 M reviews attendus.
+# Périmètre actif D-011 — 4 catégories MVP focused (high-tech + outils).
+# Voir BRAIN/decisions.md D-011 (supersede partiel D-008).
+# Volume mesuré : ~4,5 M items meta + ~96 M reviews (~17 % du périmètre D-008).
+# Justification : focus sur cat où la vision est cruciale et le marché occasion
+# avéré, pour rester tractable sur ressources MVP (vision SigLIP ~3-4h
+# total faisable, FAISS ~9 GB RAM confortable).
+#
+# Les 11 cat exclues du périmètre actif (Clothing, Home, Books, Automotive,
+# Sports, Movies, Toys, CDs, Baby, Musical_Instruments, Appliances) restent
+# téléchargées dans `data/raw/full/` (non supprimées) et peuvent être
+# réintégrées en éditant ce tuple si décision D-XXX ultérieure.
 CATEGORIES: tuple[str, ...] = (
-    "Clothing_Shoes_and_Jewelry",
-    "Home_and_Kitchen",
-    "Books",
     "Electronics",
-    "Tools_and_Home_Improvement",
-    "Automotive",
-    "Sports_and_Outdoors",
     "Cell_Phones_and_Accessories",
-    "Movies_and_TV",
-    "Toys_and_Games",
-    "CDs_and_Vinyl",
-    "Baby_Products",
     "Video_Games",
-    "Musical_Instruments",
-    "Appliances",
+    "Tools_and_Home_Improvement",
 )
 
 

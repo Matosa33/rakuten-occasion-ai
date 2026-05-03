@@ -4,24 +4,24 @@
       "split": "train",
       "schema": "ProductSchema",
       "status": "ok",
-      "n_rows": 18458346,
-      "duration_seconds": 5.0,
+      "n_rows": 3156705,
+      "duration_seconds": 0.9,
       "errors": []
     },
     "val": {
       "split": "val",
       "schema": "ProductSchema",
       "status": "ok",
-      "n_rows": 3955355,
-      "duration_seconds": 1.8,
+      "n_rows": 676435,
+      "duration_seconds": 0.2,
       "errors": []
     },
     "test": {
       "split": "test",
       "schema": "ProductSchema",
       "status": "ok",
-      "n_rows": 3955377,
-      "duration_seconds": 1.8,
+      "n_rows": 676441,
+      "duration_seconds": 0.2,
       "errors": []
     }
   },
@@ -30,27 +30,27 @@
       "split": "train",
       "schema": "ReviewIndexSchema",
       "status": "ok",
-      "n_total": 242753136,
+      "n_total": 67329805,
       "n_sample": 100000,
-      "duration_seconds": 8.3,
+      "duration_seconds": 1.8,
       "errors": []
     },
     "val": {
       "split": "val",
       "schema": "ReviewIndexSchema",
       "status": "ok",
-      "n_total": 53020007,
+      "n_total": 14467234,
       "n_sample": 100000,
-      "duration_seconds": 1.8,
+      "duration_seconds": 0.4,
       "errors": []
     },
     "test": {
       "split": "test",
       "schema": "ReviewIndexSchema",
       "status": "ok",
-      "n_total": 52593901,
+      "n_total": 14509721,
       "n_sample": 100000,
-      "duration_seconds": 1.5,
+      "duration_seconds": 0.4,
       "errors": []
     }
   }
