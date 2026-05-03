@@ -57,6 +57,9 @@ data = [
     "tqdm>=4.66.0",
     "jupyter>=1.0.0",
     "ipykernel>=6.29.0",
+    # Validation déclarative des schemas (sous-todo 1.4 — invariants pipeline post-cleaning).
+    # Pandera version polars-native pour cohérence avec le moteur d'audit (D-006).
+    "pandera[polars]>=0.20.0",
 ]
 
 # Les extras [training], [api], [frontend] seront ajoutés au fil des phases.
