@@ -259,7 +259,7 @@ def main() -> None:
     log.info("Lecture index + val embeddings…")
     index = faiss.read_index(str(text_index_path))
     val_emb = np.load(DATA_EMBEDDINGS / "text" / "text_arctic_val.npy").astype(np.float32)
-    train_meta_cols = ["title", "brand", "color", "store", "_source_category"]
+    train_meta_cols = ["title", "store", "main_category", "_source_category", "price_band"]
     train_meta = pl.read_parquet(
         DATA_PROCESSED_PRODUCTS / "train.parquet",
         columns=train_meta_cols,

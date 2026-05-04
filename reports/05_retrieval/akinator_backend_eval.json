@@ -1,0 +1,30 @@
+{
+  "n_queries_eval": 2000,
+  "ambiguity_gap_threshold": 0.05,
+  "n_ambiguous": 1500,
+  "ambiguous_rate": 0.75,
+  "n_observations_proposable": 1492,
+  "top_discriminative_attributes": {
+    "title": 1477,
+    "store": 8,
+    "main_category": 7
+  },
+  "top_observation_types": {
+    "back_view": 1492
+  },
+  "observation_map_keys": [
+    "color",
+    "storage_capacity",
+    "memory",
+    "model_number",
+    "version",
+    "year",
+    "dimensions",
+    "connector_type",
+    "port",
+    "upc",
+    "ean",
+    "barcode",
+    "brand"
+  ]
+}

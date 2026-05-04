@@ -1,0 +1,42 @@
+{
+  "n_train": 3156705,
+  "embed_dim": 1024,
+  "n_queries_eval": 1000,
+  "results": {
+    "flat": {
+      "name": "Flat",
+      "n_queries": 1000,
+      "top_k": 10,
+      "duration_total_sec": 23.03,
+      "latency_ms_per_query": 23.03,
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "recall_at_10": 1.0
+    },
+    "hnsw": {
+      "name": "HNSW",
+      "n_queries": 1000,
+      "top_k": 10,
+      "duration_total_sec": 0.29,
+      "latency_ms_per_query": 0.29,
+      "recall_at_1": 0.948,
+      "recall_at_5": 0.9722,
+      "recall_at_10": 0.9755
+    },
+    "ivfpq": {
+      "name": "IVF_PQ",
+      "n_queries": 1000,
+      "top_k": 10,
+      "duration_total_sec": 0.19,
+      "latency_ms_per_query": 0.19,
+      "recall_at_1": 0.415,
+      "recall_at_5": 0.4428,
+      "recall_at_10": 0.4426
+    }
+  },
+  "index_size_mb": {
+    "text_arctic_flat.index": 12330.9,
+    "text_arctic_hnsw.index": 13150.1,
+    "text_arctic_ivfpq.index": 125.4
+  }
+}

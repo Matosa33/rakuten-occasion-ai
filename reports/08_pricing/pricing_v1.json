@@ -5,9 +5,9 @@
     "model_type": "Algorithmique transparent (cascade L1-L4)",
     "category_medians_usd": {
       "Tools_and_Home_Improvement": 24.98,
-      "Electronics": 22.95,
       "Video_Games": 24.95,
-      "Cell_Phones_and_Accessories": 12.99
+      "Cell_Phones_and_Accessories": 12.99,
+      "Electronics": 22.95
     },
     "condition_multipliers": {
       "neuf": 1.0,
@@ -30,10 +30,16 @@
       "n": 0
     },
     "L2": {
-      "n": 0
+      "n": 287,
+      "mape_mean": 58.93,
+      "mape_median": 62.15,
+      "mape_p90": 78.62
     },
     "L3": {
-      "n": 0
+      "n": 43,
+      "mape_mean": 57.45,
+      "mape_median": 56.37,
+      "mape_p90": 91.89
     },
     "L4": {
       "n": 0
