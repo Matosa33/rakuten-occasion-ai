@@ -1,0 +1,70 @@
+{
+  "rows": [
+    {
+      "model": "m1_knn_v1",
+      "type": "k-NN via FAISS HNSW (cosine, weighted by similarity)",
+      "f1_w_test": 0.9536756651594417,
+      "f1_w_val": 0.9532376190971025,
+      "f1_macro_test": 0.9414530205486733,
+      "accuracy_test": 0.9536958877418725,
+      "top_3_test": 0.988063999668855,
+      "ece_test": 0.0069,
+      "duration_train_sec": 0
+    },
+    {
+      "model": "m6_fusion_v1",
+      "type": "Fusion adaptive",
+      "f1_w_test": 0.9521903879197966,
+      "f1_w_val": 0.9514306878546437,
+      "f1_macro_test": 0.9418089035645006,
+      "accuracy_test": 0.9522279104903458,
+      "top_3_test": 0.998982912035196,
+      "ece_test": 0.023,
+      "duration_train_sec": 0
+    },
+    {
+      "model": "m5_tfidf_linsvc_v1",
+      "type": "TF-IDF + LinearSVC + Platt",
+      "f1_w_test": 0.9502590679409848,
+      "f1_w_val": 0.9495733241849191,
+      "f1_macro_test": 0.9374511392371231,
+      "accuracy_test": 0.9503120006031568,
+      "top_3_test": 0.9984581064719613,
+      "ece_test": 0.0092,
+      "duration_train_sec": 955.9
+    },
+    {
+      "model": "m4_mlp_v1",
+      "type": "MLP head 1024→512→256→C",
+      "f1_w_test": 0.9489210770887915,
+      "f1_w_val": 0.9484990039364334,
+      "f1_macro_test": 0.9382429650573698,
+      "accuracy_test": 0.948917939628142,
+      "top_3_test": 0.9988690809693677,
+      "ece_test": 0.0013,
+      "duration_train_sec": 513.9
+    },
+    {
+      "model": "m2_svm_v1",
+      "type": "LinearSVC + Platt sur embeddings text Arctic",
+      "f1_w_test": 0.9311306206077702,
+      "f1_w_val": 0.9309002342289647,
+      "f1_macro_test": 0.9192894256668829,
+      "accuracy_test": 0.931226818007779,
+      "top_3_test": 0.9976819855685862,
+      "ece_test": 0.0145,
+      "duration_train_sec": 924.0
+    }
+  ],
+  "winner": {
+    "model": "m1_knn_v1",
+    "type": "k-NN via FAISS HNSW (cosine, weighted by similarity)",
+    "f1_w_test": 0.9536756651594417,
+    "f1_w_val": 0.9532376190971025,
+    "f1_macro_test": 0.9414530205486733,
+    "accuracy_test": 0.9536958877418725,
+    "top_3_test": 0.988063999668855,
+    "ece_test": 0.0069,
+    "duration_train_sec": 0
+  }
+}
