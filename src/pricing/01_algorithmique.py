@@ -206,18 +206,18 @@ def main() -> None:
     log.info("Lecture train + val + index FAISS pour KNN voisins…")
     train = pl.read_parquet(
         DATA_PROCESSED_PRODUCTS / "train.parquet",
-        columns=["parent_asin", "_source_category", "price_numeric"],
+        columns=["parent_asin", "_source_category", "price_num"],
     )
     val = pl.read_parquet(
         DATA_PROCESSED_PRODUCTS / "val.parquet",
-        columns=["parent_asin", "_source_category", "price_numeric"],
+        columns=["parent_asin", "_source_category", "price_num"],
     )
 
     # Médianes catégorie (train) — calibration L3
     category_medians = (
-        train.filter(pl.col("price_numeric") >= MIN_VALID_PRICE_USD)
+        train.filter(pl.col("price_num") >= MIN_VALID_PRICE_USD)
         .group_by("_source_category")
-        .agg(pl.col("price_numeric").median().alias("median_price"))
+        .agg(pl.col("price_num").median().alias("median_price"))
     )
     cat_median_dict = {
         row["_source_category"]: float(row["median_price"])
@@ -233,7 +233,7 @@ def main() -> None:
     has_val_emb = val_emb_path.exists()
 
     eval_results = {"L1": [], "L2": [], "L3": [], "L4": []}
-    train_prices = train["price_numeric"].to_numpy()
+    train_prices = train["price_num"].to_numpy()
 
     if has_index and has_val_emb:
         import faiss
@@ -250,12 +250,13 @@ def main() -> None:
 
         for i, q_idx in enumerate(query_idx):
             true_row = val.row(int(q_idx), named=True)
-            true_price = true_row["price_numeric"]
-            if true_price is None or true_price < MIN_VALID_PRICE_USD:
+            true_price = true_row["price_num"]
+            if true_price is None or float(true_price) < MIN_VALID_PRICE_USD:
                 continue
+            true_price = float(true_price)
             category = true_row["_source_category"]
             knn_prices = [
-                float(train_prices[j]) for j in knn_indices[i] if train_prices[j] is not None
+                float(train_prices[j]) for j in knn_indices[i] if not np.isnan(train_prices[j])
             ]
             result = suggest_price(
                 catalog_price=None,  # Pas de catalogue meta direct ici (simulation)

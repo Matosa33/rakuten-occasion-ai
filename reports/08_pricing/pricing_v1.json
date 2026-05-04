@@ -1,0 +1,51 @@
+{
+  "model": "m8_pricing_v1",
+  "type": "Pricing algorithmique cascade L1-L4",
+  "config": {
+    "model_type": "Algorithmique transparent (cascade L1-L4)",
+    "category_medians_usd": {
+      "Tools_and_Home_Improvement": 24.98,
+      "Electronics": 22.95,
+      "Video_Games": 24.95,
+      "Cell_Phones_and_Accessories": 12.99
+    },
+    "condition_multipliers": {
+      "neuf": 1.0,
+      "tres_bon_etat": 0.75,
+      "bon_etat": 0.55,
+      "correct": 0.35
+    },
+    "category_depreciation_rate": {
+      "Electronics": 0.15,
+      "Cell_Phones_and_Accessories": 0.2,
+      "Video_Games": 0.1,
+      "Tools_and_Home_Improvement": 0.05
+    },
+    "min_valid_price_usd": 0.01,
+    "knn_k": 10,
+    "seed": 42
+  },
+  "eval_metrics": {
+    "L1": {
+      "n": 0
+    },
+    "L2": {
+      "n": 0
+    },
+    "L3": {
+      "n": 0
+    },
+    "L4": {
+      "n": 0
+    }
+  },
+  "sample_suggestion": {
+    "suggested_price_eur": 242.0,
+    "confidence_level": "L1",
+    "confidence_score": 0.9,
+    "range_low": 205.7,
+    "range_high": 278.3,
+    "explanation": "Basé sur prix catalogue 799.99 avec dépréciation 15%/an sur 3.0 an(s), pénalité état bon_etat.",
+    "method": "catalog_meta"
+  }
+}

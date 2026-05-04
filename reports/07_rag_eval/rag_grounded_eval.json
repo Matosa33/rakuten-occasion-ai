@@ -1,0 +1,31 @@
+{
+  "writer": "mock_llm_writer",
+  "n_products_eval": 100,
+  "metrics": {
+    "grounding_coverage": 0.0,
+    "parse_rate": 1.0,
+    "avg_grounding_sentences_per_product": 0.0,
+    "n_products_with_grounding": 0
+  },
+  "sample_listings": [
+    {
+      "product_id": "B08WZDS9XG",
+      "title": "Produit en bon état, vendu par particulier",
+      "description": "",
+      "n_grounding": 0
+    },
+    {
+      "product_id": "B00CX49N0O",
+      "title": "Produit en bon état, vendu par particulier",
+      "description": "",
+      "n_grounding": 0
+    },
+    {
+      "product_id": "B00H9ZDUEW",
+      "title": "Produit en bon état, vendu par particulier",
+      "description": "",
+      "n_grounding": 0
+    }
+  ],
+  "note": "MockLLMWriter pour pré-validation pipeline. À remplacer par OpenRouter en Cycle 9. RAG grounding fonctionnel : on extrait déjà les top-N phrases reviews et on les injecte dans le prompt."
+}

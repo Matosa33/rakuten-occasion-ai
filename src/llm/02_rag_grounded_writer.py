@@ -206,6 +206,12 @@ def main() -> None:
     if reviews_path.exists():
         reviews_index = pl.read_parquet(reviews_path)
         log.info("  reviews_index val : %s lignes", f"{len(reviews_index):_}")
+        if "text" not in reviews_index.columns:
+            log.warning(
+                "reviews_index val n'a pas de colonne 'text' (granularité Option C+ : "
+                "index split-aware uniquement). Pour grounding réel : joindre lazy avec "
+                "data/raw/full/reviews/*.jsonl.gz dans Cycle 6.2 prep — TODO."
+            )
     else:
         log.warning("reviews_index val absent → grounding vide (mock seulement)")
         reviews_index = pl.DataFrame(
