@@ -1,0 +1,323 @@
+"""Cycle 7.1 — Pricing algorithmique transparent (M8).
+
+Système déterministe (aucun ML opaque) qui retourne un **prix indicatif**
++ **niveau de confiance** + **explication lisible**. Préféré à un modèle
+ML opaque (R19 grounded-avant-génératif) car le vendeur particulier doit
+comprendre POURQUOI le prix lui est suggéré.
+
+4 niveaux de confiance (cascade)
+--------------------------------
+- **L1 (haute)** : prix présent dans la fiche meta du produit identifié
+  → prix catalogue × pénalité état × dépréciation âge
+- **L2 (moyenne)** : prix médian des KNN top-10 voisins valides
+  → médiane KNN prix × pénalité état × dépréciation âge
+- **L3 (basse)** : seule la catégorie est connue
+  → médiane prix par catégorie × pénalité état
+- **L4 (très basse)** : produit inconnu / catégorie inconnue
+  → retourne une fourchette large + mode dégradé "saisie manuelle"
+
+Pénalités état (multiplicateur sur prix neuf)
+---------------------------------------------
+- neuf : 1.00
+- très bon état : 0.75
+- bon état : 0.55
+- correct (avec défauts) : 0.35
+
+Dépréciation linéaire par catégorie (config YAML)
+-------------------------------------------------
+- Electronics : -15 %/an (vieillit vite)
+- Cell_Phones_and_Accessories : -20 %/an (très volatile)
+- Video_Games : -10 %/an (collection rallume valeur)
+- Tools_and_Home_Improvement : -5 %/an (vieillit lentement)
+
+Sortie :
+- `data/models/m8_pricing_v1.joblib` (config sérialisée + KNN référence)
+- `reports/08_pricing/pricing_v1.{md,json}` (MAPE par niveau, couverture)
+
+Lance APRÈS Cycle 4.1 (FAISS index pour KNN voisins) :
+
+    python -m src.pricing.01_algorithmique
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from dataclasses import asdict, dataclass
+
+import joblib
+import numpy as np
+import polars as pl
+
+from src.config import (
+    DATA_EMBEDDINGS,
+    DATA_INDEX,
+    DATA_MODELS,
+    DATA_PROCESSED_PRODUCTS,
+    REPORTS_PRICING,
+    SEED,
+)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
+
+MODEL_NAME = "m8_pricing_v1"
+
+# Seuil prix valide : exclut les "0.0" parasites des metas Amazon
+MIN_VALID_PRICE_USD = 0.01
+
+KNN_K = 10
+EVAL_N_QUERIES = 1000
+
+# Pénalités état (multiplicatives sur prix neuf)
+CONDITION_MULTIPLIER = {
+    "neuf": 1.00,
+    "tres_bon_etat": 0.75,
+    "bon_etat": 0.55,
+    "correct": 0.35,
+}
+
+# Dépréciation linéaire par catégorie (taux annuel)
+CATEGORY_DEPRECIATION_RATE = {
+    "Electronics": 0.15,
+    "Cell_Phones_and_Accessories": 0.20,
+    "Video_Games": 0.10,
+    "Tools_and_Home_Improvement": 0.05,
+}
+
+OUT_MODEL = DATA_MODELS / f"{MODEL_NAME}.joblib"
+OUT_JSON = REPORTS_PRICING / "pricing_v1.json"
+
+
+@dataclass
+class PricingResult:
+    """Résultat d'une suggestion de prix."""
+
+    suggested_price_eur: float
+    confidence_level: str  # L1 | L2 | L3 | L4
+    confidence_score: float  # 0..1
+    range_low: float
+    range_high: float
+    explanation: str
+    method: str  # "catalog_meta" | "knn_median" | "category_median" | "fallback"
+
+
+def _depreciate(price: float, age_years: float, category: str) -> float:
+    """Applique la dépréciation linéaire selon la catégorie."""
+    rate = CATEGORY_DEPRECIATION_RATE.get(category, 0.10)
+    multiplier = max(0.10, 1.0 - rate * max(0.0, age_years))
+    return price * multiplier
+
+
+def _apply_condition(price: float, condition: str) -> float:
+    return price * CONDITION_MULTIPLIER.get(condition, 0.55)  # défaut bon_etat
+
+
+def suggest_price(
+    catalog_price: float | None,
+    knn_neighbors_prices: list[float] | None,
+    category_median_price: float | None,
+    condition: str = "bon_etat",
+    age_years: float = 0.0,
+    category: str = "",
+) -> PricingResult:
+    """Cascade L1→L4 pour suggérer un prix avec niveau de confiance."""
+    # L1 : catalogue meta
+    if catalog_price is not None and catalog_price >= MIN_VALID_PRICE_USD:
+        depreciated = _depreciate(catalog_price, age_years, category)
+        suggested = _apply_condition(depreciated, condition)
+        return PricingResult(
+            suggested_price_eur=round(suggested, 2),
+            confidence_level="L1",
+            confidence_score=0.90,
+            range_low=round(suggested * 0.85, 2),
+            range_high=round(suggested * 1.15, 2),
+            explanation=(
+                f"Basé sur prix catalogue {catalog_price:.2f} avec dépréciation "
+                f"{CATEGORY_DEPRECIATION_RATE.get(category, 0.10) * 100:.0f}%/an "
+                f"sur {age_years:.1f} an(s), pénalité état {condition}."
+            ),
+            method="catalog_meta",
+        )
+
+    # L2 : KNN voisins valides
+    if knn_neighbors_prices:
+        valid_prices = [p for p in knn_neighbors_prices if p >= MIN_VALID_PRICE_USD]
+        if len(valid_prices) >= 3:
+            knn_median = float(np.median(valid_prices))
+            depreciated = _depreciate(knn_median, age_years, category)
+            suggested = _apply_condition(depreciated, condition)
+            spread = float(np.std(valid_prices)) / max(knn_median, 1.0)
+            confidence_score = max(0.50, min(0.80, 0.80 - spread))
+            return PricingResult(
+                suggested_price_eur=round(suggested, 2),
+                confidence_level="L2",
+                confidence_score=round(confidence_score, 2),
+                range_low=round(suggested * 0.70, 2),
+                range_high=round(suggested * 1.30, 2),
+                explanation=(
+                    f"Basé sur médiane KNN-{len(valid_prices)} voisins "
+                    f"({knn_median:.2f}, σ={spread:.2f}), dépréciation par âge "
+                    f"et pénalité état {condition}."
+                ),
+                method="knn_median",
+            )
+
+    # L3 : catégorie seule
+    if category_median_price is not None and category_median_price >= MIN_VALID_PRICE_USD:
+        suggested = _apply_condition(category_median_price, condition)
+        return PricingResult(
+            suggested_price_eur=round(suggested, 2),
+            confidence_level="L3",
+            confidence_score=0.30,
+            range_low=round(suggested * 0.50, 2),
+            range_high=round(suggested * 1.50, 2),
+            explanation=(
+                f"Basé sur médiane catégorie '{category}' ({category_median_price:.2f}), "
+                f"pénalité état {condition}. Identification produit incertaine."
+            ),
+            method="category_median",
+        )
+
+    # L4 : fallback
+    return PricingResult(
+        suggested_price_eur=0.0,
+        confidence_level="L4",
+        confidence_score=0.0,
+        range_low=0.0,
+        range_high=0.0,
+        explanation=(
+            "Produit non identifié et catégorie inconnue. "
+            "Saisie manuelle requise par le vendeur."
+        ),
+        method="fallback",
+    )
+
+
+def main() -> None:
+    log.info("=== Cycle 7.1 — Pricing algorithmique transparent (M8) ===")
+    REPORTS_PRICING.mkdir(parents=True, exist_ok=True)
+    DATA_MODELS.mkdir(parents=True, exist_ok=True)
+
+    if OUT_MODEL.exists():
+        log.info("→ %s déjà présent, skip", OUT_MODEL.name)
+        return
+
+    log.info("Lecture train + val + index FAISS pour KNN voisins…")
+    train = pl.read_parquet(
+        DATA_PROCESSED_PRODUCTS / "train.parquet",
+        columns=["parent_asin", "_source_category", "price_numeric"],
+    )
+    val = pl.read_parquet(
+        DATA_PROCESSED_PRODUCTS / "val.parquet",
+        columns=["parent_asin", "_source_category", "price_numeric"],
+    )
+
+    # Médianes catégorie (train) — calibration L3
+    category_medians = (
+        train.filter(pl.col("price_numeric") >= MIN_VALID_PRICE_USD)
+        .group_by("_source_category")
+        .agg(pl.col("price_numeric").median().alias("median_price"))
+    )
+    cat_median_dict = {
+        row["_source_category"]: float(row["median_price"])
+        for row in category_medians.iter_rows(named=True)
+    }
+    log.info("Médianes catégorie (USD) : %s", cat_median_dict)
+
+    # Évaluation : on simule un "produit du val" comme query, on cherche KNN dans train,
+    # on suggère prix L2, on compare au prix vrai du val
+    text_index_path = DATA_INDEX / "text_arctic_hnsw.index"
+    has_index = text_index_path.exists()
+    val_emb_path = DATA_EMBEDDINGS / "text" / "text_arctic_val.npy"
+    has_val_emb = val_emb_path.exists()
+
+    eval_results = {"L1": [], "L2": [], "L3": [], "L4": []}
+    train_prices = train["price_numeric"].to_numpy()
+
+    if has_index and has_val_emb:
+        import faiss
+
+        log.info("Index FAISS + embeddings val OK → eval L2 sur %d queries", EVAL_N_QUERIES)
+        index = faiss.read_index(str(text_index_path))
+        val_emb = np.load(val_emb_path).astype(np.float32)
+        rng = np.random.default_rng(SEED)
+        n_queries = min(EVAL_N_QUERIES, val_emb.shape[0])
+        query_idx = rng.choice(val_emb.shape[0], size=n_queries, replace=False)
+        queries = val_emb[query_idx]
+
+        _, knn_indices = index.search(queries, KNN_K)
+
+        for i, q_idx in enumerate(query_idx):
+            true_row = val.row(int(q_idx), named=True)
+            true_price = true_row["price_numeric"]
+            if true_price is None or true_price < MIN_VALID_PRICE_USD:
+                continue
+            category = true_row["_source_category"]
+            knn_prices = [
+                float(train_prices[j]) for j in knn_indices[i] if train_prices[j] is not None
+            ]
+            result = suggest_price(
+                catalog_price=None,  # Pas de catalogue meta direct ici (simulation)
+                knn_neighbors_prices=knn_prices,
+                category_median_price=cat_median_dict.get(category),
+                condition="bon_etat",
+                age_years=2.0,  # défaut simulé
+                category=category,
+            )
+            ape = abs(result.suggested_price_eur - true_price) / true_price * 100
+            eval_results[result.confidence_level].append(ape)
+    else:
+        log.warning("Index ou val_emb absent → eval L2 skippée. Run Cycle 2.3 + 4.1 puis relancer.")
+
+    # Synthèse MAPE par niveau
+    metrics = {}
+    for level, apes in eval_results.items():
+        if apes:
+            metrics[level] = {
+                "n": len(apes),
+                "mape_mean": round(float(np.mean(apes)), 2),
+                "mape_median": round(float(np.median(apes)), 2),
+                "mape_p90": round(float(np.percentile(apes, 90)), 2),
+            }
+        else:
+            metrics[level] = {"n": 0}
+
+    log.info("Métriques pricing par niveau :")
+    for level, m in metrics.items():
+        log.info("  %s : %s", level, m)
+
+    artifact = {
+        "model_type": "Algorithmique transparent (cascade L1-L4)",
+        "category_medians_usd": cat_median_dict,
+        "condition_multipliers": CONDITION_MULTIPLIER,
+        "category_depreciation_rate": CATEGORY_DEPRECIATION_RATE,
+        "min_valid_price_usd": MIN_VALID_PRICE_USD,
+        "knn_k": KNN_K,
+        "seed": SEED,
+    }
+    joblib.dump(artifact, OUT_MODEL)
+
+    full = {
+        "model": MODEL_NAME,
+        "type": "Pricing algorithmique cascade L1-L4",
+        "config": artifact,
+        "eval_metrics": metrics,
+        "sample_suggestion": asdict(
+            suggest_price(
+                catalog_price=799.99,
+                knn_neighbors_prices=[750.0, 780.0, 820.0, 790.0],
+                category_median_price=500.0,
+                condition="bon_etat",
+                age_years=3.0,
+                category="Electronics",
+            )
+        ),
+    }
+    OUT_JSON.write_text(json.dumps(full, indent=2, ensure_ascii=False), encoding="utf-8")
+    log.info("→ %s + %s", OUT_MODEL.name, OUT_JSON.name)
+    log.info("Cycle 7.1 pricing algorithmique OK.")
+
+
+if __name__ == "__main__":
+    main()
