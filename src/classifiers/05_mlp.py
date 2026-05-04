@@ -53,6 +53,11 @@ HIDDEN_LAYERS = (512, 256)
 BATCH_SIZE = 256
 MAX_ITER = 30  # peut s'arrêter avant via early stopping
 
+# Sample stratifié train pour speed (MLP sur 3M × 1024 × 30 epochs = 2-4h)
+# 500k items × 1024 × 30 epochs sur CPU = ~30-60 min.
+# Anti-leakage préservé : sample côté train uniquement, val + test entiers.
+TRAIN_SAMPLE_SIZE = 500_000
+
 OUT_MODEL = DATA_MODELS / f"{MODEL_NAME}.joblib"
 OUT_METRICS = REPORTS_CLASSIFIERS / f"{MODEL_NAME}.json"
 
@@ -80,17 +85,35 @@ def main() -> None:
 
     log.info("Lecture embeddings…")
     t0 = time.time()
-    X_train, y_train = _load_split("train")
+    X_train_full, y_train_full = _load_split("train")
     X_val, y_val = _load_split("val")
     X_test, y_test = _load_split("test")
     log.info(
-        "  train=%s, val=%s, test=%s, dim=%d (%.1fs)",
-        f"{X_train.shape[0]:_}",
+        "  train_full=%s, val=%s, test=%s, dim=%d (%.1fs)",
+        f"{X_train_full.shape[0]:_}",
         f"{X_val.shape[0]:_}",
         f"{X_test.shape[0]:_}",
-        X_train.shape[1],
+        X_train_full.shape[1],
         time.time() - t0,
     )
+
+    # Sample stratifié train (R3 anti-leakage : sample côté train UNIQUEMENT)
+    if X_train_full.shape[0] > TRAIN_SAMPLE_SIZE:
+        from sklearn.model_selection import train_test_split
+
+        log.info(
+            "Sample stratifié train %s → %s", f"{X_train_full.shape[0]:_}", f"{TRAIN_SAMPLE_SIZE:_}"
+        )
+        X_train, _, y_train, _ = train_test_split(
+            X_train_full,
+            y_train_full,
+            train_size=TRAIN_SAMPLE_SIZE,
+            stratify=y_train_full,
+            random_state=SEED,
+        )
+        del X_train_full, y_train_full
+    else:
+        X_train, y_train = X_train_full, y_train_full
 
     log.info(
         "Train MLP hidden=%s batch=%d max_iter=%d early_stopping…",
@@ -169,6 +192,7 @@ def main() -> None:
             "batch_size": BATCH_SIZE,
             "max_iter": MAX_ITER,
             "early_stopping": True,
+            "train_sample_size": TRAIN_SAMPLE_SIZE,
             "seed": SEED,
         },
         "duration_train_sec": round(duration_train, 1),

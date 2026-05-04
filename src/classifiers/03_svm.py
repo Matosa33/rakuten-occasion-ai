@@ -46,6 +46,11 @@ MODEL_NAME = "m2_svm_v1"
 C_PARAM = 1.0
 CALIBRATION_CV = 3
 
+# Sample stratifié train pour speed (LinearSVC sur 3M × 1024 + Platt CV3 = 2-3h)
+# 500k items × 1024 dim = ~30-60 min. Anti-leakage préservé : sample côté train uniquement,
+# val + test évalués entiers (676k chacun).
+TRAIN_SAMPLE_SIZE = 500_000
+
 OUT_MODEL = DATA_MODELS / f"{MODEL_NAME}.joblib"
 OUT_METRICS = REPORTS_CLASSIFIERS / f"{MODEL_NAME}.json"
 
@@ -73,17 +78,35 @@ def main() -> None:
 
     log.info("Lecture embeddings…")
     t0 = time.time()
-    X_train, y_train = _load_split("train")
+    X_train_full, y_train_full = _load_split("train")
     X_val, y_val = _load_split("val")
     X_test, y_test = _load_split("test")
     log.info(
-        "  train=%s, val=%s, test=%s, dim=%d (%.1fs)",
-        f"{X_train.shape[0]:_}",
+        "  train_full=%s, val=%s, test=%s, dim=%d (%.1fs)",
+        f"{X_train_full.shape[0]:_}",
         f"{X_val.shape[0]:_}",
         f"{X_test.shape[0]:_}",
-        X_train.shape[1],
+        X_train_full.shape[1],
         time.time() - t0,
     )
+
+    # Sample stratifié train (R3 anti-leakage : sample côté train UNIQUEMENT)
+    if X_train_full.shape[0] > TRAIN_SAMPLE_SIZE:
+        from sklearn.model_selection import train_test_split
+
+        log.info(
+            "Sample stratifié train %s → %s", f"{X_train_full.shape[0]:_}", f"{TRAIN_SAMPLE_SIZE:_}"
+        )
+        X_train, _, y_train, _ = train_test_split(
+            X_train_full,
+            y_train_full,
+            train_size=TRAIN_SAMPLE_SIZE,
+            stratify=y_train_full,
+            random_state=SEED,
+        )
+        del X_train_full, y_train_full
+    else:
+        X_train, y_train = X_train_full, y_train_full
 
     log.info("Train LinearSVC C=%g balanced + Platt CV=%d…", C_PARAM, CALIBRATION_CV)
     t_train = time.time()
@@ -146,6 +169,7 @@ def main() -> None:
         "type": "LinearSVC + Platt sur embeddings text Arctic",
         "perimeter": list(CATEGORIES),
         "n_train": X_train.shape[0],
+        "n_train_sample_size": TRAIN_SAMPLE_SIZE,
         "n_val": X_val.shape[0],
         "n_test": X_test.shape[0],
         "embed_dim": X_train.shape[1],
@@ -153,6 +177,7 @@ def main() -> None:
             "C": C_PARAM,
             "class_weight": "balanced",
             "calibration_cv": CALIBRATION_CV,
+            "train_sample_size": TRAIN_SAMPLE_SIZE,
             "seed": SEED,
         },
         "duration_train_sec": round(duration_train, 1),
