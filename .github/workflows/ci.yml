@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,data]"
+
+      - name: Ruff lint
+        run: ruff check src/ tests/
+
+      - name: Ruff format check
+        run: ruff format --check src/ tests/
+
+      - name: Pytest (skip slow data tests)
+        run: pytest tests/ -v --tb=short -m "not slow"
+        env:
+          PYTHONIOENCODING: utf-8
+
+  brain-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify BRAIN structure
+        run: |
+          test -f BRAIN/bios.md
+          test -f BRAIN/state.md
+          test -f BRAIN/decisions.md
+          test -f BRAIN/golden_rules.md
+          test -f BRAIN/to-do.md
+          test -f BRAIN/learnings.md
+          test -f BRAIN/erreur_a_ne_plus_faire.md
+          test -f BRAIN/glossary.md
+          test -f BRAIN/context.md
+          echo "BRAIN 9 fichiers présents"
