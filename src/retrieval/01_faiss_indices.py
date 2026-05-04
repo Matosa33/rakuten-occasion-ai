@@ -75,7 +75,7 @@ def _load_val_queries() -> np.ndarray:
     return np.ascontiguousarray(arr)
 
 
-def _build_flat(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
+def _build_flat(embeddings: np.ndarray) -> faiss.Index:  # noqa: F821
     import faiss
 
     log.info(
@@ -88,7 +88,7 @@ def _build_flat(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
     return index
 
 
-def _build_hnsw(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
+def _build_hnsw(embeddings: np.ndarray) -> faiss.Index:  # noqa: F821
     import faiss
 
     log.info("  Build HNSW M=%d efC=%d…", HNSW_M, HNSW_EF_CONSTRUCTION)
@@ -101,7 +101,7 @@ def _build_hnsw(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
     return index
 
 
-def _build_ivfpq(embeddings: np.ndarray) -> "faiss.Index":  # noqa: F821
+def _build_ivfpq(embeddings: np.ndarray) -> faiss.Index:  # noqa: F821
     import faiss
 
     d = embeddings.shape[1]

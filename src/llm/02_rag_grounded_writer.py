@@ -91,10 +91,10 @@ class MockLLMWriter(LLMWriter):
     name = "mock_llm_writer"
 
     def generate(self, prompt: str) -> str:
-        # Détecte le type de prompt par heuristique sur les marqueurs
-        if '"title"' in prompt:
-            return json.dumps({"title": "Produit en bon état, vendu par particulier"})
-        if '"description"' in prompt:
+        # Détecte le type de prompt par marqueur dans la dernière section
+        # (ordre : description avant title, car description prompt mentionne aussi 'title' via observed_attrs)
+        last_block = prompt[-200:]
+        if '"description"' in last_block:
             return json.dumps(
                 {
                     "description": (
@@ -104,6 +104,8 @@ class MockLLMWriter(LLMWriter):
                     )
                 }
             )
+        if '"title"' in last_block:
+            return json.dumps({"title": "Produit en bon état, vendu par particulier"})
         return json.dumps({"l2_suggestion": "Inconnu", "confidence": 0.0})
 
 
