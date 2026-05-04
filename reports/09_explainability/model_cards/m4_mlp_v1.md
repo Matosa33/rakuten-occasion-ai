@@ -13,6 +13,16 @@
 ## Limitations
 - Boîte noire (peu d'explainability native). Sensible au scaling.
 
+## Métriques mesurées (test split)
+
+- **f1_weighted** : 0.9489
+- **f1_macro** : 0.9382
+- **accuracy** : 0.9489
+- **top_1_accuracy** : 0.9489
+- **top_3_accuracy** : 0.9989
+- **ece** : 0.0013
+- **duration_eval_sec** : 18.8800
+
 ## Source de vérité métriques
 
 `reports/04_classifiers_bench/m4_mlp_v1.json`

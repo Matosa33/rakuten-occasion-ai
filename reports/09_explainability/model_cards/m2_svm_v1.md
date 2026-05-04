@@ -13,6 +13,16 @@
 ## Limitations
 - Hyperparamètre C non tuné (default). Linéaire — pas d'interactions.
 
+## Métriques mesurées (test split)
+
+- **f1_weighted** : 0.9311
+- **f1_macro** : 0.9193
+- **accuracy** : 0.9312
+- **top_1_accuracy** : 0.9312
+- **top_3_accuracy** : 0.9977
+- **ece** : 0.0145
+- **duration_eval_sec** : 21.8400
+
 ## Source de vérité métriques
 
 `reports/04_classifiers_bench/m2_svm_v1.json`
