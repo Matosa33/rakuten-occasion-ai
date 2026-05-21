@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Condition, DescribeResponse } from "../api";
 
 // IKEA effect : le vendeur peut éditer le titre/description générés. En
@@ -13,6 +13,13 @@ export function ListingCard({
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
   const [copied, setCopied] = useState(false);
+
+  // Re-synchronise l'état local quand une NOUVELLE annonce arrive (sinon on
+  // reste bloqué sur le 1er produit — bug derived-state-from-props).
+  useEffect(() => {
+    setTitle(listing.title);
+    setDescription(listing.description);
+  }, [listing]);
 
   async function copyAll() {
     await navigator.clipboard.writeText(`${title}\n\n${description}`);

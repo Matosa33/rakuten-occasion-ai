@@ -39,6 +39,13 @@ export default function App() {
     if (!textHint.trim()) return;
     setLoading(true);
     setError(null);
+    // Nettoie tout l'état aval d'une analyse précédente (évite de rester
+    // "bloqué" sur le 1er résultat si on relance une identification).
+    setIdent(null);
+    setChosenAsin(null);
+    setChosenCategory(null);
+    setPrice(null);
+    setListing(null);
     try {
       const res = await identify(textHint);
       setIdent(res);
@@ -176,7 +183,11 @@ export default function App() {
             className="mt-6 space-y-4"
           >
             <PriceCard price={price} />
-            <ListingCard listing={listing} initialCondition={condition} />
+            <ListingCard
+              key={chosenAsin ?? "listing"}
+              listing={listing}
+              initialCondition={condition}
+            />
             <button
               onClick={reset}
               className="w-full rounded-xl border border-slate-300 py-2.5 text-slate-600 transition hover:bg-slate-50"
