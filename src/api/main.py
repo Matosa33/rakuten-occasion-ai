@@ -2,18 +2,19 @@
 
 Endpoints
 ---------
-- `GET /health` — version, modèles chargés
-- `POST /identify` — image vendeur → top-K candidats + VLM validation + Akinator si ambig
+- `GET /health` — version, services chargés
+- `POST /identify` — texte vendeur → top-K candidats + OOD + Akinator si ambig
 - `POST /price` — produit identifié + condition → suggestion prix L1-L4
-- `POST /describe` — produit identifié + condition → titre + description grounded RAG
+- `POST /describe` — produit identifié + condition → titre + description grounded RAG (Cycle 9.3b)
 
 Lifespan
 --------
-Au démarrage : charge en mémoire les modèles (FAISS index, M5 TF-IDF,
-M8 pricing, prompt templates). Au shutdown : libère.
+Au démarrage : instancie + charge `IdentificationService` (FAISS HNSW +
+métadonnées train, encodeur Arctic lazy) et `PricingService` (M8). Au
+shutdown : libère.
 
-Pattern asynchrone (Cycle 9.3) : `aiohttp` pour appels VLM/LLM externes,
-`asyncio.Semaphore(8)` pour throttler les appels OpenRouter.
+Text-only MVP (cf. D-014) : `/identify` exploite `text_hint` encodé par
+Arctic. La branche vision (image_url + SigLIP) est différée post-MVP.
 
 Lance :
 
@@ -28,68 +29,51 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 
+from src.api.pipeline import IdentificationService, PricingService
 from src.api.schemas import (
+    CandidateMeta,
     DescribeRequest,
     DescribeResponse,
     HealthResponse,
     IdentifyRequest,
     IdentifyResponse,
+    ObservationToRequest,
     PriceRequest,
     PriceResponse,
 )
-from src.config import DATA_INDEX, DATA_MODELS
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
 # Singleton state (rempli au lifespan startup, consommé par les endpoints)
 APP_STATE: dict[str, Any] = {
-    "faiss_index": None,
-    "m5_tfidf": None,
-    "m8_pricing": None,
-    "vlm_validator": None,
-    "llm_writer": None,
+    "identification": None,
+    "pricing": None,
 }
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Hot loading des modèles au démarrage, free au shutdown."""
-    log.info("=== Lifespan startup : chargement modèles ===")
+    """Hot loading des services au démarrage, free au shutdown."""
+    log.info("=== Lifespan startup : chargement services ===")
 
-    # FAISS index (lazy : seulement si fichier dispo)
-    faiss_path = DATA_INDEX / "text_arctic_hnsw.index"
-    if faiss_path.exists():
-        try:
-            import faiss
+    # IdentificationService (FAISS + métadonnées train ; encodeur Arctic lazy)
+    try:
+        ident = IdentificationService()
+        ident.load()
+        APP_STATE["identification"] = ident
+    except (FileNotFoundError, ImportError) as e:
+        log.warning("  IdentificationService indispo : %s → /identify renverra 503", e)
 
-            APP_STATE["faiss_index"] = faiss.read_index(str(faiss_path))
-            APP_STATE["faiss_index"].hnsw.efSearch = 64
-            log.info("  FAISS HNSW chargé : %d vecteurs", APP_STATE["faiss_index"].ntotal)
-        except ImportError:
-            log.warning("  faiss non installé → /identify renverra 503")
-    else:
-        log.warning("  faiss index absent → /identify renverra 503")
+    # PricingService (M8 cascade)
+    try:
+        pricing = PricingService()
+        pricing.load()
+        APP_STATE["pricing"] = pricing
+    except (FileNotFoundError, ImportError) as e:
+        log.warning("  PricingService indispo : %s → /price renverra 503", e)
 
-    # M5 TF-IDF (fallback texte)
-    m5_path = DATA_MODELS / "m5_tfidf_linsvc_v1.joblib"
-    if m5_path.exists():
-        import joblib
-
-        APP_STATE["m5_tfidf"] = joblib.load(m5_path)
-        log.info("  M5 TF-IDF chargé")
-
-    # M8 Pricing (config algorithmique)
-    m8_path = DATA_MODELS / "m8_pricing_v1.joblib"
-    if m8_path.exists():
-        import joblib
-
-        APP_STATE["m8_pricing"] = joblib.load(m8_path)
-        log.info("  M8 Pricing config chargée")
-
-    # VLM + LLM : à instancier en Cycle 9.3 (OpenRouter via aiohttp)
-    log.info("  VLM/LLM clients : à wirer en Cycle 9.3 (OpenRouter)")
-
+    log.info("  VLM/LLM clients : à wirer en Cycle 9.3b (OpenRouter)")
     log.info("=== Lifespan ready ===")
     yield
     log.info("=== Lifespan shutdown ===")
@@ -106,34 +90,92 @@ app = FastAPI(
 
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
+    ident = APP_STATE.get("identification")
+    pricing = APP_STATE.get("pricing")
     return HealthResponse(
         status="ok",
         version="0.1.0",
         models_loaded={
-            "faiss_index": APP_STATE.get("faiss_index") is not None,
-            "m5_tfidf": APP_STATE.get("m5_tfidf") is not None,
-            "m8_pricing": APP_STATE.get("m8_pricing") is not None,
+            "identification": ident is not None and ident.ready,
+            "pricing": pricing is not None and pricing.ready,
         },
     )
 
 
 @app.post("/identify", response_model=IdentifyResponse)
 async def identify(req: IdentifyRequest) -> IdentifyResponse:
-    """Pipeline complet identification : retrieval → VLM → Akinator."""
-    if APP_STATE.get("faiss_index") is None:
-        raise HTTPException(503, "FAISS index pas chargé. Lance Cycle 2.4 d'abord.")
-    raise HTTPException(501, "Endpoint non implémenté. Cf. Cycle 9.1 RUN.")
+    """Identification retrieval-first (text-only MVP) : FAISS → OOD → Akinator."""
+    ident: IdentificationService | None = APP_STATE.get("identification")
+    if ident is None or not ident.ready:
+        raise HTTPException(
+            503, "IdentificationService indisponible. Vérifie Cycle 2.4 (index FAISS)."
+        )
+
+    query = req.text_hint.strip()
+    if not query:
+        raise HTTPException(
+            422,
+            "text_hint vide. Le MVP text-only requiert une description texte "
+            "(la branche vision image_url est différée post-MVP, cf. D-014).",
+        )
+
+    result = ident.identify(query, already_observed=req.already_observed)
+
+    next_obs = None
+    if result.next_observation is not None:
+        obs = result.next_observation
+        next_obs = ObservationToRequest(
+            attribute=obs.attribute,
+            observation_type=obs.observation_type,
+            instruction=obs.instruction,
+            discriminative_score=obs.discriminative_score,
+        )
+
+    return IdentifyResponse(
+        status=result.status,
+        top_candidates=[
+            CandidateMeta(
+                parent_asin=c.parent_asin,
+                title=c.title,
+                brand=c.store,
+                category=c.category,
+                score=max(0.0, min(1.0, c.score)),
+            )
+            for c in result.candidates
+        ],
+        vlm_validation=None,  # Cycle 9.3b
+        next_observation=next_obs,
+        explanation=result.explanation,
+    )
 
 
 @app.post("/price", response_model=PriceResponse)
 async def price(req: PriceRequest) -> PriceResponse:
-    """Pricing transparent cascade L1-L4."""
-    if APP_STATE.get("m8_pricing") is None:
-        raise HTTPException(503, "M8 pricing pas chargé. Lance Cycle 7.1 d'abord.")
-    raise HTTPException(501, "Endpoint non implémenté. Cf. Cycle 9.1 RUN.")
+    """Pricing transparent cascade L1-L4 (M8)."""
+    pricing: PricingService | None = APP_STATE.get("pricing")
+    if pricing is None or not pricing.ready:
+        raise HTTPException(503, "PricingService indisponible. Vérifie Cycle 7.1 (M8).")
+
+    result = pricing.suggest(
+        category=req.category.value,
+        condition=req.condition.value,
+        age_years=req.age_years,
+    )
+    return PriceResponse(
+        suggested_price_eur=result.suggested_price_eur,
+        confidence_level=result.confidence_level,
+        confidence_score=result.confidence_score,
+        range_low=result.range_low,
+        range_high=result.range_high,
+        explanation=result.explanation,
+        method=result.method,
+    )
 
 
 @app.post("/describe", response_model=DescribeResponse)
 async def describe(req: DescribeRequest) -> DescribeResponse:
-    """Génération titre + description grounded RAG."""
-    raise HTTPException(501, "Endpoint non implémenté. Cf. Cycle 9.1 RUN.")
+    """Génération titre + description grounded RAG via OpenRouter (Cycle 9.3b)."""
+    raise HTTPException(
+        501,
+        "Endpoint /describe : wiring OpenRouter prévu Cycle 9.3b (nécessite OPENROUTER_API_KEY).",
+    )
