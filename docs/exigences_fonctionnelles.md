@@ -16,7 +16,7 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 | **F1** Classification **L2** | sous-catégorie, F1≥0.90 | 3 | 🔴 écart | livré **L1** (`_source_category`, F1_w=0.954) ; **L2 jamais modélisée**. Incohérence BRAIN : to-do disait `_source_category`, PROJECT disait L2. Résolu D-018 (surface cat fine du produit identifié). |
 | **F2** Extraction attributs | marque/modèle/couleur/version + obs. dirigées | 4 | 🔴 manquant | attributs riches **droppés au cleaning (D-006)** → ni extraction, ni Akinator discriminant |
 | **F3** Génération ancrée reviews | RAG sur reviews réelles du produit | 6,9 | 🟡 partiel | Gemma génère depuis **meta produit**, **PAS depuis reviews réelles** (`reviews_index` sans colonne `text`) |
-| **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | 🔴 cassé (wiring) | M8 algo ✅ (L1/L2/L3/L4) MAIS `/price` ne reçoit **pas le produit identifié** → tombe en L3 médiane cat → **prix absurde** (RTX 4080 = 12€) |
+| **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | ✅ conforme | `/price` reçoit `parent_asin` + `catalog_price` (L1) + `neighbor_prices` (L2). **RTX 4080 = 589€** (était 12€). Reste : conversion USD→EUR à raffiner (mineur). |
 | **F5** UI multi-modes | express / assisté / batch | 10 | 🟡 partiel | express ✅ ; **assisté (boucle Akinator) non câblé** ; batch ⏸️ (D-016, dépend vision) |
 | **F6** Garde-fous OOD | seuil + mode dégradé | 4,9 | ✅ conforme | 3 niveaux confiance D-017, candidats toujours montrés |
 | **F7** Cycle de vie auto | retrain + drift + hot-reload | 11-14 | ⚪ non démarré | cycles MLOps à venir |

@@ -17,6 +17,7 @@ export interface CandidateMeta {
   category: Category;
   image_url: string;
   score: number;
+  price: number | null;
 }
 
 export interface ObservationToRequest {
@@ -73,11 +74,23 @@ export function identify(textHint: string, alreadyObserved: Record<string, strin
   });
 }
 
-export function priceProduct(category: Category, condition: Condition, ageYears = 2) {
+export function priceProduct(
+  category: Category,
+  condition: Condition,
+  opts: {
+    parentAsin?: string;
+    catalogPrice?: number | null;
+    neighborPrices?: number[];
+    ageYears?: number;
+  } = {}
+) {
   return postJson<PriceResponse>("/price", {
+    parent_asin: opts.parentAsin ?? null,
     category,
     condition,
-    age_years: ageYears,
+    age_years: opts.ageYears ?? 2,
+    catalog_price: opts.catalogPrice ?? null,
+    neighbor_prices: opts.neighborPrices ?? [],
   });
 }
 

@@ -177,6 +177,7 @@ async def identify(req: IdentifyRequest) -> IdentifyResponse:
                 category=c.category,
                 image_url=c.image_url,
                 score=max(0.0, min(1.0, c.score)),
+                price=c.price,
             )
             for c in result.candidates
         ],
@@ -197,6 +198,8 @@ async def price(req: PriceRequest) -> PriceResponse:
         category=req.category.value,
         condition=req.condition.value,
         age_years=req.age_years,
+        catalog_price=req.catalog_price,
+        knn_neighbors_prices=req.neighbor_prices or None,
     )
     return PriceResponse(
         suggested_price_eur=result.suggested_price_eur,

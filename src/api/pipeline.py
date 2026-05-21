@@ -62,6 +62,7 @@ class Candidate:
     category: str
     score: float
     image_url: str = ""
+    price: float | None = None  # prix catalogue (USD) du produit, pour le pricing F4
 
 
 @dataclass
@@ -83,6 +84,7 @@ class IdentificationService:
         self._index = None
         self._train_meta: pl.DataFrame | None = None
         self._train_labels: np.ndarray | None = None
+        self._train_prices: np.ndarray | None = None
         self._image_lookup: dict[str, str] = {}
         self._encoder = None
         self._loaded = False
@@ -100,12 +102,13 @@ class IdentificationService:
         self._index = faiss.read_index(str(index_path))
         self._index.hnsw.efSearch = HNSW_EF_SEARCH
 
-        log.info("Loading train metadata (parent_asin, title, store, category)…")
+        log.info("Loading train metadata (parent_asin, title, store, category, price)…")
         self._train_meta = pl.read_parquet(
             DATA_PROCESSED_PRODUCTS / "train.parquet",
-            columns=["parent_asin", "title", "store", "_source_category"],
+            columns=["parent_asin", "title", "store", "_source_category", "price_num"],
         )
         self._train_labels = self._train_meta["_source_category"].to_numpy()
+        self._train_prices = self._train_meta["price_num"].to_numpy()  # prix catalogue (F4)
 
         # Lookup vignettes (optionnel : graceful si absent, cf. 06_build_images_lookup)
         lookup_path = DATA_PROCESSED_PRODUCTS / "images_lookup.parquet"
@@ -186,6 +189,12 @@ class IdentificationService:
             if i < 0:
                 continue
             asin = str(self._train_meta["parent_asin"][int(i)])
+            raw_price = self._train_prices[int(i)]
+            price = (
+                float(raw_price)
+                if raw_price is not None and not np.isnan(raw_price) and raw_price > 0
+                else None
+            )
             candidates.append(
                 Candidate(
                     parent_asin=asin,
@@ -194,6 +203,7 @@ class IdentificationService:
                     category=str(self._train_labels[int(i)]),
                     score=float(s),
                     image_url=self._image_lookup.get(asin, ""),
+                    price=price,
                 )
             )
 

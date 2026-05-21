@@ -58,6 +58,7 @@ class CandidateMeta(BaseModel):
     category: CategoryEnum
     image_url: str = ""
     score: float = Field(..., ge=0.0, le=1.0)
+    price: float | None = None  # prix catalogue USD (pour le pricing F4)
 
 
 class ObservationToRequest(BaseModel):
@@ -87,6 +88,13 @@ class PriceRequest(BaseModel):
     category: CategoryEnum
     condition: ConditionEnum = ConditionEnum.BON_ETAT
     age_years: float = Field(default=2.0, ge=0.0, le=50.0)
+    # Contexte produit pour le pricing F4 (fourni par le front depuis /identify) :
+    catalog_price: float | None = Field(
+        None, description="Prix catalogue du produit identifié (USD) → L1"
+    )
+    neighbor_prices: list[float] = Field(
+        default_factory=list, description="Prix des candidats voisins FAISS (USD) → L2"
+    )
 
 
 class PriceResponse(BaseModel):
