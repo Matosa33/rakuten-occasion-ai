@@ -21,6 +21,7 @@ Lance :
 from __future__ import annotations
 
 import ast
+import json
 import logging
 
 import polars as pl
@@ -31,6 +32,27 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 log = logging.getLogger(__name__)
 
 OUT_LOOKUP = DATA_PROCESSED_PRODUCTS / "product_lookup.parquet"
+
+# Facettes discriminantes curées : nom canonique → clés `details` possibles.
+# On exclut le bruit non-discriminant pour l'UX (Item Weight, Date First Available,
+# Best Sellers Rank…). L'Akinator (entropie) choisira la meilleure facette PAR requête
+# parmi celles présentes ET qui varient dans le set de candidats.
+FACET_KEYS: dict[str, tuple[str, ...]] = {
+    "color": ("Color",),
+    "capacity": (
+        "Memory Storage Capacity",
+        "Digital Storage Capacity",
+        "Hard Disk Size",
+        "Capacity",
+        "RAM",
+    ),
+    "size": ("Screen Size", "Size", "Display Size"),
+    "material": ("Material",),
+    "form_factor": ("Form Factor",),
+    "style": ("Style", "Configuration"),
+    "feature": ("Special Feature", "Special features"),
+    "compatible_with": ("Compatible Devices", "Compatible Phone Models"),
+}
 
 
 def _extract_thumb_url(images_str: str | None) -> str | None:
@@ -71,6 +93,43 @@ def _extract_category_leaf(categories_str: str | None) -> str | None:
     return str(leaf) if leaf else None
 
 
+def _parse_details(details_str: str | None) -> dict:
+    """Parse le dict `details` stringifié (une seule fois par item)."""
+    if not details_str or details_str in ("{}", "null", "None"):
+        return {}
+    try:
+        d = ast.literal_eval(details_str)
+    except (ValueError, SyntaxError):
+        return {}
+    return d if isinstance(d, dict) else {}
+
+
+def _brand_from_details(d: dict) -> str | None:
+    """Vraie marque fabricant (`Brand`, fallback `Manufacturer`).
+
+    Plus fiable que `store` (boutique Amazon, souvent un revendeur "Amazon Renewed").
+    Cf. découverte user 2026-05-21.
+    """
+    brand = d.get("Brand") or d.get("Manufacturer")
+    return str(brand).strip() if brand else None
+
+
+def _facets_from_details(d: dict) -> dict[str, str]:
+    """Extrait les facettes discriminantes curées présentes (FACET_KEYS).
+
+    Retourne {nom_canonique: valeur} pour les seules facettes présentes — base
+    de la sélection Akinator par entropie côté requête.
+    """
+    facets: dict[str, str] = {}
+    for canon, keys in FACET_KEYS.items():
+        for k in keys:
+            v = d.get(k)
+            if v:
+                facets[canon] = str(v).strip()
+                break
+    return facets
+
+
 def main() -> None:
     log.info("=== Lookup produit parent_asin → (vignette, catégorie fine) ===")
     DATA_PROCESSED_PRODUCTS.mkdir(parents=True, exist_ok=True)
@@ -85,24 +144,40 @@ def main() -> None:
         if not meta_path.exists():
             log.warning("  meta %s absente, skip", cat)
             continue
-        df = pl.read_parquet(meta_path, columns=["parent_asin", "images", "categories"])
+        df = pl.read_parquet(
+            meta_path, columns=["parent_asin", "images", "categories", "details", "store"]
+        )
         image_urls = [_extract_thumb_url(s) for s in df["images"]]
         cat_leaves = [_extract_category_leaf(s) for s in df["categories"]]
+        # Parse details UNE fois → marque + facettes discriminantes
+        brands: list[str | None] = []
+        facets_json: list[str | None] = []
+        for det, store in zip(df["details"], df["store"], strict=False):
+            d = _parse_details(det)
+            brands.append(_brand_from_details(d) or (str(store).strip() if store else None))
+            facets = _facets_from_details(d)
+            facets_json.append(json.dumps(facets, ensure_ascii=False) if facets else None)
         sub = pl.DataFrame(
             {
                 "parent_asin": df["parent_asin"],
                 "image_url": image_urls,
                 "category_leaf": cat_leaves,
+                "brand": brands,
+                "facets_json": facets_json,
             }
         )
         n_img = sub.filter(pl.col("image_url").is_not_null()).height
         n_cat = sub.filter(pl.col("category_leaf").is_not_null()).height
+        n_brand = sub.filter(pl.col("brand").is_not_null()).height
+        n_facet = sub.filter(pl.col("facets_json").is_not_null()).height
         log.info(
-            "  %s : %s items (%s vignettes, %s cat fines)",
+            "  %s : %s items (%s vignettes, %s cat, %s marques, %s avec facettes)",
             cat,
             f"{df.height:_}",
             f"{n_img:_}",
             f"{n_cat:_}",
+            f"{n_brand:_}",
+            f"{n_facet:_}",
         )
         frames.append(sub)
 

@@ -1,13 +1,9 @@
 import { useMemo, useState } from "react";
 import type { Category, IdentifyResponse } from "../api";
+import { bestDiscriminativeFacet, FACET_LABELS } from "../facets";
 
-// Hick's Law : on met en avant le top 3 (les plus probables), mais on laisse
-// dérouler la liste complète (triée par similarité) pour le vendeur exigeant.
+// Hick's Law : top 3 mis en avant, liste complète déroulable (triée par similarité).
 const TOP_HIGHLIGHT = 3;
-// Akinator text-only (D-019) : on propose un filtre par facette si ≥2 marques
-// distinctes parmi les candidats — désambiguation par attribut, sans photo.
-const MIN_FACET_OPTIONS = 2;
-const MAX_FACET_CHIPS = 6;
 
 const STATUS_LABEL: Record<IdentifyResponse["status"], { text: string; color: string }> = {
   identified: { text: "Produit identifié ✓", color: "text-emerald-600" },
@@ -27,69 +23,74 @@ export function CandidatePicker({
   onBack: () => void;
 }) {
   const status = STATUS_LABEL[ident.status];
-  const [brandFilter, setBrandFilter] = useState<string | null>(null);
-
-  // Facette discriminante = marque (déjà présente, le vendeur la connaît).
-  const brands = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const c of ident.top_candidates) {
-      const b = c.brand?.trim();
-      if (b) counts.set(b, (counts.get(b) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, MAX_FACET_CHIPS)
-      .map(([b]) => b);
-  }, [ident]);
-
-  const showFacet = brands.length >= MIN_FACET_OPTIONS;
+  // Akinator multi-étapes (D-019) : filtres appliqués {facette: valeur}.
+  const [applied, setApplied] = useState<Record<string, string>>({});
 
   const visible = useMemo(
     () =>
-      brandFilter
-        ? ident.top_candidates.filter((c) => c.brand?.trim() === brandFilter)
-        : ident.top_candidates,
-    [ident, brandFilter]
+      ident.top_candidates.filter((c) =>
+        Object.entries(applied).every(([k, v]) => (c.attributes?.[k] ?? "") === v)
+      ),
+    [ident, applied]
   );
+
+  // Facette la plus discriminante sur le set courant, hors facettes déjà choisies.
+  const facet = useMemo(
+    () => bestDiscriminativeFacet(visible, new Set(Object.keys(applied))),
+    [visible, applied]
+  );
+
+  function pick(key: string, value: string) {
+    setApplied((prev) => ({ ...prev, [key]: value }));
+  }
+  function removeFilter(key: string) {
+    setApplied((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm">
       <p className={`text-sm font-semibold ${status.color}`}>{status.text}</p>
       <p className="mt-1 text-xs text-slate-500">{ident.explanation}</p>
 
-      {/* Akinator text-only : filtre par marque pour lever l'ambiguïté (D-019). */}
-      {showFacet && (
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <p className="text-xs font-medium text-amber-800">Affinez par marque :</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+      {/* Filtres déjà appliqués (retirables) */}
+      {Object.keys(applied).length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {Object.entries(applied).map(([k, v]) => (
             <button
-              onClick={() => setBrandFilter(null)}
-              className={`rounded-full px-2.5 py-1 text-xs transition ${
-                brandFilter === null
-                  ? "bg-amber-600 text-white"
-                  : "bg-white text-amber-700 hover:bg-amber-100"
-              }`}
+              key={k}
+              onClick={() => removeFilter(k)}
+              className="rounded-full bg-rose-100 px-2.5 py-1 text-xs text-rose-700 hover:bg-rose-200"
+              title="Retirer ce filtre"
             >
-              Toutes
+              {(FACET_LABELS[k] ?? k)}: {v} ✕
             </button>
-            {brands.map((b) => (
+          ))}
+        </div>
+      )}
+
+      {/* Akinator : question sur la facette la plus discriminante (narrowing). */}
+      {facet && visible.length > 1 && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-medium text-amber-800">{facet.label} ?</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {facet.options.map((opt) => (
               <button
-                key={b}
-                onClick={() => setBrandFilter(b)}
-                className={`rounded-full px-2.5 py-1 text-xs transition ${
-                  brandFilter === b
-                    ? "bg-amber-600 text-white"
-                    : "bg-white text-amber-700 hover:bg-amber-100"
-                }`}
+                key={opt}
+                onClick={() => pick(facet.key, opt)}
+                className="rounded-full bg-white px-2.5 py-1 text-xs text-amber-700 transition hover:bg-amber-100"
               >
-                {b}
+                {opt}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Candidats TOUJOURS affichés (humain = validateur, R19) — même en incertain. */}
+      {/* Candidats TOUJOURS affichés (humain = validateur, R19). */}
       {visible.length > 0 ? (
         <ul className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1">
           {visible.map((c, idx) => (
@@ -101,7 +102,6 @@ export function CandidatePicker({
                   idx < TOP_HIGHLIGHT ? "border-slate-200" : "border-slate-100"
                 }`}
               >
-                {/* Vignette produit (URL CDN Amazon). Fallback : masquée si KO. */}
                 {c.image_url ? (
                   <img
                     src={c.image_url}
@@ -132,14 +132,8 @@ export function CandidatePicker({
         </ul>
       ) : (
         <div className="mt-4 text-sm text-slate-600">
-          Aucun candidat — vous pouvez saisir l'annonce manuellement.
+          Aucun candidat avec ces critères — retirez un filtre ou saisissez manuellement.
         </div>
-      )}
-
-      {ident.status === "uncertain" && ident.top_candidates.length > 0 && (
-        <p className="mt-3 text-xs text-slate-400">
-          Si aucun ne correspond, recommencez avec plus de détails (marque, modèle, capacité).
-        </p>
       )}
 
       <button

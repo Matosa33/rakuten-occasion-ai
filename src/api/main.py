@@ -173,12 +173,13 @@ async def identify(req: IdentifyRequest) -> IdentifyResponse:
             CandidateMeta(
                 parent_asin=c.parent_asin,
                 title=c.title,
-                brand=c.store,
+                brand=c.brand,
                 category=c.category,
                 image_url=c.image_url,
                 score=max(0.0, min(1.0, c.score)),
                 price=c.price,
                 category_fine=c.category_fine,
+                attributes=c.attributes,
             )
             for c in result.candidates
         ],

@@ -19,6 +19,7 @@ export interface CandidateMeta {
   score: number;
   price: number | null;
   category_fine: string;
+  attributes: Record<string, string>;
 }
 
 export interface ObservationToRequest {

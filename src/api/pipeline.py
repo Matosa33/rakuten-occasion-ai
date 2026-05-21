@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import importlib
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import polars as pl
@@ -58,12 +58,14 @@ _rag = importlib.import_module("src.llm.02_rag_grounded_writer")
 class Candidate:
     parent_asin: str
     title: str
-    store: str
+    store: str  # boutique Amazon (souvent revendeur, ex "Amazon Renewed")
     category: str  # _source_category (L1 macro : Electronics, …)
     score: float
     image_url: str = ""
     price: float | None = None  # prix catalogue (USD) du produit, pour le pricing F4
     category_fine: str = ""  # catégorie feuille du breadcrumb (L2/L3, ex: "Graphics Cards")
+    brand: str = ""  # vraie marque fabricant (details['Brand'], fallback store)
+    attributes: dict[str, str] = field(default_factory=dict)  # facettes Akinator (color, capacity…)
 
 
 @dataclass
@@ -88,6 +90,8 @@ class IdentificationService:
         self._train_prices: np.ndarray | None = None
         self._image_lookup: dict[str, str] = {}
         self._category_lookup: dict[str, str] = {}
+        self._brand_lookup: dict[str, str] = {}
+        self._facets_lookup: dict[str, dict[str, str]] = {}
         self._encoder = None
         self._loaded = False
 
@@ -127,10 +131,25 @@ class IdentificationService:
                 for a, c in zip(asins, lk["category_leaf"].to_list(), strict=False)
                 if c is not None
             }
+            self._brand_lookup = (
+                {a: b for a, b in zip(asins, lk["brand"].to_list(), strict=False) if b is not None}
+                if "brand" in lk.columns
+                else {}
+            )
+            if "facets_json" in lk.columns:
+                import json as _json
+
+                self._facets_lookup = {
+                    a: _json.loads(f)
+                    for a, f in zip(asins, lk["facets_json"].to_list(), strict=False)
+                    if f
+                }
             log.info(
-                "  Lookup produit : %s vignettes, %s catégories fines",
+                "  Lookup produit : %s vignettes, %s cat fines, %s marques, %s avec facettes",
                 f"{len(self._image_lookup):_}",
                 f"{len(self._category_lookup):_}",
+                f"{len(self._brand_lookup):_}",
+                f"{len(self._facets_lookup):_}",
             )
         else:
             log.warning(
@@ -210,16 +229,28 @@ class IdentificationService:
                 if raw_price is not None and not np.isnan(raw_price) and raw_price > 0
                 else None
             )
+            store = str(self._train_meta["store"][int(i)] or "")
+            brand = self._brand_lookup.get(asin, "") or store
+            category_fine = self._category_lookup.get(asin, "")
+            # Attributs facetables pour l'Akinator (entropie côté front) : facettes
+            # curées + marque + catégorie fine, uniquement les non-vides.
+            attributes = dict(self._facets_lookup.get(asin, {}))
+            if brand:
+                attributes["brand"] = brand
+            if category_fine:
+                attributes["category"] = category_fine
             candidates.append(
                 Candidate(
                     parent_asin=asin,
                     title=str(self._train_meta["title"][int(i)] or ""),
-                    store=str(self._train_meta["store"][int(i)] or ""),
+                    store=store,
                     category=str(self._train_labels[int(i)]),
                     score=float(s),
                     image_url=self._image_lookup.get(asin, ""),
                     price=price,
-                    category_fine=self._category_lookup.get(asin, ""),
+                    category_fine=category_fine,
+                    brand=brand,
+                    attributes=attributes,
                 )
             )
 
