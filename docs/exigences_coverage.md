@@ -21,30 +21,30 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | | C06 | Cleaning + features + split | **1.2** | ✅ done (4d2509b puis b338555 sur 4 cat) |
 | | C07 | Anti-leakage 5 patterns | **1.3** | ✅ done (2107cb8) |
 | | C08 | Validation Pandera | **1.4** | ✅ done (6ed4393) |
-| **P03 Représentations** | C09 | Embeddings concept + similarité | **2.1** | not_started |
-| | C10 | Vision encoders CLIP/SigLIP | **2.2** | not_started (E1 SigLIP) |
-| | C11 | Text encoders Arctic | **2.3** | not_started (E2 Arctic) |
-| **P04 Classification** | C12 | Benchmark 4 classifieurs | **3.1** | not_started (M1-M4) |
-| | C13 | TF-IDF + LinearSVC + Platt | **3.2** | not_started (M5) |
-| | C14 | Métriques évaluation | **3.3** | not_started |
-| | C15 | Fusion adaptive multimodale | **3.4** | not_started (M6) |
-| **P05 Retrieval** | C16 | FAISS vector search | **4.1** | not_started (M7) |
-| | C17 | Multi-view + RRF | **4.2** | not_started |
-| | C18 | OOD guardrails | **4.3** | not_started (+ Akinator backend) |
-| **P06 VLM** | C19 | VLM zero-shot | **5.1** | not_started (E3) |
-| | C20 | Fine-tuning VLM QLoRA | **5.2** (OPTIONNEL F8) | conditional (M9) |
-| **P07 LLM/RAG** | C21 | LLMs prompt engineering | **6.1** | not_started |
-| | C22 | RAG grounding | **6.2** | not_started (E4) |
-| **P08 Pricing** | C23 | Pricing algorithmique | **7.1** | not_started (M8) |
-| **P09 Explainability** | C24 | SHAP + t-SNE + Model Cards | **8.1** | not_started |
-| **P10 API** | C25 | FastAPI async | **9.1** | not_started |
-| | C26 | Pydantic v2 | **9.2** | not_started |
-| | C27 | Async I/O patterns | **9.3** | not_started |
-| | C28 | SSE streaming | **9.4** | not_started |
-| | C29 | SQLAlchemy sessions | **9.5** | not_started |
-| **P11 Frontend** | C30 | React Vite Tailwind | **10.1** | not_started |
-| | C31 | UX progressive neuro-marketing | **10.2** | not_started |
-| | C32 | Mode batch queue localStorage | **10.3** | not_started |
+| **P03 Représentations** | C09 | Embeddings concept + similarité | **2.1** | ✅ done |
+| | C10 | Vision encoders CLIP/SigLIP | **2.2** | ⏸️ différé D-014 (CDN throttling) |
+| | C11 | Text encoders Arctic | **2.3** | ✅ done (E2 Arctic, 3,16M vec) |
+| **P04 Classification** | C12 | Benchmark 4 classifieurs | **3.1** | ✅ done (M1,M2,M4 ; M3 skippé D-015) |
+| | C13 | TF-IDF + LinearSVC + Platt | **3.2** | ✅ done (M5 F1_w=0.950) |
+| | C14 | Métriques évaluation | **3.3** | ✅ done (metrics.py) |
+| | C15 | Fusion adaptive multimodale | **3.4** | ✅ done (M6) |
+| **P05 Retrieval** | C16 | FAISS vector search | **4.1** | ✅ done (M7 HNSW recall@1=0.948) |
+| | C17 | Multi-view + RRF | **4.2** | ✅ done (text-only mono-view) |
+| | C18 | OOD guardrails | **4.3** | ✅ done (3-niveaux D-017 + Akinator) |
+| **P06 VLM** | C19 | VLM zero-shot | **5.1** | 🟡 mock (réel gated vision D-014) |
+| | C20 | Fine-tuning VLM QLoRA | **5.2** (OPTIONNEL F8) | ⏸️ conditional (non déclenché) |
+| **P07 LLM/RAG** | C21 | LLMs prompt engineering | **6.1** | ✅ done (prompt templates) |
+| | C22 | RAG grounding | **6.2** | ✅ done (E4 Gemma, grounding description) |
+| **P08 Pricing** | C23 | Pricing algorithmique | **7.1** | ✅ done (M8 cascade L1-L4) |
+| **P09 Explainability** | C24 | SHAP + t-SNE + Model Cards | **8.1** | ✅ done (12 cards + t-SNE) |
+| **P10 API** | C25 | FastAPI async | **9.1** | ✅ done |
+| | C26 | Pydantic v2 | **9.2** | ✅ done |
+| | C27 | Async I/O patterns | **9.3** | ✅ done (OpenRouter + to_thread) |
+| | C28 | SSE streaming | **9.4** | ✅ done (/identify/stream) |
+| | C29 | SQLAlchemy sessions | **9.5** | ✅ done (persistence + /history) |
+| **P11 Frontend** | C30 | React Vite Tailwind | **10.1** | ✅ done |
+| | C31 | UX progressive neuro-marketing | **10.2** | ✅ done (Zeigarnik/Hick/Anchoring/IKEA) |
+| | C32 | Mode batch queue localStorage | **10.3** | ⏸️ différé D-016 (dépend vision) |
 | **P12 MLOps tracking** | C33 | MLflow tracking | **11.1** | not_started |
 | | C34 | MLflow Registry + hot reload | **11.2** | not_started |
 | | C35 | DVC pipelines | **11.3** | not_started |
@@ -65,7 +65,11 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | | C50 | Tests intégration + sécurité | **15.3** | not_started |
 | | C51 | Soutenance défense | **15.4** | not_started |
 
-**51 cours / 51 répartis sur 16 cycles. Statut global : 5 / 51 implémentés (10 %)**.
+**51 cours / 51 répartis sur 16 cycles. Statut global : ~33 / 51 implémentés (~65 %)** au 2026-05-21 (Cycles 0-10 faits, hors différés D-014/D-015/D-016 ; Cycles 11-15 à venir).
+
+> ⚠️ Cette table (cours pédagogiques C01-C51) est secondaire. **Sources de vérité du statut** :
+> `BRAIN/to-do.md` (table d'ensemble des 16 cycles) + `docs/exigences_fonctionnelles.md` (état réel F0-F8).
+> Statuts cours détaillés ci-dessous re-synchronisés au fil des RESTIT.
 
 ---
 
