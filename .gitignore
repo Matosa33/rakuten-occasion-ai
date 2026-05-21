@@ -61,9 +61,12 @@ data/processed/**/*.parquet
 data/processed/*.json
 data/processed/**/*.json
 data/embeddings/*.npy
+data/embeddings/**/*.npy
 data/embeddings/*.bin
+data/embeddings/**/*.bin
 data/embeddings/*.parquet
 data/index/*.index
+data/index/**/*.index
 data/index/*.faiss
 data/fine_tuning/*.jsonl
 data/images/

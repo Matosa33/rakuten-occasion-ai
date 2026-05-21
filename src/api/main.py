@@ -33,7 +33,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 
 from src.api import persistence
-from src.api.pipeline import IdentificationService, PricingService
+from src.api.pipeline import DescribeService, IdentificationService, PricingService
 from src.api.schemas import (
     CandidateMeta,
     DescribeRequest,
@@ -53,6 +53,7 @@ log = logging.getLogger(__name__)
 APP_STATE: dict[str, Any] = {
     "identification": None,
     "pricing": None,
+    "describe": None,
 }
 
 
@@ -77,7 +78,14 @@ async def lifespan(app: FastAPI):
     except (FileNotFoundError, ImportError) as e:
         log.warning("  PricingService indispo : %s → /price renverra 503", e)
 
-    log.info("  VLM/LLM clients : à wirer en Cycle 9.3b (OpenRouter)")
+    # DescribeService (métadonnées train ; writer OpenRouter si clé, sinon mock)
+    try:
+        desc = DescribeService()
+        desc.load()
+        APP_STATE["describe"] = desc
+    except (FileNotFoundError, ImportError) as e:
+        log.warning("  DescribeService indispo : %s → /describe renverra 503", e)
+
     log.info("=== Lifespan ready ===")
     yield
     log.info("=== Lifespan shutdown ===")
@@ -96,12 +104,14 @@ app = FastAPI(
 async def health() -> HealthResponse:
     ident = APP_STATE.get("identification")
     pricing = APP_STATE.get("pricing")
+    desc = APP_STATE.get("describe")
     return HealthResponse(
         status="ok",
         version="0.1.0",
         models_loaded={
             "identification": ident is not None and ident.ready,
             "pricing": pricing is not None and pricing.ready,
+            "describe": desc is not None and desc.ready,
         },
     )
 
@@ -191,10 +201,22 @@ async def price(req: PriceRequest) -> PriceResponse:
 
 @app.post("/describe", response_model=DescribeResponse)
 async def describe(req: DescribeRequest) -> DescribeResponse:
-    """Génération titre + description grounded RAG via OpenRouter (Cycle 9.3b)."""
-    raise HTTPException(
-        501,
-        "Endpoint /describe : wiring OpenRouter prévu Cycle 9.3b (nécessite OPENROUTER_API_KEY).",
+    """Génération titre + description grounded RAG (E4 OpenRouter si clé, sinon mock D-013)."""
+    desc: DescribeService | None = APP_STATE.get("describe")
+    if desc is None or not desc.ready:
+        raise HTTPException(
+            503, "DescribeService indisponible. Vérifie le catalogue train.parquet."
+        )
+    try:
+        result = await asyncio.to_thread(desc.describe, req.parent_asin, req.condition.value)
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from e
+    return DescribeResponse(
+        title=result.title,
+        description=result.description,
+        grounding_sentences_count=result.grounding_sentences_count,
+        grounding_sentences_preview=result.grounding_sentences_preview,
+        parse_ok=result.parse_ok,
     )
 
 

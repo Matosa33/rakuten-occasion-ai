@@ -46,6 +46,8 @@ AMBIGUITY_GAP_THRESHOLD = 0.05
 # Akinator backend (import dynamique : module préfixé par un chiffre)
 _akinator = importlib.import_module("src.retrieval.04_akinator_backend")
 _pricing = importlib.import_module("src.pricing.01_algorithmique")
+_prompts = importlib.import_module("src.llm.01_prompt_templates")
+_rag = importlib.import_module("src.llm.02_rag_grounded_writer")
 
 
 @dataclass
@@ -234,4 +236,75 @@ class PricingService:
             condition=condition,
             age_years=age_years,
             category=category,
+        )
+
+
+@dataclass
+class DescribeResult:
+    title: str
+    description: str
+    grounding_sentences_count: int
+    grounding_sentences_preview: list[str]
+    parse_ok: bool
+
+
+class DescribeService:
+    """Service de rédaction grounded RAG (E4).
+
+    Charge les métadonnées produit (train), récupère les phrases grounding
+    (TODO Cycle 6.2 prep : reviews_index n'a pas la colonne `text`, lazy
+    join raw à faire), puis génère titre + description via OpenRouter si
+    `OPENROUTER_API_KEY` présent, sinon MockLLMWriter (D-013).
+    """
+
+    def __init__(self) -> None:
+        self._train_meta: pl.DataFrame | None = None
+        self._loaded = False
+
+    def load(self) -> None:
+        log.info("Loading train metadata for DescribeService…")
+        self._train_meta = pl.read_parquet(
+            DATA_PROCESSED_PRODUCTS / "train.parquet",
+            columns=["parent_asin", "title", "store", "_source_category"],
+        )
+        self._loaded = True
+
+    @property
+    def ready(self) -> bool:
+        return self._loaded
+
+    def _get_writer(self):
+        """OpenRouter si clé dispo (E4 réel), sinon Mock (D-013)."""
+        openrouter = importlib.import_module("src.llm.openrouter_client")
+        if openrouter.is_available():
+
+            class OpenRouterWriter(_rag.LLMWriter):
+                name = "openrouter_gemini_flash"
+
+                def generate(self, prompt: str) -> str:
+                    return openrouter.chat_completion(prompt)
+
+            return OpenRouterWriter()
+        return _rag.MockLLMWriter()
+
+    def describe(self, parent_asin: str, condition: str = "bon état") -> DescribeResult:
+        if not self._loaded:
+            raise RuntimeError("DescribeService non chargé.")
+        row = self._train_meta.filter(pl.col("parent_asin") == parent_asin)
+        if row.is_empty():
+            raise ValueError(f"parent_asin {parent_asin} introuvable dans le catalogue.")
+        product_meta = row.row(0, named=True)
+
+        # Grounding : reviews_index sans colonne text (Option C+) → vide pour MVP
+        empty_reviews = pl.DataFrame(schema={"text": pl.Utf8})
+        writer = self._get_writer()
+        listing = _rag.generate_listing(
+            product_meta, empty_reviews, writer, seller_condition=condition
+        )
+        return DescribeResult(
+            title=listing.title,
+            description=listing.description,
+            grounding_sentences_count=len(listing.grounding_sentences_used),
+            grounding_sentences_preview=listing.grounding_sentences_used[:3],
+            parse_ok=listing.parse_ok,
         )

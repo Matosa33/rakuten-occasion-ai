@@ -147,6 +147,33 @@ def extract_useful_sentences(
     return deduped[:top_n]
 
 
+def _extract_json_field(raw: str, field: str) -> str | None:
+    """Extrait `field` d'une réponse LLM tolérante au markdown/prose.
+
+    Gère : JSON pur, JSON entouré de ```json … ```, ou JSON noyé dans du
+    texte. Stratégie : tenter json.loads direct, sinon retirer les fences,
+    sinon regex sur le premier objet {...} contenant le field.
+    """
+    candidates = [raw.strip()]
+    # Retire les fences markdown ```json … ``` ou ``` … ```
+    fence = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+    if fence:
+        candidates.insert(0, fence.group(1))
+    # Premier objet {...} brut
+    brace = re.search(r"\{.*\}", raw, re.DOTALL)
+    if brace:
+        candidates.append(brace.group(0))
+
+    for cand in candidates:
+        try:
+            data = json.loads(cand)
+            if isinstance(data, dict) and field in data:
+                return str(data[field])
+        except (json.JSONDecodeError, TypeError):
+            continue
+    return None
+
+
 def generate_listing(
     product_meta: dict,
     reviews_df: pl.DataFrame,
@@ -172,14 +199,13 @@ def generate_listing(
     title_raw = writer.generate(inputs.render_title())
     desc_raw = writer.generate(inputs.render_description())
 
-    parse_ok = True
-    try:
-        title = json.loads(title_raw).get("title", "")
-        description = json.loads(desc_raw).get("description", "")
-    except (json.JSONDecodeError, AttributeError, TypeError):
+    title = _extract_json_field(title_raw, "title")
+    description = _extract_json_field(desc_raw, "description")
+    parse_ok = title is not None and description is not None
+    if title is None:
         title = "(parse error)"
+    if description is None:
         description = "(parse error)"
-        parse_ok = False
 
     return GeneratedListing(
         product_id=str(product_meta.get("parent_asin", "")),

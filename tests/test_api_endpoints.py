@@ -145,9 +145,10 @@ class TestPrice:
 
 
 class TestDescribe:
-    def test_describe_501_not_wired(self):
+    def test_describe_503_when_not_loaded(self):
+        # /describe est câblé (9.3b) → 503 quand le service n'est pas chargé
         r = client.post("/describe", json={"parent_asin": "B001"})
-        assert r.status_code == 501
+        assert r.status_code == 503
 
 
 class TestPricingService:
