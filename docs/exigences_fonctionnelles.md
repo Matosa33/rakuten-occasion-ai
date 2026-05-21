@@ -14,7 +14,7 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 |---|---|---|---|---|
 | **F0** Identification grounded | photo→retrieval→Akinator→VLM validateur | 2,4,5,9 | 🟡 partiel | retrieval ✅ (text-only D-014) ; **VLM validateur E3 = mock, pas câblé** ; **Akinator superficiel** (attributs droppés D-006) |
 | **F1** Classification **L2** | sous-catégorie, F1≥0.90 | 3 | ✅ conforme (via grounding) | L1 classifieurs M1-M6 (F1_w=0.954, garde-fou) **+** catégorie fine réelle du produit identifié surface (breadcrumb `categories` → ex "Graphics Cards"). Résolu D-018 : pas de classifieur L2 séparé, on a le produit exact. |
-| **F2** Extraction attributs | marque/modèle/couleur/version + obs. dirigées | 4 | 🔴 manquant | attributs riches **droppés au cleaning (D-006)** → ni extraction, ni Akinator discriminant |
+| **F2** Extraction attributs + Akinator | marque/modèle/couleur/version + obs. dirigées | 4 | 🟡 partiel | **Akinator text-only = filtre facette marque** (D-019, actionnable : chips → filtre liste). Obs. photo/OCR gated vision (D-014). Extraction couleur/version via `details` = extension future. |
 | **F3** Génération ancrée reviews | RAG sur reviews réelles du produit | 6,9 | 🟡 partiel | Gemma génère depuis **meta produit**, **PAS depuis reviews réelles** (`reviews_index` sans colonne `text`) |
 | **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | ✅ conforme | `/price` reçoit `parent_asin` + `catalog_price` (L1) + `neighbor_prices` (L2). **RTX 4080 = 589€** (était 12€). Reste : conversion USD→EUR à raffiner (mineur). |
 | **F5** UI multi-modes | express / assisté / batch | 10 | 🟡 partiel | express ✅ ; **assisté (boucle Akinator) non câblé** ; batch ⏸️ (D-016, dépend vision) |
