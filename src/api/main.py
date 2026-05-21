@@ -175,6 +175,7 @@ async def identify(req: IdentifyRequest) -> IdentifyResponse:
                 title=c.title,
                 brand=c.store,
                 category=c.category,
+                image_url=c.image_url,
                 score=max(0.0, min(1.0, c.score)),
             )
             for c in result.candidates

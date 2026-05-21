@@ -1,8 +1,8 @@
 import type { Category, IdentifyResponse } from "../api";
 
-// Hick's Law : on limite l'affichage aux 3 meilleurs candidats pour ne pas
-// noyer le vendeur sous les choix.
-const MAX_CANDIDATES = 3;
+// Hick's Law : on met en avant le top 3 (les plus probables), mais on laisse
+// dérouler la liste complète (triée par similarité) pour le vendeur exigeant.
+const TOP_HIGHLIGHT = 3;
 
 const STATUS_LABEL: Record<IdentifyResponse["status"], { text: string; color: string }> = {
   identified: { text: "Produit identifié ✓", color: "text-emerald-600" },
@@ -37,21 +37,37 @@ export function CandidatePicker({
 
       {/* Candidats TOUJOURS affichés (humain = validateur, R19) — même en incertain. */}
       {ident.top_candidates.length > 0 ? (
-        <ul className="mt-4 space-y-2">
-          {ident.top_candidates.slice(0, MAX_CANDIDATES).map((c) => (
+        <ul className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1">
+          {ident.top_candidates.map((c, idx) => (
             <li key={c.parent_asin}>
               <button
                 disabled={loading}
                 onClick={() => onChoose(c.parent_asin, c.category)}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-200 p-3 text-left transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40"
+                className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40 ${
+                  idx < TOP_HIGHLIGHT ? "border-slate-200" : "border-slate-100"
+                }`}
               >
-                <span className="min-w-0">
+                {/* Vignette produit (URL CDN Amazon). Fallback : masquée si KO. */}
+                {c.image_url ? (
+                  <img
+                    src={c.image_url}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => (e.currentTarget.style.visibility = "hidden")}
+                    className="h-12 w-12 shrink-0 rounded-lg border border-slate-100 object-contain"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-300">
+                    📦
+                  </div>
+                )}
+                <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-slate-800">
                     {c.title || "(sans titre)"}
                   </span>
                   <span className="text-xs text-slate-400">{c.category}</span>
                 </span>
-                <span className="ml-3 shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                <span className="ml-1 shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
                   {(c.score * 100).toFixed(0)}%
                 </span>
               </button>

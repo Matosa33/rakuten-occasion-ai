@@ -37,7 +37,7 @@ ARCTIC_EMBED_DIM = 1024
 ARCTIC_QUERY_PROMPT = "query"  # Arctic Embed v2 prompt key pour les requêtes
 
 HNSW_EF_SEARCH = 64
-TOP_K_RETRIEVAL = 5
+TOP_K_RETRIEVAL = 30  # candidats retournés, triés par similarité (scroll UI)
 
 # Seuils de confiance — 3 niveaux (D-017).
 # Le seuil F0.5=0.600 (D-012) était calibré sur item↔item (texte complet). En usage
@@ -61,6 +61,7 @@ class Candidate:
     store: str
     category: str
     score: float
+    image_url: str = ""
 
 
 @dataclass
@@ -82,11 +83,12 @@ class IdentificationService:
         self._index = None
         self._train_meta: pl.DataFrame | None = None
         self._train_labels: np.ndarray | None = None
+        self._image_lookup: dict[str, str] = {}
         self._encoder = None
         self._loaded = False
 
     def load(self) -> None:
-        """Charge index FAISS + métadonnées train. Encodeur reste lazy."""
+        """Charge index FAISS + métadonnées train + lookup vignettes. Encodeur lazy."""
         import faiss
 
         index_path = DATA_INDEX / "text_arctic_hnsw.index"
@@ -104,6 +106,20 @@ class IdentificationService:
             columns=["parent_asin", "title", "store", "_source_category"],
         )
         self._train_labels = self._train_meta["_source_category"].to_numpy()
+
+        # Lookup vignettes (optionnel : graceful si absent, cf. 06_build_images_lookup)
+        lookup_path = DATA_PROCESSED_PRODUCTS / "images_lookup.parquet"
+        if lookup_path.exists():
+            lk = pl.read_parquet(lookup_path)
+            self._image_lookup = dict(
+                zip(lk["parent_asin"].to_list(), lk["image_url"].to_list(), strict=False)
+            )
+            log.info("  Lookup vignettes : %s URLs", f"{len(self._image_lookup):_}")
+        else:
+            log.warning(
+                "  images_lookup.parquet absent → vignettes vides (lance 06_build_images_lookup)"
+            )
+
         self._loaded = True
         log.info("IdentificationService ready : %s vecteurs indexés", f"{self._index.ntotal:_}")
 
@@ -165,17 +181,21 @@ class IdentificationService:
         scores, indices = self._index.search(query_emb, TOP_K_RETRIEVAL)
         scores, indices = scores[0], indices[0]
 
-        candidates = [
-            Candidate(
-                parent_asin=str(self._train_meta["parent_asin"][int(i)]),
-                title=str(self._train_meta["title"][int(i)] or ""),
-                store=str(self._train_meta["store"][int(i)] or ""),
-                category=str(self._train_labels[int(i)]),
-                score=float(s),
+        candidates = []
+        for s, i in zip(scores, indices, strict=False):
+            if i < 0:
+                continue
+            asin = str(self._train_meta["parent_asin"][int(i)])
+            candidates.append(
+                Candidate(
+                    parent_asin=asin,
+                    title=str(self._train_meta["title"][int(i)] or ""),
+                    store=str(self._train_meta["store"][int(i)] or ""),
+                    category=str(self._train_labels[int(i)]),
+                    score=float(s),
+                    image_url=self._image_lookup.get(asin, ""),
+                )
             )
-            for s, i in zip(scores, indices, strict=False)
-            if i >= 0
-        ]
 
         if not candidates:
             return IdentificationResult(
