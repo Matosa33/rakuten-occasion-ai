@@ -6,8 +6,8 @@
     "category_medians_usd": {
       "Tools_and_Home_Improvement": 24.98,
       "Video_Games": 24.95,
-      "Cell_Phones_and_Accessories": 12.99,
-      "Electronics": 22.95
+      "Electronics": 22.95,
+      "Cell_Phones_and_Accessories": 12.99
     },
     "condition_multipliers": {
       "neuf": 1.0,

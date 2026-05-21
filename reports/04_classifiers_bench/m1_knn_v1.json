@@ -33,7 +33,7 @@
         "Tools_and_Home_Improvement": 0.9754,
         "Video_Games": 0.9021
       },
-      "duration_eval_sec": 144.75
+      "duration_eval_sec": 115.36
     },
     "test": {
       "f1_weighted": 0.9536756651594417,
@@ -48,7 +48,7 @@
         "Tools_and_Home_Improvement": 0.9758,
         "Video_Games": 0.8996
       },
-      "duration_eval_sec": 142.4
+      "duration_eval_sec": 116.19
     }
   }
 }

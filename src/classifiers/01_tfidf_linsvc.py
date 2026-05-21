@@ -53,6 +53,7 @@ from src.config import (
     REPORTS_CLASSIFIERS,
     SEED,
 )
+from src.mlops.mlflow_utils import log_training_run
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -218,6 +219,21 @@ def main() -> None:
     }
     OUT_METRICS.write_text(json.dumps(full_metrics, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("→ %s", OUT_METRICS.name)
+
+    # MLflow LIVE (R5) : run loggé au moment du train + signature + @Production (D-020)
+    log_training_run(
+        MODEL_NAME,
+        model=pipe,
+        hyperparams=full_metrics["hyperparams"],
+        results=results,
+        x_example=X_val[:2],
+        sklearn=True,
+        n_train=len(X_train),
+        duration_train_sec=duration_train,
+        cycle="3",
+        register=True,
+        promote_production=True,
+    )
 
     log.info("\nM5 TF-IDF baseline OK.")
 

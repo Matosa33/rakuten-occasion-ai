@@ -19,7 +19,7 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 | **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | ✅ conforme | `/price` reçoit `parent_asin` + `catalog_price` (L1) + `neighbor_prices` (L2). **RTX 4080 = 589€** (était 12€). Reste : conversion USD→EUR à raffiner (mineur). |
 | **F5** UI multi-modes | express / assisté / batch | 10 | 🟡 partiel | express ✅ ; **assisté (boucle Akinator) non câblé** ; batch ⏸️ (D-016, dépend vision) |
 | **F6** Garde-fous OOD | seuil + mode dégradé | 4,9 | ✅ conforme | 3 niveaux confiance D-017, candidats toujours montrés |
-| **F7** Cycle de vie auto | retrain + drift + hot-reload | 11-14 | 🟡 partiel | MLflow tracking + Registry + DVC pipeline ✅ (C11). Retrain Airflow (C12) + drift Evidently (C14) + hot-reload API à venir. |
+| **F7** Cycle de vie auto | retrain + drift + hot-reload | 11-14 | 🟡 partiel | MLflow tracking **LIVE** (instrumentation dans chaque script, D-021) + Registry `@Production=M5` + reload testé ✅ (C11). DVC DAG validé (lock→C13). Retrain Airflow (C12) + drift Evidently (C14) + câblage hot-reload API à venir. |
 | **F8** Fine-tuning VLM QLoRA | OPTIONNEL si gain >+0.05 | 5.2 | ⏸️ conditionnel | non déclenché (pas de preuve de bénéfice) |
 
 ## Verdict synthétique (mis à jour 2026-05-21)

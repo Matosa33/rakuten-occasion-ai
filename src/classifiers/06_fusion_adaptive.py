@@ -48,6 +48,7 @@ from src.config import (
     REPORTS_CLASSIFIERS,
     SEED,
 )
+from src.mlops.mlflow_utils import log_training_run
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -233,6 +234,18 @@ def main() -> None:
     }
     OUT_METRICS.write_text(json.dumps(full_metrics, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("→ %s + %s", OUT_MODEL.name, OUT_METRICS.name)
+
+    # MLflow LIVE (R5) : tracking params (α optimaux) + metrics. Méta-modèle = dict
+    # de poids référençant M1-M5 → sklearn=False, non registré (cf. D-020).
+    log_training_run(
+        MODEL_NAME,
+        model=None,
+        hyperparams={"alphas": dict(zip(model_names, best_alphas, strict=False)), "seed": SEED},
+        results=results,
+        sklearn=False,
+        cycle="3",
+    )
+
     log.info("\nM6 Fusion adaptive OK.")
 
 

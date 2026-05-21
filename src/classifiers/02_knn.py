@@ -45,6 +45,7 @@ from src.config import (
     REPORTS_CLASSIFIERS,
     SEED,
 )
+from src.mlops.mlflow_utils import log_training_run
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -240,6 +241,19 @@ def main() -> None:
     }
     OUT_METRICS.write_text(json.dumps(full_metrics, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("→ %s + %s", OUT_MODEL.name, OUT_METRICS.name)
+
+    # MLflow LIVE (R5) : tracking params/metrics. Modèle = index FAISS (DVC, pas
+    # Registry sklearn) → sklearn=False, non registré (couplé index, cf. D-020).
+    log_training_run(
+        MODEL_NAME,
+        model=None,
+        hyperparams=full_metrics["hyperparams"],
+        results=results,
+        sklearn=False,
+        n_train=int(index.ntotal),
+        cycle="3",
+    )
+
     log.info("M1 k-NN via FAISS OK.")
 
 

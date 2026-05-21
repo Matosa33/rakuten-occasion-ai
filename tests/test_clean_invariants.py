@@ -65,7 +65,7 @@ def test_clean_init_documents_pipeline() -> None:
         # Extraire le numéro d'étape : "01_join..." → "01"
         step_num = script.split("_")[0]
         assert step_num in init, (
-            f"Étape {step_num} non documentée dans clean/__init__.py " f"(script {script})"
+            f"Étape {step_num} non documentée dans clean/__init__.py (script {script})"
         )
 
 
@@ -98,6 +98,6 @@ def test_clean_scripts_import_from_config() -> None:
     ]
     for path in paths_to_check:
         source = path.read_text(encoding="utf-8")
-        assert (
-            "from src.config import" in source
-        ), f"{path.name} doit importer ses paths depuis src.config (R8 single source of truth)"
+        assert "from src.config import" in source, (
+            f"{path.name} doit importer ses paths depuis src.config (R8 single source of truth)"
+        )

@@ -182,9 +182,9 @@ class IdentificationService:
             normalize_embeddings=True,
             convert_to_numpy=True,
         ).astype(np.float32)
-        assert (
-            emb.shape[-1] == ARCTIC_EMBED_DIM
-        ), f"Expected {ARCTIC_EMBED_DIM} dim, got {emb.shape[-1]}"
+        assert emb.shape[-1] == ARCTIC_EMBED_DIM, (
+            f"Expected {ARCTIC_EMBED_DIM} dim, got {emb.shape[-1]}"
+        )
         return emb
 
     def _maybe_translate(self, text_query: str) -> str:

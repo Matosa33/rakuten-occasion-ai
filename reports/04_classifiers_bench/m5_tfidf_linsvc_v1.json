@@ -22,7 +22,7 @@
     "calibration_method": "sigmoid",
     "seed": 42
   },
-  "duration_train_sec": 955.9,
+  "duration_train_sec": 797.7,
   "results": {
     "val": {
       "f1_weighted": 0.9495733241849191,
@@ -37,7 +37,7 @@
         "Tools_and_Home_Improvement": 0.9726,
         "Video_Games": 0.8935
       },
-      "duration_eval_sec": 110.64
+      "duration_eval_sec": 103.99
     },
     "test": {
       "f1_weighted": 0.9502590679409848,
@@ -52,7 +52,7 @@
         "Tools_and_Home_Improvement": 0.9727,
         "Video_Games": 0.8928
       },
-      "duration_eval_sec": 110.7
+      "duration_eval_sec": 105.21
     }
   }
 }

@@ -30,6 +30,7 @@ import joblib
 import numpy as np
 import polars as pl
 from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import LabelEncoder
 
 from src.classifiers.metrics import (
     compute_calibration_ece,
@@ -44,6 +45,7 @@ from src.config import (
     REPORTS_CLASSIFIERS,
     SEED,
 )
+from src.mlops.mlflow_utils import log_training_run
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -134,7 +136,12 @@ def main() -> None:
         random_state=SEED,
         verbose=True,
     )
-    mlp.fit(X_train, y_train)
+    # sklearn ≥1.6 : early_stopping fait np.isnan(y_pred) en interne → crash si y est
+    # du texte. On encode les labels en entiers (LabelEncoder, classes triées =
+    # même ordre que `sorted(set(y))`) puis on redécode les prédictions à l'éval.
+    label_encoder = LabelEncoder()
+    y_train_enc = label_encoder.fit_transform(y_train)
+    mlp.fit(X_train, y_train_enc)
     duration_train = time.time() - t_train
     log.info(
         "  Train OK en %.1fs (%.1f min), n_iter=%d",
@@ -147,7 +154,9 @@ def main() -> None:
     for split_name, X_eval, y_eval in [("val", X_val, y_val), ("test", X_test, y_test)]:
         log.info("Eval sur %s…", split_name)
         t_eval = time.time()
-        y_pred = mlp.predict(X_eval)
+        # mlp prédit des entiers (cf. LabelEncoder) → on redécode en labels texte ;
+        # predict_proba garde l'ordre des colonnes = label_encoder.classes_ (trié).
+        y_pred = label_encoder.inverse_transform(mlp.predict(X_eval))
         y_proba = mlp.predict_proba(X_eval)
         duration_eval = time.time() - t_eval
 
@@ -197,10 +206,27 @@ def main() -> None:
         },
         "duration_train_sec": round(duration_train, 1),
         "n_iter_actual": mlp.n_iter_,
+        # mlp prédit des entiers ; mapping index→catégorie (ordre predict_proba)
+        "label_classes": label_encoder.classes_.tolist(),
         "results": results,
     }
     OUT_METRICS.write_text(json.dumps(full_metrics, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("→ %s + %s", OUT_MODEL.name, OUT_METRICS.name)
+
+    # MLflow LIVE (R5) : run loggé au moment du train + signature + Registry
+    log_training_run(
+        MODEL_NAME,
+        model=mlp,
+        hyperparams=full_metrics["hyperparams"],
+        results=results,
+        x_example=X_val[:2],
+        sklearn=True,
+        n_train=int(X_train.shape[0]),
+        duration_train_sec=duration_train,
+        cycle="3",
+        register=True,
+    )
+
     log.info("\nM4 MLP OK.")
 
 

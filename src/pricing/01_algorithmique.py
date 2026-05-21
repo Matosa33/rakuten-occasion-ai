@@ -57,6 +57,7 @@ from src.config import (
     REPORTS_PRICING,
     SEED,
 )
+from src.mlops.mlflow_utils import log_training_run
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -187,8 +188,7 @@ def suggest_price(
         range_low=0.0,
         range_high=0.0,
         explanation=(
-            "Produit non identifié et catégorie inconnue. "
-            "Saisie manuelle requise par le vendeur."
+            "Produit non identifié et catégorie inconnue. Saisie manuelle requise par le vendeur."
         ),
         method="fallback",
     )
@@ -317,6 +317,29 @@ def main() -> None:
     }
     OUT_JSON.write_text(json.dumps(full, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("→ %s + %s", OUT_MODEL.name, OUT_JSON.name)
+
+    # MLflow LIVE (R5) : run pricing (MAPE par niveau aplati en test_*). Modèle =
+    # cascade algorithmique déterministe (config dict) → sklearn=False, non registré.
+    flat_pricing = {
+        f"{level}_{k}": v
+        for level, m in metrics.items()
+        for k, v in m.items()
+        if k.startswith("mape") and isinstance(v, int | float)
+    }
+    log_training_run(
+        MODEL_NAME,
+        model=None,
+        hyperparams={
+            "knn_k": KNN_K,
+            "eval_n_queries": EVAL_N_QUERIES,
+            "min_valid_price_usd": MIN_VALID_PRICE_USD,
+            "seed": SEED,
+        },
+        results={"test": flat_pricing},
+        sklearn=False,
+        cycle="7",
+    )
+
     log.info("Cycle 7.1 pricing algorithmique OK.")
 
 

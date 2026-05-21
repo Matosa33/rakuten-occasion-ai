@@ -79,6 +79,6 @@ def test_audit_report_links_figures() -> None:
         "figures/03e_distribution_temporelle_reviews.png",
     ]
     found = [ref for ref in figure_refs if ref in content]
-    assert (
-        len(found) >= 4
-    ), f"Le rapport doit référencer ≥ 4 figures distributions, trouvé : {found}"
+    assert len(found) >= 4, (
+        f"Le rapport doit référencer ≥ 4 figures distributions, trouvé : {found}"
+    )

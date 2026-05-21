@@ -38,6 +38,7 @@ from src.config import (
     REPORTS_CLASSIFIERS,
     SEED,
 )
+from src.mlops.mlflow_utils import log_training_run
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -185,6 +186,21 @@ def main() -> None:
     }
     OUT_METRICS.write_text(json.dumps(full_metrics, indent=2, ensure_ascii=False), encoding="utf-8")
     log.info("→ %s + %s", OUT_MODEL.name, OUT_METRICS.name)
+
+    # MLflow LIVE (R5) : run loggé au moment du train + signature + Registry
+    log_training_run(
+        MODEL_NAME,
+        model=clf,
+        hyperparams=full_metrics["hyperparams"],
+        results=results,
+        x_example=X_val[:2],
+        sklearn=True,
+        n_train=int(X_train.shape[0]),
+        duration_train_sec=duration_train,
+        cycle="3",
+        register=True,
+    )
+
     log.info("\nM2 LinearSVC OK.")
 
 
