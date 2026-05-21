@@ -62,9 +62,14 @@ export default function App() {
     setChosenCategory(category);
     setLoading(true);
     setError(null);
-    // Contexte prix (F4) : prix du produit choisi (L1) + prix des voisins (L2)
+    // Contexte prix (F4) : prix du produit choisi (L1) + prix des voisins (L2).
+    // IMPORTANT : on filtre les voisins au MÊME type de produit que le choisi
+    // (sinon les coques/accessoires pas chers polluent la médiane → prix absurde).
     const chosen = ident?.top_candidates.find((c) => c.parent_asin === asin);
+    const sameType = (c: { category_fine: string; category: Category }) =>
+      chosen ? (c.category_fine || c.category) === (chosen.category_fine || chosen.category) : true;
     const neighborPrices = (ident?.top_candidates ?? [])
+      .filter(sameType)
       .map((c) => c.price)
       .filter((p): p is number => p != null && p > 0);
     try {
