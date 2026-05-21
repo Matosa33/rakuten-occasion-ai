@@ -82,6 +82,12 @@ api = [
     "httpx>=0.27.0",
 ]
 
+# Phase P12-P13 — MLOps tracking + versioning (Cycles 11-12).
+mlops = [
+    "mlflow>=2.16.0",
+    "dvc>=3.50.0",
+]
+
 # Extra [frontend] géré séparément via npm (cf. frontend/package.json).
 # Voir BRAIN/to-do.md pour le plan d'enrichissement.
 

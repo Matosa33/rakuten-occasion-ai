@@ -1,0 +1,61 @@
+# Cycle 11.3 — Pipeline DVC reproductible (C35).
+#
+# Déclare le DAG de production des artefacts ML à partir des données processed.
+# `dvc repro` ré-exécute les stages dont les deps ont changé (reproductibilité
+# bit-à-bit avec dvc.lock + seeds fixes, cf. docs/PROJECT.md §7).
+#
+# NB : non exécuté en CI (heures de compute GPU/CPU) — c'est la DÉFINITION du
+# pipeline. Lancer manuellement `dvc repro <stage>` sur la machine de dev.
+# Les outs sont gérés par DVC (gitignorés, versionnés via .dvc/cache + remote).
+
+stages:
+  text_embeddings:
+    desc: Encodage texte Arctic Embed L v2 (3,16M items train + val + test → .npy FP16)
+    cmd: python -m src.encoders.01_text_arctic
+    deps:
+      - src/encoders/01_text_arctic.py
+      - data/processed/products/train.parquet
+      - data/processed/products/val.parquet
+      - data/processed/products/test.parquet
+    outs:
+      - data/embeddings/text
+
+  faiss_index:
+    desc: Construction index FAISS (Flat IP / HNSW / IVF_PQ) + bench recall/latence
+    cmd: python -m src.retrieval.01_faiss_indices
+    deps:
+      - src/retrieval/01_faiss_indices.py
+      - data/embeddings/text
+    outs:
+      - data/index
+    metrics:
+      - reports/05_retrieval/faiss_bench.json:
+          cache: false
+
+  product_lookup:
+    desc: Lookup parent_asin → vignette + catégorie fine + marque + facettes (depuis raw meta)
+    cmd: python -m src.data.clean.06_build_product_lookup
+    deps:
+      - src/data/clean/06_build_product_lookup.py
+      - data/raw/full/meta
+    outs:
+      - data/processed/products/product_lookup.parquet
+
+  classifiers:
+    desc: Entraînement + bench M1(FAISS) M2 M4 M5 M6 (M3 skippé D-015)
+    cmd: >
+      python -m src.classifiers.02_knn &&
+      python -m src.classifiers.03_svm &&
+      python -m src.classifiers.05_mlp &&
+      python -m src.classifiers.01_tfidf_linsvc &&
+      python -m src.classifiers.06_fusion_adaptive &&
+      python -m src.classifiers.07_bench_report
+    deps:
+      - src/classifiers
+      - data/embeddings/text
+      - data/index
+    outs:
+      - data/models
+    metrics:
+      - reports/04_classifiers_bench/bench_v1.json:
+          cache: false

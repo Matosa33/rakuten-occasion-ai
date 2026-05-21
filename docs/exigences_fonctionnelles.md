@@ -19,7 +19,7 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 | **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | ✅ conforme | `/price` reçoit `parent_asin` + `catalog_price` (L1) + `neighbor_prices` (L2). **RTX 4080 = 589€** (était 12€). Reste : conversion USD→EUR à raffiner (mineur). |
 | **F5** UI multi-modes | express / assisté / batch | 10 | 🟡 partiel | express ✅ ; **assisté (boucle Akinator) non câblé** ; batch ⏸️ (D-016, dépend vision) |
 | **F6** Garde-fous OOD | seuil + mode dégradé | 4,9 | ✅ conforme | 3 niveaux confiance D-017, candidats toujours montrés |
-| **F7** Cycle de vie auto | retrain + drift + hot-reload | 11-14 | ⚪ non démarré | cycles MLOps à venir |
+| **F7** Cycle de vie auto | retrain + drift + hot-reload | 11-14 | 🟡 partiel | MLflow tracking + Registry + DVC pipeline ✅ (C11). Retrain Airflow (C12) + drift Evidently (C14) + hot-reload API à venir. |
 | **F8** Fine-tuning VLM QLoRA | OPTIONNEL si gain >+0.05 | 5.2 | ⏸️ conditionnel | non déclenché (pas de preuve de bénéfice) |
 
 ## Verdict synthétique (mis à jour 2026-05-21)
@@ -30,14 +30,10 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 
 ## Reste à faire (ordre)
 
-Le cœur F0-F4 text-only étant conforme, R13 n'interdit plus d'avancer. Suite :
+Cœur F0-F4 text-only conforme + F7 (MLOps tracking) entamé (C11 ✅). Suite :
+- **Cycle 12-15** : Airflow/BentoML (retrain, closed-loop) → Docker → Observabilité (drift Evidently, rembourse R6) → Prod (JWT, CI/CD, soutenance).
 - **Vision (post-MVP D-014)** : réactive entrée photo → branche vision F0 + VLM validateur E3 + observation-photo Akinator + batch F5.
-- **Cycle 11 MLOps** (rembourse R5 MLflow) : reprise de l'ordre du plan.
-- Enhancements : grounding reviews (vs description), conversion USD→EUR, normalisation casse marques.
-4. **F3 grounding reviews** 🟡 — lazy join raw reviews → RAG sur avis réels.
-5. **F0 VLM validateur E3** 🟡 — OpenRouter Gemini Vision réel (on a la clé) en validateur top-1.
-
-Une fois F0-F4 conformes → reprise ordre normal (Cycle 11 MLOps).
+- Enhancements mineurs : grounding reviews (vs description), conversion USD→EUR, normalisation casse marques.
 
 ## Maintenance
 

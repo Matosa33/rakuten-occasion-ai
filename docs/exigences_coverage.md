@@ -45,9 +45,9 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | **P11 Frontend** | C30 | React Vite Tailwind | **10.1** | ✅ done |
 | | C31 | UX progressive neuro-marketing | **10.2** | ✅ done (Zeigarnik/Hick/Anchoring/IKEA) |
 | | C32 | Mode batch queue localStorage | **10.3** | ⏸️ différé D-016 (dépend vision) |
-| **P12 MLOps tracking** | C33 | MLflow tracking | **11.1** | not_started |
-| | C34 | MLflow Registry + hot reload | **11.2** | not_started |
-| | C35 | DVC pipelines | **11.3** | not_started |
+| **P12 MLOps tracking** | C33 | MLflow tracking | **11.1** | ✅ done (7 runs M1-M8) |
+| | C34 | MLflow Registry + hot reload | **11.2** | ✅ done (@Production=M5, D-020) |
+| | C35 | DVC pipelines | **11.3** | ✅ done (dvc.yaml DAG 4 stages) |
 | **P13 MLOps orchestration** | C36 | Airflow DAGs | **12.1** | not_started |
 | | C37 | BentoML serving | **12.2** | not_started |
 | | C38 | Boucle MLOps fermée | **12.3** | not_started |
