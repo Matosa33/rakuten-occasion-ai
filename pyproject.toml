@@ -62,7 +62,27 @@ data = [
     "pandera[polars]>=0.20.0",
 ]
 
-# Les extras [training], [api], [frontend] seront ajoutés au fil des phases.
+# Phase P03-P05 — encodeurs (SigLIP/Arctic), FAISS, classifieurs sklearn.
+# torch : CPU par défaut depuis PyPI (suffit pour serving + encode query unitaire).
+# Pour l'encodage de masse sur GPU, installer torch CUDA séparément (index PyTorch).
+ml = [
+    "faiss-cpu>=1.8.0",
+    "torch>=2.4.0",
+    "sentence-transformers>=3.0.0",
+    "transformers>=4.44.0",
+    "scikit-learn>=1.5.0",
+    "joblib>=1.4.0",
+]
+
+# Phase P10 — API serving (Cycle 9).
+api = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "sqlalchemy>=2.0.0",
+    "httpx>=0.27.0",
+]
+
+# Extra [frontend] géré séparément via npm (cf. frontend/package.json).
 # Voir BRAIN/to-do.md pour le plan d'enrichissement.
 
 [tool.setuptools.packages.find]
