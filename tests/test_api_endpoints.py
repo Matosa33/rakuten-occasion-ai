@@ -102,21 +102,22 @@ class TestIdentify:
             ready = True
 
             def identify(self, q, already_observed=None):
+                # Variantes proches → observation Akinator présente, statut par tier (to_confirm)
                 return IdentificationResult(
-                    status="ambiguous",
+                    status="to_confirm",
                     candidates=[
-                        Candidate("B001", "T1", "S1", "Electronics", 0.80),
-                        Candidate("B002", "T2", "S2", "Electronics", 0.78),
+                        Candidate("B001", "T1", "S1", "Electronics", 0.55),
+                        Candidate("B002", "T2", "S2", "Electronics", 0.53),
                     ],
                     next_observation=obs,
-                    explanation="Ambigu.",
+                    explanation="Variantes proches.",
                 )
 
         api_main.APP_STATE["identification"] = FakeIdent()
         r = client.post("/identify", json={"image_url": "x", "text_hint": "appareil"})
         assert r.status_code == 200
         body = r.json()
-        assert body["status"] == "ambiguous"
+        assert body["status"] == "to_confirm"
         assert body["next_observation"]["observation_type"] == "back_view"
 
 

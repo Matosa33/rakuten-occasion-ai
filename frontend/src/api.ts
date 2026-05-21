@@ -27,7 +27,7 @@ export interface ObservationToRequest {
 }
 
 export interface IdentifyResponse {
-  status: "identified" | "ambiguous" | "ood";
+  status: "identified" | "to_confirm" | "uncertain";
   top_candidates: CandidateMeta[];
   vlm_validation: unknown | null;
   next_observation: ObservationToRequest | null;

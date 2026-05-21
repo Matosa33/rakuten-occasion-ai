@@ -6,8 +6,8 @@ const MAX_CANDIDATES = 3;
 
 const STATUS_LABEL: Record<IdentifyResponse["status"], { text: string; color: string }> = {
   identified: { text: "Produit identifié ✓", color: "text-emerald-600" },
-  ambiguous: { text: "Plusieurs correspondances", color: "text-amber-600" },
-  ood: { text: "Produit non reconnu", color: "text-rose-600" },
+  to_confirm: { text: "Est-ce l'un de ces produits ?", color: "text-amber-600" },
+  uncertain: { text: "Correspondance incertaine", color: "text-rose-600" },
 };
 
 export function CandidatePicker({
@@ -35,12 +35,8 @@ export function CandidatePicker({
         </div>
       )}
 
-      {ident.status === "ood" ? (
-        <div className="mt-4 text-sm text-slate-600">
-          Nous n'avons pas trouvé ce produit dans le catalogue. Vous pouvez saisir l'annonce
-          manuellement.
-        </div>
-      ) : (
+      {/* Candidats TOUJOURS affichés (humain = validateur, R19) — même en incertain. */}
+      {ident.top_candidates.length > 0 ? (
         <ul className="mt-4 space-y-2">
           {ident.top_candidates.slice(0, MAX_CANDIDATES).map((c) => (
             <li key={c.parent_asin}>
@@ -62,6 +58,16 @@ export function CandidatePicker({
             </li>
           ))}
         </ul>
+      ) : (
+        <div className="mt-4 text-sm text-slate-600">
+          Aucun candidat — vous pouvez saisir l'annonce manuellement.
+        </div>
+      )}
+
+      {ident.status === "uncertain" && ident.top_candidates.length > 0 && (
+        <p className="mt-3 text-xs text-slate-400">
+          Si aucun ne correspond, recommencez avec plus de détails (marque, modèle, capacité).
+        </p>
       )}
 
       <button

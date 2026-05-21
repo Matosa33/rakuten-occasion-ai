@@ -39,9 +39,13 @@ ARCTIC_QUERY_PROMPT = "query"  # Arctic Embed v2 prompt key pour les requêtes
 HNSW_EF_SEARCH = 64
 TOP_K_RETRIEVAL = 5
 
-# Seuils calibrés Cycle 4.3 (D-012)
-OOD_THRESHOLD = 0.600
-AMBIGUITY_GAP_THRESHOLD = 0.05
+# Seuils de confiance — 3 niveaux (D-017).
+# Le seuil F0.5=0.600 (D-012) était calibré sur item↔item (texte complet). En usage
+# réel, la requête vendeur est courte → cosine systématiquement plus bas. On passe
+# donc à 3 niveaux et on montre TOUJOURS les candidats (humain = validateur, R19).
+IDENTIFIED_THRESHOLD = 0.60  # >= : produit identifié avec confiance
+CONFIRM_THRESHOLD = 0.45  # [0.45, 0.60[ : à confirmer par le vendeur ; < : incertain
+AMBIGUITY_GAP_THRESHOLD = 0.05  # gap top1-top2 → désambiguation Akinator
 
 # Akinator backend (import dynamique : module préfixé par un chiffre)
 _akinator = importlib.import_module("src.retrieval.04_akinator_backend")
@@ -61,7 +65,7 @@ class Candidate:
 
 @dataclass
 class IdentificationResult:
-    status: str  # "identified" | "ambiguous" | "ood"
+    status: str  # "identified" | "to_confirm" | "uncertain"
     candidates: list[Candidate]
     next_observation: object | None  # ObservationRequest | None
     explanation: str
@@ -174,47 +178,51 @@ class IdentificationService:
         ]
 
         if not candidates:
-            return IdentificationResult("ood", [], None, "Aucun candidat retrouvé.")
-
-        top1 = candidates[0]
-
-        # Garde-fou OOD (seuil absolu D-012)
-        if top1.score < OOD_THRESHOLD:
             return IdentificationResult(
-                status="ood",
-                candidates=candidates,
-                next_observation=None,
-                explanation=(
-                    f"Score top-1 ({top1.score:.3f}) < seuil OOD ({OOD_THRESHOLD}). "
-                    "Produit probablement hors catalogue → saisie assistée."
-                ),
+                "uncertain", [], None, "Aucun candidat trouvé — saisie manuelle."
             )
 
-        # Ambiguïté → Akinator
+        top1 = candidates[0]
         top2_score = candidates[1].score if len(candidates) > 1 else 0.0
-        if _akinator.is_ambiguous(top1.score, top2_score, AMBIGUITY_GAP_THRESHOLD):
+
+        # Désambiguation Akinator si top1/top2 trop proches (variantes du même produit)
+        next_observation = None
+        is_ambiguous = _akinator.is_ambiguous(top1.score, top2_score, AMBIGUITY_GAP_THRESHOLD)
+        if is_ambiguous:
             cand_meta = [
                 {"title": c.title, "store": c.store, "main_category": c.category}
                 for c in candidates
             ]
-            observation = _akinator.select_next_observation(
+            next_observation = _akinator.select_next_observation(
                 cand_meta, already_asked_attributes=set((already_observed or {}).keys())
             )
-            return IdentificationResult(
-                status="ambiguous",
-                candidates=candidates,
-                next_observation=observation,
-                explanation=(
-                    f"Écart top1-top2 ({top1.score - top2_score:.3f}) < {AMBIGUITY_GAP_THRESHOLD}. "
-                    "Observation dirigée demandée pour lever l'ambiguïté."
-                ),
+
+        # 3 niveaux de confiance sur le score absolu top-1. Candidats TOUJOURS montrés.
+        if top1.score >= IDENTIFIED_THRESHOLD:
+            status = "identified"
+            base = f"Produit identifié (score {top1.score:.3f})."
+        elif top1.score >= CONFIRM_THRESHOLD:
+            status = "to_confirm"
+            base = f"Est-ce l'un de ces produits ? (score {top1.score:.3f}, à confirmer)"
+        else:
+            status = "uncertain"
+            base = (
+                f"Correspondance incertaine (score {top1.score:.3f}). "
+                "Vérifiez ou saisissez manuellement."
+            )
+
+        explanation = base
+        if is_ambiguous:
+            explanation += (
+                f" Variantes proches (écart top1-top2 {top1.score - top2_score:.3f})"
+                " — une observation peut préciser."
             )
 
         return IdentificationResult(
-            status="identified",
+            status=status,
             candidates=candidates,
-            next_observation=None,
-            explanation=f"Top-1 confiant (score {top1.score:.3f} ≥ {OOD_THRESHOLD}, gap suffisant).",
+            next_observation=next_observation,
+            explanation=explanation,
         )
 
 
