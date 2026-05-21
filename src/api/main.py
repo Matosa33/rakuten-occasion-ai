@@ -30,6 +30,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from src.api import persistence
@@ -97,6 +98,14 @@ app = FastAPI(
     description="Pipeline d'identification + pricing + rédaction pour vendeurs particuliers",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# CORS — autorise le frontend (Vite :5173) en dev. En prod, restreindre aux origines connues.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
