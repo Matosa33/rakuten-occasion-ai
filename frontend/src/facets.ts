@@ -8,7 +8,7 @@ import type { CandidateMeta } from "./api";
 // Libellés FR des facettes canoniques (clés venant du backend `attributes`).
 export const FACET_LABELS: Record<string, string> = {
   brand: "Marque",
-  category: "Catégorie",
+  category: "Type de produit",
   color: "Couleur",
   capacity: "Capacité",
   size: "Taille",
@@ -17,6 +17,16 @@ export const FACET_LABELS: Record<string, string> = {
   style: "Style",
   feature: "Caractéristique",
   compatible_with: "Compatible avec",
+};
+
+// Priorité sémantique : le TYPE de produit (téléphone vs coque) est la
+// désambiguation la plus utile pour le vendeur — bien plus que la marque.
+// On pondère le score d'entropie pour que `category` passe en premier quand
+// les types sont mixtes, sans écraser les autres facettes.
+const FACET_PRIORITY: Record<string, number> = {
+  category: 2.0,
+  capacity: 1.2,
+  size: 1.1,
 };
 
 export interface FacetChoice {
@@ -68,9 +78,10 @@ export function bestDiscriminativeFacet(
     if (distinct.length < 2) continue;
 
     const entropy = normalizedEntropy(values);
-    // Score : entropie pondérée par la couverture (combien de candidats ont l'attribut)
+    // Score : entropie × couverture × priorité sémantique (type produit > marque > détails)
     const coverage = values.length / candidates.length;
-    const score = entropy * coverage;
+    const priority = FACET_PRIORITY[key] ?? 1.0;
+    const score = entropy * coverage * priority;
     if (score > bestScore) {
       bestScore = score;
       // Options triées par fréquence décroissante
