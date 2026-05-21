@@ -18,6 +18,7 @@ export interface CandidateMeta {
   image_url: string;
   score: number;
   price: number | null;
+  category_fine: string;
 }
 
 export interface ObservationToRequest {

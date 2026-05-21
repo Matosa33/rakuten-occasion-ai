@@ -178,6 +178,7 @@ async def identify(req: IdentifyRequest) -> IdentifyResponse:
                 image_url=c.image_url,
                 score=max(0.0, min(1.0, c.score)),
                 price=c.price,
+                category_fine=c.category_fine,
             )
             for c in result.candidates
         ],

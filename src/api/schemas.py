@@ -59,6 +59,7 @@ class CandidateMeta(BaseModel):
     image_url: str = ""
     score: float = Field(..., ge=0.0, le=1.0)
     price: float | None = None  # prix catalogue USD (pour le pricing F4)
+    category_fine: str = ""  # catégorie L2/L3 réelle du produit (ex: "Graphics Cards")
 
 
 class ObservationToRequest(BaseModel):

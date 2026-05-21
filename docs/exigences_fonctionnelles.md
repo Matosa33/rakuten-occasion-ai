@@ -13,7 +13,7 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 | Réq | Intention (PROJECT.md) | Cycle(s) | État réel | Gap mesuré |
 |---|---|---|---|---|
 | **F0** Identification grounded | photo→retrieval→Akinator→VLM validateur | 2,4,5,9 | 🟡 partiel | retrieval ✅ (text-only D-014) ; **VLM validateur E3 = mock, pas câblé** ; **Akinator superficiel** (attributs droppés D-006) |
-| **F1** Classification **L2** | sous-catégorie, F1≥0.90 | 3 | 🔴 écart | livré **L1** (`_source_category`, F1_w=0.954) ; **L2 jamais modélisée**. Incohérence BRAIN : to-do disait `_source_category`, PROJECT disait L2. Résolu D-018 (surface cat fine du produit identifié). |
+| **F1** Classification **L2** | sous-catégorie, F1≥0.90 | 3 | ✅ conforme (via grounding) | L1 classifieurs M1-M6 (F1_w=0.954, garde-fou) **+** catégorie fine réelle du produit identifié surface (breadcrumb `categories` → ex "Graphics Cards"). Résolu D-018 : pas de classifieur L2 séparé, on a le produit exact. |
 | **F2** Extraction attributs | marque/modèle/couleur/version + obs. dirigées | 4 | 🔴 manquant | attributs riches **droppés au cleaning (D-006)** → ni extraction, ni Akinator discriminant |
 | **F3** Génération ancrée reviews | RAG sur reviews réelles du produit | 6,9 | 🟡 partiel | Gemma génère depuis **meta produit**, **PAS depuis reviews réelles** (`reviews_index` sans colonne `text`) |
 | **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | ✅ conforme | `/price` reçoit `parent_asin` + `catalog_price` (L1) + `neighbor_prices` (L2). **RTX 4080 = 589€** (était 12€). Reste : conversion USD→EUR à raffiner (mineur). |

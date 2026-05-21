@@ -65,7 +65,7 @@ export function CandidatePicker({
                   <span className="block truncate text-sm font-medium text-slate-800">
                     {c.title || "(sans titre)"}
                   </span>
-                  <span className="text-xs text-slate-400">{c.category}</span>
+                  <span className="text-xs text-slate-400">{c.category_fine || c.category}</span>
                 </span>
                 <span className="ml-1 shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
                   {(c.score * 100).toFixed(0)}%

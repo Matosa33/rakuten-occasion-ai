@@ -59,10 +59,11 @@ class Candidate:
     parent_asin: str
     title: str
     store: str
-    category: str
+    category: str  # _source_category (L1 macro : Electronics, …)
     score: float
     image_url: str = ""
     price: float | None = None  # prix catalogue (USD) du produit, pour le pricing F4
+    category_fine: str = ""  # catégorie feuille du breadcrumb (L2/L3, ex: "Graphics Cards")
 
 
 @dataclass
@@ -86,6 +87,7 @@ class IdentificationService:
         self._train_labels: np.ndarray | None = None
         self._train_prices: np.ndarray | None = None
         self._image_lookup: dict[str, str] = {}
+        self._category_lookup: dict[str, str] = {}
         self._encoder = None
         self._loaded = False
 
@@ -110,17 +112,30 @@ class IdentificationService:
         self._train_labels = self._train_meta["_source_category"].to_numpy()
         self._train_prices = self._train_meta["price_num"].to_numpy()  # prix catalogue (F4)
 
-        # Lookup vignettes (optionnel : graceful si absent, cf. 06_build_images_lookup)
-        lookup_path = DATA_PROCESSED_PRODUCTS / "images_lookup.parquet"
+        # Lookup produit : vignette + catégorie fine (graceful si absent, cf. 06_build_product_lookup)
+        lookup_path = DATA_PROCESSED_PRODUCTS / "product_lookup.parquet"
         if lookup_path.exists():
             lk = pl.read_parquet(lookup_path)
-            self._image_lookup = dict(
-                zip(lk["parent_asin"].to_list(), lk["image_url"].to_list(), strict=False)
+            asins = lk["parent_asin"].to_list()
+            self._image_lookup = {
+                a: u
+                for a, u in zip(asins, lk["image_url"].to_list(), strict=False)
+                if u is not None
+            }
+            self._category_lookup = {
+                a: c
+                for a, c in zip(asins, lk["category_leaf"].to_list(), strict=False)
+                if c is not None
+            }
+            log.info(
+                "  Lookup produit : %s vignettes, %s catégories fines",
+                f"{len(self._image_lookup):_}",
+                f"{len(self._category_lookup):_}",
             )
-            log.info("  Lookup vignettes : %s URLs", f"{len(self._image_lookup):_}")
         else:
             log.warning(
-                "  images_lookup.parquet absent → vignettes vides (lance 06_build_images_lookup)"
+                "  product_lookup.parquet absent → vignettes/cat fines vides "
+                "(lance 06_build_product_lookup)"
             )
 
         self._loaded = True
@@ -204,6 +219,7 @@ class IdentificationService:
                     score=float(s),
                     image_url=self._image_lookup.get(asin, ""),
                     price=price,
+                    category_fine=self._category_lookup.get(asin, ""),
                 )
             )
 
