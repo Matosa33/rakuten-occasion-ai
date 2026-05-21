@@ -104,3 +104,26 @@ def chat_completion(
 def is_available() -> bool:
     """True si la clé OpenRouter est configurée (sans tester le réseau)."""
     return bool(os.environ.get("OPENROUTER_API_KEY"))
+
+
+_TRANSLATE_PROMPT = (
+    "Translate this French second-hand product description into a concise English "
+    "product search query (brand, model, key specs, color). The catalog is in English. "
+    "Output ONLY the English query, no quotes, no explanation.\n\nFrench: {text}\nEnglish:"
+)
+
+
+def translate_to_english(text: str, timeout: float = 15.0) -> str:
+    """Traduit une requête produit FR → EN pour l'aligner sur le catalogue anglais.
+
+    Aligne le décalage cross-lingue mesuré (requête FR score ~0.08 plus bas qu'EN
+    sur catalogue Amazon US). Raises OpenRouterError si clé absente / appel KO —
+    l'appelant doit gérer le fallback (requête brute).
+    """
+    raw = chat_completion(
+        _TRANSLATE_PROMPT.format(text=text),
+        temperature=0.0,
+        max_tokens=128,
+        timeout=timeout,
+    )
+    return raw.strip().strip('"').strip()

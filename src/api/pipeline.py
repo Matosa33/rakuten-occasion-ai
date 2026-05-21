@@ -130,14 +130,34 @@ class IdentificationService:
         ), f"Expected {ARCTIC_EMBED_DIM} dim, got {emb.shape[-1]}"
         return emb
 
+    def _maybe_translate(self, text_query: str) -> str:
+        """Traduit FR→EN via OpenRouter pour aligner sur le catalogue anglais.
+
+        Décalage cross-lingue mesuré : une requête FR score ~0.08 plus bas qu'EN
+        (catalogue Amazon US). Fallback gracieux sur la requête brute si pas de clé
+        ou si l'appel échoue — l'identification reste fonctionnelle (Arctic est
+        multilingue, juste un peu moins précis sans traduction).
+        """
+        openrouter = importlib.import_module("src.llm.openrouter_client")
+        if not openrouter.is_available():
+            return text_query
+        try:
+            translated = openrouter.translate_to_english(text_query)
+            log.info("Requête traduite FR→EN : %r → %r", text_query, translated)
+            return translated or text_query
+        except Exception as e:  # noqa: BLE001 — la traduction ne doit jamais casser l'identification
+            log.warning("Traduction échouée (fallback requête brute) : %s", e)
+            return text_query
+
     def identify(
         self, text_query: str, already_observed: dict[str, str] | None = None
     ) -> IdentificationResult:
-        """Pipeline complet : encode → search → OOD → Akinator si ambigu."""
+        """Pipeline complet : (traduire) → encode → search → OOD → Akinator si ambigu."""
         if not self._loaded:
             raise RuntimeError("IdentificationService non chargé. Appelle load() au lifespan.")
 
-        query_emb = self.encode_query(text_query)
+        search_query = self._maybe_translate(text_query)
+        query_emb = self.encode_query(search_query)
         scores, indices = self._index.search(query_emb, TOP_K_RETRIEVAL)
         scores, indices = scores[0], indices[0]
 

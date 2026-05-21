@@ -29,6 +29,23 @@ class TestOpenRouterClient:
         monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test")
         assert openrouter_client.is_available() is True
 
+    def test_translate_raises_without_key(self, monkeypatch):
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        with pytest.raises(openrouter_client.OpenRouterError):
+            openrouter_client.translate_to_english("iPhone 13 noir")
+
+
+class TestQueryTranslationFallback:
+    def test_maybe_translate_falls_back_to_raw_without_key(self, monkeypatch):
+        # Sans clé : _maybe_translate doit retourner la requête brute (pas de crash)
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        from src.api.pipeline import IdentificationService
+
+        svc = (
+            IdentificationService()
+        )  # pas besoin de load() : _maybe_translate n'utilise pas l'index
+        assert svc._maybe_translate("iPhone 13 noir") == "iPhone 13 noir"
+
 
 class TestDescribeEndpoint:
     def test_503_when_not_loaded(self):
