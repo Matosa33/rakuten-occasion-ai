@@ -367,10 +367,10 @@ class DescribeService:
         self._loaded = False
 
     def load(self) -> None:
-        log.info("Loading train metadata for DescribeService…")
+        log.info("Loading train metadata for DescribeService (+ description grounding)…")
         self._train_meta = pl.read_parquet(
             DATA_PROCESSED_PRODUCTS / "train.parquet",
-            columns=["parent_asin", "title", "store", "_source_category"],
+            columns=["parent_asin", "title", "store", "_source_category", "description"],
         )
         self._loaded = True
 
@@ -392,6 +392,26 @@ class DescribeService:
             return OpenRouterWriter()
         return _rag.MockLLMWriter()
 
+    @staticmethod
+    def _description_to_grounding(description: object) -> pl.DataFrame:
+        """Convertit la description produit (liste de paragraphes stringifiée) en
+        DataFrame `text` consommable par le RAG (extract_useful_sentences)."""
+        import ast
+
+        paragraphs: list[str] = []
+        if isinstance(description, str) and description.strip():
+            try:
+                parsed = ast.literal_eval(description)
+                if isinstance(parsed, list):
+                    paragraphs = [str(p) for p in parsed if p and str(p).strip()]
+                else:
+                    paragraphs = [description]
+            except (ValueError, SyntaxError):
+                paragraphs = [description]
+        if not paragraphs:
+            return pl.DataFrame(schema={"text": pl.Utf8})
+        return pl.DataFrame({"text": paragraphs})
+
     def describe(self, parent_asin: str, condition: str = "bon état") -> DescribeResult:
         if not self._loaded:
             raise RuntimeError("DescribeService non chargé.")
@@ -400,11 +420,13 @@ class DescribeService:
             raise ValueError(f"parent_asin {parent_asin} introuvable dans le catalogue.")
         product_meta = row.row(0, named=True)
 
-        # Grounding : reviews_index sans colonne text (Option C+) → vide pour MVP
-        empty_reviews = pl.DataFrame(schema={"text": pl.Utf8})
+        # Grounding F3 : on ancre la génération sur la DESCRIPTION réelle du produit
+        # (paragraphes catalogue), pas seulement le titre ni la mémoire du LLM.
+        # La description est une liste de paragraphes stringifiée ('[...]').
+        grounding_df = self._description_to_grounding(product_meta.get("description"))
         writer = self._get_writer()
         listing = _rag.generate_listing(
-            product_meta, empty_reviews, writer, seller_condition=condition
+            product_meta, grounding_df, writer, seller_condition=condition
         )
         return DescribeResult(
             title=listing.title,

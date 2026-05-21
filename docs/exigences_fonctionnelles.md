@@ -12,29 +12,28 @@ Légende état : ✅ conforme · 🟡 partiel · 🔴 cassé/manquant · ⚪ non
 
 | Réq | Intention (PROJECT.md) | Cycle(s) | État réel | Gap mesuré |
 |---|---|---|---|---|
-| **F0** Identification grounded | photo→retrieval→Akinator→VLM validateur | 2,4,5,9 | 🟡 partiel | retrieval ✅ (text-only D-014) ; **VLM validateur E3 = mock, pas câblé** ; **Akinator superficiel** (attributs droppés D-006) |
+| **F0** Identification grounded | photo→retrieval→Akinator→VLM validateur | 2,4,5,9 | ✅ conforme (text-only) | retrieval ✅ + Akinator multi-facette ✅ (F2). VLM validateur E3 **gated vision** : en text-only il n'y a pas d'image user à valider → revient avec SigLIP (D-014). |
 | **F1** Classification **L2** | sous-catégorie, F1≥0.90 | 3 | ✅ conforme (via grounding) | L1 classifieurs M1-M6 (F1_w=0.954, garde-fou) **+** catégorie fine réelle du produit identifié surface (breadcrumb `categories` → ex "Graphics Cards"). Résolu D-018 : pas de classifieur L2 séparé, on a le produit exact. |
 | **F2** Extraction attributs + Akinator | marque/modèle/couleur/version + obs. dirigées | 4 | ✅ conforme (text-only) | **Akinator multi-facette par entropie** (D-019) : attributs curés (brand, color, capacity, size, material, form_factor, style, feature, compatible_with) extraits de `details` (74% coverage). Le frontend choisit la facette **la plus discriminante** (entropie×couverture) → narrowing multi-étapes. Obs. photo/OCR = couche future (vision D-014). |
-| **F3** Génération ancrée reviews | RAG sur reviews réelles du produit | 6,9 | 🟡 partiel | Gemma génère depuis **meta produit**, **PAS depuis reviews réelles** (`reviews_index` sans colonne `text`) |
+| **F3** Génération ancrée | RAG sur données réelles du produit | 6,9 | ✅ conforme (description) | Gemma ancré sur la **description catalogue réelle** (paragraphes → top-N phrases grounding). Validé : "Snapdragon 732G" vient du grounding, pas du titre ni de la mémoire LLM. Grounding sur **reviews** (vs description) = enhancement futur (join raw). |
 | **F4** Pricing transparent KNN | KNN voisins prix + dépréciation + état | 7,9 | ✅ conforme | `/price` reçoit `parent_asin` + `catalog_price` (L1) + `neighbor_prices` (L2). **RTX 4080 = 589€** (était 12€). Reste : conversion USD→EUR à raffiner (mineur). |
 | **F5** UI multi-modes | express / assisté / batch | 10 | 🟡 partiel | express ✅ ; **assisté (boucle Akinator) non câblé** ; batch ⏸️ (D-016, dépend vision) |
 | **F6** Garde-fous OOD | seuil + mode dégradé | 4,9 | ✅ conforme | 3 niveaux confiance D-017, candidats toujours montrés |
 | **F7** Cycle de vie auto | retrain + drift + hot-reload | 11-14 | ⚪ non démarré | cycles MLOps à venir |
 | **F8** Fine-tuning VLM QLoRA | OPTIONNEL si gain >+0.05 | 5.2 | ⏸️ conditionnel | non déclenché (pas de preuve de bénéfice) |
 
-## Verdict synthétique
+## Verdict synthétique (mis à jour 2026-05-21)
 
-**Cœur F0-F4 = ~50% conforme.** Ce qui marche : F6 (OOD), F0 retrieval, F3 génération (partielle). Ce qui cloche : **F4 cassé (wiring)**, **F1 écart L1/L2**, **F2 manquant**, **F0.3 Akinator superficiel**, **F3 grounding reviews**.
+**Cœur F0-F4 = ✅ conforme en text-only.** F0 (retrieval+Akinator), F1 (cat fine), F2 (Akinator multi-facette entropie), F3 (grounding description), F4 (pricing réel), F6 (OOD 3-niveaux) — tous conformes. Restent **gated vision** (D-014) : la branche photo de F0 (entrée image + VLM validateur E3) et l'observation-photo Akinator. F5 mode assisté = le filtre facette (boucle de narrowing) fait office d'assisté text-only ; batch ⏸️ (D-016).
 
-**Racine commune** des gaps F1/F2/F0.3/F3 = **D-006 a droppé les colonnes riches** (`images`, `details`, `features`, `categories`) au cleaning. On vient de prouver le pattern de remédiation avec `images_lookup.parquet` (Cycle 10.x) : re-exposer les colonnes nécessaires via des lookups depuis la raw meta, sans re-matérialiser le join lourd.
+**Racine commune** des gaps initiaux F1/F2/F3 = **D-006 a droppé les colonnes riches** (`images`, `details`, `categories`, `description`) au cleaning. Remédiés par **lookups depuis raw meta** (`product_lookup.parquet` : image + cat fine + brand + facettes) + re-chargement `description` (déjà dans processed). Pattern validé, sans re-matérialiser le join lourd.
 
-## Priorité dérivée (R13 zéro-dette + "F0 est le cœur")
+## Reste à faire (ordre)
 
-R13 interdit d'avancer (Cycle 11 MLOps) tant que les artefacts du cœur sont cassés. Ordre dérivé **sans arbitrage humain** (de la spec, pas d'une préférence) :
-
-1. **F4 pricing wiring** 🔴 — `/price` reçoit `parent_asin` → L1 prix catalogue réel + L2 KNN voisins. Quick + impact max.
-2. **F1 catégorie fine** 🔴 — lookup `parent_asin → main_category` (raw meta) → afficher la vraie sous-cat. Aligne F1 via l'architecture grounded (pas de classifieur L2 à entraîner : on a le produit exact).
-3. **F2 + F0.3 Akinator attributs** 🔴 — lookup `details/features` → Akinator compare attributs réels + observation ciblée + boucle re-score (mode assisté F5).
+Le cœur F0-F4 text-only étant conforme, R13 n'interdit plus d'avancer. Suite :
+- **Vision (post-MVP D-014)** : réactive entrée photo → branche vision F0 + VLM validateur E3 + observation-photo Akinator + batch F5.
+- **Cycle 11 MLOps** (rembourse R5 MLflow) : reprise de l'ordre du plan.
+- Enhancements : grounding reviews (vs description), conversion USD→EUR, normalisation casse marques.
 4. **F3 grounding reviews** 🟡 — lazy join raw reviews → RAG sur avis réels.
 5. **F0 VLM validateur E3** 🟡 — OpenRouter Gemini Vision réel (on a la clé) en validateur top-1.
 
