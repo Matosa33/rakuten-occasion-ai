@@ -9,11 +9,13 @@ depuis ses rapports JSON (`reports/**/*.json`) : un run MLflow par modèle avec 
 params + metrics + artefacts, puis enregistrement au Model Registry et promotion du
 vainqueur (M1, F1_w=0.954) en alias `@Production`.
 
-Tracking store : local file (`mlruns/`, gitignored). Pas de serveur requis pour la démo.
+Tracking store : **SQLite** (`mlflow.db`, gitignored) — backend recommandé MLflow
+(le file store `mlruns/` est déprécié depuis fév 2026). Artefacts → `mlartifacts/`.
 
 Lance :
 
     python -m src.mlops.01_mlflow_log_runs
+    # UI : mlflow ui --backend-store-uri sqlite:///mlflow.db
 """
 
 from __future__ import annotations
@@ -39,6 +41,8 @@ log = logging.getLogger(__name__)
 
 EXPERIMENT_NAME = "rakuten-mvp"
 REGISTERED_MODEL = "rakuten-classifier"
+TRACKING_DB = "mlflow.db"  # SQLite (recommandé) ; file store mlruns/ déprécié 2026
+ARTIFACTS_DIR = "mlartifacts"
 # @Production = M5 (TF-IDF) : meilleur classifieur PORTABLE (rechargeable sans l'index
 # FAISS 13 GB), F1_w=0.9503. M1 (FAISS k-NN, 0.954) est le vainqueur bench mais couplé
 # à l'index (servi comme M7 retrieval) → tracké, pas promu comme modèle portable. Cf. D-020.
@@ -116,9 +120,14 @@ def _log_simple(name: str, report_path: Path, cycle: str, metrics: dict[str, flo
 
 def main() -> None:
     log.info("=== Cycle 11.1+11.2 — MLflow tracking + Registry (R5) ===")
-    mlflow.set_tracking_uri(f"file:{(REPO_ROOT / 'mlruns').as_posix()}")
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    mlflow.set_tracking_uri(f"sqlite:///{(REPO_ROOT / TRACKING_DB).as_posix()}")
     client = MlflowClient()
+    # Crée l'expérience avec un artifact_location dédié (sinon défaut relatif)
+    if mlflow.get_experiment_by_name(EXPERIMENT_NAME) is None:
+        mlflow.create_experiment(
+            EXPERIMENT_NAME, artifact_location=(REPO_ROOT / ARTIFACTS_DIR).as_uri()
+        )
+    mlflow.set_experiment(EXPERIMENT_NAME)
 
     # 1. Log classifieurs M1-M6
     log.info("--- Classifieurs M1-M6 ---")
@@ -169,7 +178,7 @@ def main() -> None:
     else:
         log.warning("  Vainqueur %s non enregistré (artefact model absent)", PRODUCTION_MODEL_ID)
 
-    log.info("MLflow tracking OK. UI : `mlflow ui --backend-store-uri file:./mlruns`")
+    log.info("MLflow tracking OK. UI : `mlflow ui --backend-store-uri sqlite:///mlflow.db`")
 
 
 if __name__ == "__main__":
