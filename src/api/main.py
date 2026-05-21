@@ -23,12 +23,16 @@ Lance :
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 
+from src.api import persistence
 from src.api.pipeline import IdentificationService, PricingService
 from src.api.schemas import (
     CandidateMeta,
@@ -121,6 +125,19 @@ async def identify(req: IdentifyRequest) -> IdentifyResponse:
 
     result = ident.identify(query, already_observed=req.already_observed)
 
+    # Persistence (Cycle 9.5) : trace l'identification
+    top1 = result.candidates[0] if result.candidates else None
+    try:
+        persistence.log_identification(
+            query_text=query,
+            status=result.status,
+            top1_parent_asin=top1.parent_asin if top1 else None,
+            top1_category=top1.category if top1 else None,
+            top1_score=top1.score if top1 else None,
+        )
+    except Exception as e:  # noqa: BLE001 — la persistance ne doit jamais casser l'API
+        log.warning("Persistence log échoué (non bloquant) : %s", e)
+
     next_obs = None
     if result.next_observation is not None:
         obs = result.next_observation
@@ -179,3 +196,56 @@ async def describe(req: DescribeRequest) -> DescribeResponse:
         501,
         "Endpoint /describe : wiring OpenRouter prévu Cycle 9.3b (nécessite OPENROUTER_API_KEY).",
     )
+
+
+@app.get("/history")
+async def history(limit: int = 20) -> dict:
+    """Cycle 9.5 — N dernières identifications historisées (traçabilité)."""
+    try:
+        return {"logs": persistence.recent_logs(limit=limit)}
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(503, f"Historique indisponible : {e}") from e
+
+
+@app.post("/identify/stream")
+async def identify_stream(req: IdentifyRequest):
+    """Cycle 9.4 — SSE : streame les étapes du pipeline pour UX progressive.
+
+    Chaque étape = un event JSON. Le frontend (Cycle 10) affiche la
+    progression (encodage → recherche → garde-fous → résultat).
+    """
+    ident: IdentificationService | None = APP_STATE.get("identification")
+    if ident is None or not ident.ready:
+        raise HTTPException(503, "IdentificationService indisponible.")
+    query = req.text_hint.strip()
+    if not query:
+        raise HTTPException(422, "text_hint vide (MVP text-only, cf. D-014).")
+
+    async def event_generator():
+        def _sse(event: str, data: dict) -> str:
+            return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+        yield _sse("step", {"phase": "encoding", "message": "Encodage de la requête…"})
+        await asyncio.sleep(0)
+        # Le pipeline est synchrone (FAISS/Arctic) → exécuté en thread pour ne pas bloquer la loop
+        result = await asyncio.to_thread(ident.identify, query, req.already_observed)
+        yield _sse("step", {"phase": "retrieval", "message": "Recherche catalogue terminée."})
+        yield _sse(
+            "result",
+            {
+                "status": result.status,
+                "top_candidates": [
+                    {
+                        "parent_asin": c.parent_asin,
+                        "title": c.title,
+                        "category": c.category,
+                        "score": round(c.score, 4),
+                    }
+                    for c in result.candidates
+                ],
+                "explanation": result.explanation,
+            },
+        )
+        yield _sse("done", {"ok": True})
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

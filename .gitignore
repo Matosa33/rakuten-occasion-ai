@@ -125,3 +125,8 @@ catboost_info/
 !data/processed/*.dvc
 !data/embeddings/*.dvc
 !models/**/*.dvc
+
+# === SQLite (Cycle 9.5 persistence) ===
+*.db
+*.sqlite
+*.sqlite3
