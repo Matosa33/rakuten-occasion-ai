@@ -1,0 +1,23 @@
+# Image Airflow + projet Rakuten — orchestration de la boucle de ré-entraînement.
+# Cf. BRAIN/decisions.md D-022 : l'orchestrateur n'exécute PAS le GPU.
+# Extra [train] = CPU strict (sklearn + polars + mlflow), pas de torch.
+#
+# Build : depuis la racine du repo (contexte = repo root) :
+#   docker build -f infra/docker/Dockerfile.airflow -t rakuten/airflow:dev .
+FROM apache/airflow:2.10.5-python3.12
+
+# git : nécessaire au tag `git_commit` du helper MLflow (D-021) lancé dans les tâches.
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+USER airflow
+
+# Deps projet (extra train). On copie pyproject + src pour résoudre l'editable install ;
+# au runtime, le repo complet est monté sur /opt/rakuten (code + data + mlflow.db live).
+COPY --chown=airflow:root pyproject.toml README.md /opt/rakuten/
+COPY --chown=airflow:root src /opt/rakuten/src
+RUN pip install --no-cache-dir -e "/opt/rakuten[train]"
+
+# `python -m src.x` résout via la racine repo montée (src = package, a son __init__).
+ENV PYTHONPATH=/opt/rakuten

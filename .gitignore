@@ -113,6 +113,11 @@ infra/**/secrets/
 infra/minio/data/
 infra/postgres/data/
 
+# === Airflow (Cycle 12 — orchestration) ===
+infra/airflow/logs/
+infra/airflow/plugins/*
+!infra/airflow/plugins/.gitkeep
+
 # === Monitoring (P15) ===
 monitoring/prometheus/data/
 monitoring/grafana/data/

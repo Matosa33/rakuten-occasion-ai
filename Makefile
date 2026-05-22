@@ -1,7 +1,9 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger
+
+AIRFLOW_COMPOSE := docker compose -f infra/compose/docker-compose.airflow.yml
 
 help:  ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -49,3 +51,17 @@ audit:  ## P02 - chaîne audit complète (load → qualité → dist → biais)
 clean:  ## Nettoie les caches Python/pytest/ruff
 	rm -rf .pytest_cache .ruff_cache .mypy_cache htmlcov .coverage
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+
+# === Cycle 12 — Orchestration Airflow (D-022) ===
+
+airflow-up:  ## C12 - build + démarre Airflow (UI http://localhost:8080, admin/admin)
+	$(AIRFLOW_COMPOSE) up -d --build
+
+airflow-down:  ## C12 - arrête Airflow (préserve le volume Postgres)
+	$(AIRFLOW_COMPOSE) down
+
+airflow-logs:  ## C12 - suit les logs du scheduler + webserver
+	$(AIRFLOW_COMPOSE) logs -f airflow-scheduler airflow-webserver
+
+airflow-trigger:  ## C12 - déclenche manuellement le DAG rakuten_retrain
+	$(AIRFLOW_COMPOSE) exec airflow-scheduler airflow dags trigger rakuten_retrain
