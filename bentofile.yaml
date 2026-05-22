@@ -1,0 +1,14 @@
+# Build BentoML du classifieur @Production (Cycle 12.2, D-022).
+# Build : `bentoml build` (après `python -m src.serving.import_model`).
+# Dev   : `bentoml serve src/serving/service.py:RakutenClassifier`.
+service: "src/serving/service.py:RakutenClassifier"
+name: rakuten_classifier
+labels:
+  cycle: "12"
+  owner: rakuten
+include:
+  - "src/serving/*.py"
+python:
+  packages:
+    - scikit-learn>=1.5.0
+    - mlflow>=2.16.0

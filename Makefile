@@ -1,7 +1,7 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger bento-import bento-serve
 
 AIRFLOW_COMPOSE := docker compose -f infra/compose/docker-compose.airflow.yml
 
@@ -65,3 +65,11 @@ airflow-logs:  ## C12 - suit les logs du scheduler + webserver
 
 airflow-trigger:  ## C12 - déclenche manuellement le DAG rakuten_retrain
 	$(AIRFLOW_COMPOSE) exec airflow-scheduler airflow dags trigger rakuten_retrain
+
+# === Cycle 12.2 — Serving BentoML (D-022) ===
+
+bento-import:  ## C12.2 - importe le modèle @Production MLflow dans le store BentoML
+	BENTOML_DO_NOT_TRACK=1 python -m src.serving.import_model
+
+bento-serve:  ## C12.2 - sert le classifieur (API :8500, métriques Prometheus /metrics)
+	BENTOML_DO_NOT_TRACK=1 bentoml serve src/serving/service.py:RakutenClassifier --port 8500
