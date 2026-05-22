@@ -77,6 +77,7 @@ with DAG(
     start_date=datetime(2026, 5, 1),
     schedule="@weekly",
     catchup=False,
+    max_active_runs=1,  # un seul retrain à la fois (évite la course sur joblibs + mlflow.db)
     tags=["rakuten", "mlops", "retrain"],
     doc_md=__doc__,
 ) as dag:
