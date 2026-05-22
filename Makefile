@@ -54,7 +54,7 @@ clean:  ## Nettoie les caches Python/pytest/ruff
 
 # === Cycle 12 — Orchestration Airflow (D-022) ===
 
-airflow-up:  ## C12 - build + démarre Airflow (UI http://localhost:8080, admin/admin)
+airflow-up:  ## C12 - build + démarre Airflow (UI http://localhost:8088, admin/admin)
 	$(AIRFLOW_COMPOSE) up -d --build
 
 airflow-down:  ## C12 - arrête Airflow (préserve le volume Postgres)

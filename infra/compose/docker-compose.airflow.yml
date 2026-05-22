@@ -72,7 +72,8 @@ services:
     <<: *airflow-common
     command: webserver
     ports:
-      - "8080:8080"
+      # hôte 8088 (le 8080 est souvent pris par Apache/XAMPP) → conteneur 8080
+      - "8088:8080"
     depends_on:
       <<: *airflow-deps
       airflow-init:

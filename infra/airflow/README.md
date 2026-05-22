@@ -12,7 +12,7 @@ Depuis la racine du repo :
 
 ```bash
 make airflow-up        # build l'image + démarre Postgres + scheduler + webserver
-# UI : http://localhost:8080  (admin / admin)
+# UI : http://localhost:8088  (admin / admin)
 make airflow-trigger   # déclenche le DAG rakuten_retrain
 make airflow-logs      # suit les logs
 make airflow-down      # arrête (le volume Postgres est préservé)
