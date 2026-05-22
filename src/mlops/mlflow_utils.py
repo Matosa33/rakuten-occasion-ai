@@ -127,15 +127,27 @@ def log_training_run(
                         input_example = x_example
                 except Exception as e:  # noqa: BLE001
                     log.warning("signature infer échouée pour %s : %s", model_id, e)
-            info = mlflow.sklearn.log_model(
-                model,
-                name="model",
-                signature=signature,
-                input_example=input_example,
-                registered_model_name=REGISTERED_MODEL if register else None,
-            )
-            # version créée PAR CET appel (ordre-indépendant, vs "max version")
-            registered_version = getattr(info, "registered_model_version", None)
+            try:
+                info = mlflow.sklearn.log_model(
+                    model,
+                    name="model",
+                    signature=signature,
+                    input_example=input_example,
+                    registered_model_name=REGISTERED_MODEL if register else None,
+                )
+                # version créée PAR CET appel (ordre-indépendant, vs "max version")
+                registered_version = getattr(info, "registered_model_version", None)
+            except Exception as e:  # noqa: BLE001
+                # Dégradation propre : params/metrics restent loggés (SQLite), mais le
+                # push d'artefact échoue si le store n'est pas inscriptible — ex. retrain
+                # in-container, dont le chemin d'artefact absolu de l'hôte est invisible
+                # (cf. D-023). Portabilité réelle = MLflow server + MinIO au Cycle 13.4.
+                log.warning(
+                    "log_model artefact/registry échoué pour %s (run gardé, métriques OK) : %s",
+                    model_id,
+                    e,
+                )
+                mlflow.set_tag("artifact_logging", "deferred")
 
         if promote_production and registered_version is not None:
             from mlflow.tracking import MlflowClient
