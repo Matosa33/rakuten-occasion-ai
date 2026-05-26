@@ -17,7 +17,7 @@ USER airflow
 # au runtime, le repo complet est monté sur /opt/rakuten (code + data + mlflow.db live).
 COPY --chown=airflow:root pyproject.toml README.md /opt/rakuten/
 COPY --chown=airflow:root src /opt/rakuten/src
-RUN pip install --no-cache-dir -e "/opt/rakuten[train]"
+RUN pip install --no-cache-dir -e "/opt/rakuten[train,monitoring]"
 
 # `python -m src.x` résout via la racine repo montée (src = package, a son __init__).
 ENV PYTHONPATH=/opt/rakuten

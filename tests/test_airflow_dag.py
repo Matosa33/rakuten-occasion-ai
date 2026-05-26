@@ -28,13 +28,19 @@ def test_dag_compile():
 
 
 def test_dag_id_et_taches_presentes():
-    """Le DAG expose l'id attendu et les 3 tâches du graphe (12.1)."""
+    """Le DAG expose l'id attendu et les 5 tâches du graphe (12.1 + 12.3)."""
     src = _source()
     assert 'dag_id="rakuten_retrain"' in src
-    for task_id in ("check_new_data", "train_classifiers", "evaluate_gate"):
+    for task_id in (
+        "check_new_data",
+        "train_classifiers",
+        "evaluate_gate",
+        "promote_gate",  # 12.3 (D-024) — champion/challenger
+        "reimport_bento",  # 12.3 — API hot reload (BentoML)
+    ):
         assert f'task_id="{task_id}"' in src, f"tâche manquante : {task_id}"
-    # dépendances chaînées
-    assert "t_check >> t_train >> t_gate" in src
+    # dépendances chaînées (graphe complet 5 tâches)
+    assert "t_check >> t_train >> t_gate >> t_promote >> t_reimport" in src
 
 
 def test_retrain_modules_sont_les_tetes_cpu():

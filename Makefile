@@ -1,7 +1,7 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger bento-import bento-serve
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger bento-import bento-serve drift-check promote-gate
 
 AIRFLOW_COMPOSE := docker compose -f infra/compose/docker-compose.airflow.yml
 
@@ -73,3 +73,11 @@ bento-import:  ## C12.2 - importe le modèle @Production MLflow dans le store Be
 
 bento-serve:  ## C12.2 - sert le classifieur (API :8500, métriques Prometheus /metrics)
 	BENTOML_DO_NOT_TRACK=1 bentoml serve src/serving/service.py:RakutenClassifier --port 8500
+
+# === Cycle 12.3 — Boucle fermée (D-024) ===
+
+drift-check:  ## C12.3 - détection de drift Evidently (rapport HTML monitoring/evidently/reports/)
+	python -m src.monitoring.drift_detection
+
+promote-gate:  ## C12.3 - champion/challenger : bouge @Production si nouveau modèle meilleur
+	python -m src.mlops.promote_gate

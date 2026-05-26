@@ -1,21 +1,21 @@
-"""DAG `rakuten_retrain` — boucle de ré-entraînement orchestrée (Cycle 12.1, D-022).
+"""DAG `rakuten_retrain` — boucle de ré-entraînement fermée (C12.1+12.3, D-022/D-024).
 
-L'orchestrateur orchestre, il ne calcule PAS le GPU (anti-pattern). Graphe :
+L'orchestrateur orchestre, il ne calcule PAS le GPU. Graphe :
 
-    check_new_data  →  train_classifiers  →  evaluate_gate
+    check_new_data → train_classifiers → evaluate_gate → promote_gate → reimport_bento
 
-- **check_new_data** : l'étape d'encodage GPU est une tâche AMONT ISOLÉE. En prod
-  elle encode le *delta* (nouveaux items) sur un worker GPU ; en démo (VM sans GPU),
-  elle est idempotente : no-op si les embeddings sont déjà matérialisés (cache/DVC).
-- **train_classifiers** : ré-entraîne les têtes CPU M5/M2/M4 sur les embeddings en
-  cache → log MLflow live + register `rakuten-classifier` + alias `@Production` (M5)
-  via l'instrumentation du Cycle 11 (D-021).
-- **evaluate_gate** : garde-fou qualité — lit le rapport du challenger et échoue le
-  DAG si F1 < seuil (empêche de propager un modèle dégradé). Le *gate* explicite
-  champion/challenger (promote conditionnel) = sous-todo 12.3 (boucle fermée).
+- **check_new_data** : encode GPU = tâche amont isolée ; no-op si embeddings en cache.
+- **train_classifiers** : ré-entraîne M5/M2/M4 sur embeddings, logge MLflow live (D-021,
+  push d'artefact dégradé en conteneur cf. D-023 → C13.4).
+- **evaluate_gate** : garde-fou qualité (F1 ≥ seuil) — échoue le DAG sous le seuil.
+- **promote_gate** (12.3, D-024) : compare le challenger au champion `@Production` ;
+  bouge l'alias **seulement si meilleur + ε**. Honnête si pas de nouvelle version
+  (D-023 in-container) → `skipped_no_challenger`.
+- **reimport_bento** (12.3) : si promote a eu lieu, re-importe `@Production` dans le
+  store BentoML pour rafraîchir le service. Tolérant (bentoml absent du conteneur OK).
 
-Les tâches tournent dans le conteneur Airflow avec le repo monté sur /opt/rakuten
-(code + data + mlflow.db live). Cf. infra/compose/docker-compose.airflow.yml.
+Les tâches tournent dans le conteneur Airflow avec le repo monté sur /opt/rakuten.
+Cf. infra/compose/docker-compose.airflow.yml.
 """
 
 from __future__ import annotations
@@ -71,6 +71,39 @@ def evaluate_gate() -> dict:
     return {"test_f1_weighted": f1, "gate_passed": True}
 
 
+def promote_gate_callable() -> dict:
+    """Champion/challenger : bouge `@Production` seulement si meilleur (D-024)."""
+    from src.mlops.promote_gate import decide_and_promote
+
+    result = decide_and_promote()
+    log.info("Promote gate : %s", result)
+    return result
+
+
+def reimport_bento_callable(**context) -> str:
+    """Si promote a eu lieu, re-importe `@Production` dans le store BentoML.
+
+    Tolérant : bentoml absent du conteneur (image lean) ou artefact non téléchargeable
+    (D-023, hôte↔conteneur) → warning + skip sans casser le DAG. La vraie portabilité
+    inter-environnements arrive avec MinIO + MLflow server au Cycle 13.4.
+    """
+    prev = context["ti"].xcom_pull(task_ids="promote_gate")
+    if not (prev and prev.get("promoted")):
+        log.info("Pas de promote (%s) → reimport skippé.", (prev or {}).get("decision", "?"))
+        return "skipped_no_promote"
+    try:
+        from src.serving.import_model import main as do_import
+
+        do_import()
+        return "reimported"
+    except ModuleNotFoundError as e:
+        log.warning("bentoml absent (image lean) → reimport host-callable. (%s)", e)
+        return "skipped_no_bentoml"
+    except Exception as e:  # noqa: BLE001 — D-023 in-container, voir C13.4
+        log.warning("reimport échoué (cf. D-023 → C13.4) : %s", e)
+        return "skipped_artifact_unreachable"
+
+
 with DAG(
     dag_id="rakuten_retrain",
     description="Boucle de ré-entraînement CPU (encode-delta → train → eval → register) — D-022",
@@ -103,4 +136,14 @@ with DAG(
         python_callable=evaluate_gate,
     )
 
-    t_check >> t_train >> t_gate
+    t_promote = PythonOperator(
+        task_id="promote_gate",
+        python_callable=promote_gate_callable,
+    )
+
+    t_reimport = PythonOperator(
+        task_id="reimport_bento",
+        python_callable=reimport_bento_callable,
+    )
+
+    t_check >> t_train >> t_gate >> t_promote >> t_reimport

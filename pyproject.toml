@@ -88,6 +88,14 @@ mlops = [
     "dvc>=3.50.0",
 ]
 
+# Phase P13 — observabilité / drift detection (Cycle 12.3, étendu C14).
+# Evidently : drift detection sur features texte + catégories. CPU only.
+monitoring = [
+    "evidently>=0.4.0",
+    "pandas>=2.2.0",
+    "polars>=1.0.0",
+]
+
 # Phase P13 — serving BentoML (Cycle 12.2) : sert le modèle @Production du Registry
 # MLflow, métriques Prometheus natives (/metrics). CPU only.
 serving = [
