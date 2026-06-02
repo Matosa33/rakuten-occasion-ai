@@ -1,0 +1,31 @@
+# Overlay PROD pour la stack Rakuten (Cycle 13.2, D-025).
+#
+# Lancer :
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Différences vs dev (base) :
+#   - restart policy stricte (`unless-stopped`) → survit aux crash + reboot
+#   - ports api / airflow NON exposés à l'hôte (Traefik 13.3 en frontal)
+#   - frontend reste exposé (point d'entrée HTTP du user final)
+
+services:
+  api:
+    restart: unless-stopped
+    # Plus de port hôte : on accédera via Traefik (C13.3) → réseau Docker interne.
+    ports: !reset []
+
+  frontend:
+    restart: unless-stopped
+    # Frontend reste accessible (sera derrière Traefik en C13.3 mais reste exposé
+    # pour démo si Traefik pas encore en place).
+
+  postgres:
+    restart: unless-stopped
+
+  airflow-scheduler:
+    restart: unless-stopped
+
+  airflow-webserver:
+    restart: unless-stopped
+    # UI Airflow pas exposée publiquement en prod ; Traefik (13.3) la protègera.
+    ports: !reset []

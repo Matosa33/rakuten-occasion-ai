@@ -70,6 +70,18 @@ Sans ces volumes, l'image démarre et répond `200` sur `/health` mais `/identif
 échoue à l'initialisation des services (FAISS introuvable). Honnête et attendu :
 ce sont les VOLUMES qui rendent l'API fonctionnelle, pas l'image seule.
 
+## Note premier load API sous Windows Docker Desktop
+
+L'API charge au démarrage l'index FAISS HNSW (~**13,8 Go**) monté en read-only.
+Sous **Windows + Docker Desktop (WSL2)**, le bind-mount lit séquentiellement
+via la traduction NTFS↔ext4 → premier `faiss.read_index` prend **5 à 15 min**
+(pas un bug, caractéristique connue). Sous **Linux natif (VM soutenance)** :
+mmap direct, **quasi-instantané**.
+
+Le `start_period` du healthcheck API est calé à 5 min pour tolérer ce cas
+sans marquer le conteneur `unhealthy` à tort. Cf. `BRAIN/learnings.md`
+(`bind-mount-RO-docker-desktop-windows-tres-lent-sur-gros-fichiers`).
+
 ## Pourquoi pas de variante CUDA ?
 
 L'API ne fait que de l'inférence légère (FAISS CPU + un classifieur sklearn).

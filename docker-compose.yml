@@ -1,0 +1,168 @@
+# Stack Rakuten — Compose unifié (Cycle 13.2, D-025).
+#
+# Démarrage (depuis la racine du repo) :
+#   docker compose up -d --build       # construit et démarre tout
+#   docker compose ps                  # état des services
+#   docker compose logs -f api         # suit les logs d'un service
+#   docker compose down                # arrête (préserve les volumes)
+#
+# UI (ports par défaut, customisables via `.env`) :
+#   - Frontend     : http://localhost:8082  (var FRONTEND_PORT)
+#   - API          : http://localhost:8010  (var API_PORT)
+#   - Airflow UI   : http://localhost:8088  (var AIRFLOW_PORT)  — admin/admin
+#   - MLflow UI    : `mlflow ui --backend-store-uri sqlite:///mlflow.db` (host, hors stack)
+#
+# Si tes ports par défaut sont pris (XAMPP, autre uvicorn...), créer un `.env` :
+#   API_PORT=8011
+#   FRONTEND_PORT=8082
+#   AIRFLOW_PORT=8089
+#
+# Overlay prod : `docker compose -f docker-compose.yml -f docker-compose.prod.yml up`.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# YAML anchors — config Airflow partagée par init/scheduler/webserver.
+# ─────────────────────────────────────────────────────────────────────────────
+x-airflow-env: &airflow-env
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+  AIRFLOW__CORE__FERNET_KEY: "${AIRFLOW_FERNET_KEY:-}"
+  PYTHONPATH: /opt/rakuten
+  MLFLOW_TRACKING_URI: sqlite:////opt/rakuten/mlflow.db
+
+x-airflow-volumes: &airflow-volumes
+  # repo entier monté (code + data + mlflow.db + mlartifacts live).
+  - .:/opt/rakuten
+  - ./infra/airflow/dags:/opt/airflow/dags
+  - ./infra/airflow/logs:/opt/airflow/logs
+  - ./infra/airflow/plugins:/opt/airflow/plugins
+
+x-airflow-depends: &airflow-depends
+  postgres:
+    condition: service_healthy
+
+services:
+  # ───────────────────────────────────────────────────────────────────────────
+  # API FastAPI (Cycle 9 / image C13.1). Sert /identify, /price, /describe.
+  # Volumes data en READ-ONLY (l'API ne ré-écrit pas les artefacts ML).
+  # ───────────────────────────────────────────────────────────────────────────
+  api:
+    image: rakuten/api:dev
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    ports:
+      # Personnalisable via `API_PORT=xxxx` dans `.env` (8000 souvent pris par
+      # uvicorn dev / XAMPP). Par défaut 8010 = libre sur la plupart des postes.
+      - "127.0.0.1:${API_PORT:-8010}:8000"
+    volumes:
+      - ./data:/opt/rakuten/data:ro
+      - ./mlflow.db:/opt/rakuten/mlflow.db:ro
+      - ./mlartifacts:/opt/rakuten/mlartifacts:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # 300 s pour tolérer le premier load de l'index FAISS 13,8 Go via bind-mount
+      # RO Docker Desktop Windows (5-15 min). Sous Linux natif c'est instantané.
+      start_period: 300s
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Frontend React/Vite servi par nginx (image C13.1).
+  # Proxy /api/ → service "api" (DNS Docker, cf. nginx.conf).
+  # ───────────────────────────────────────────────────────────────────────────
+  frontend:
+    image: rakuten/frontend:dev
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.frontend
+    ports:
+      # Personnalisable via `FRONTEND_PORT=xxxx` (8080/8081 souvent pris par Apache/XAMPP).
+      - "127.0.0.1:${FRONTEND_PORT:-8082}:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Métadonnées Airflow (Cycle 12.1). Volume nommé → durabilité du registry DAG.
+  # ───────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Airflow init (one-shot) : db migrate + utilisateur admin.
+  # ───────────────────────────────────────────────────────────────────────────
+  airflow-init:
+    image: rakuten/airflow:dev
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.airflow
+    environment: *airflow-env
+    volumes: *airflow-volumes
+    working_dir: /opt/rakuten
+    depends_on: *airflow-depends
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin --password admin \
+          --firstname Rakuten --lastname Admin \
+          --role Admin --email admin@example.com || true
+    restart: "no"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Airflow scheduler : exécute les DAGs (`rakuten_retrain`, `rakuten_drift_check`).
+  # ───────────────────────────────────────────────────────────────────────────
+  airflow-scheduler:
+    image: rakuten/airflow:dev
+    environment: *airflow-env
+    volumes: *airflow-volumes
+    working_dir: /opt/rakuten
+    depends_on:
+      <<: *airflow-depends
+      airflow-init:
+        condition: service_completed_successfully
+    command: scheduler
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Airflow webserver : UI sur http://localhost:8088 (admin/admin).
+  # ───────────────────────────────────────────────────────────────────────────
+  airflow-webserver:
+    image: rakuten/airflow:dev
+    environment: *airflow-env
+    volumes: *airflow-volumes
+    working_dir: /opt/rakuten
+    ports:
+      # Personnalisable via `AIRFLOW_PORT=xxxx`. 8088 par défaut (8080 souvent pris).
+      - "127.0.0.1:${AIRFLOW_PORT:-8088}:8080"
+    depends_on:
+      <<: *airflow-depends
+      airflow-init:
+        condition: service_completed_successfully
+    command: webserver
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  airflow-pgdata:

@@ -15,7 +15,7 @@ L'orchestrateur orchestre, il ne calcule PAS le GPU. Graphe :
   store BentoML pour rafraîchir le service. Tolérant (bentoml absent du conteneur OK).
 
 Les tâches tournent dans le conteneur Airflow avec le repo monté sur /opt/rakuten.
-Cf. infra/compose/docker-compose.airflow.yml.
+Cf. docker-compose.yml à la racine (D-025).
 """
 
 from __future__ import annotations

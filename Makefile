@@ -1,9 +1,11 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean up down logs ps stack-build airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build prod-up prod-down
 
-AIRFLOW_COMPOSE := docker compose -f infra/compose/docker-compose.airflow.yml
+# Stack Compose unifiée à la racine (D-025). Override prod via `-f`.
+COMPOSE := docker compose
+PROD := -f docker-compose.yml -f docker-compose.prod.yml
 
 help:  ## Affiche cette aide
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -54,17 +56,31 @@ clean:  ## Nettoie les caches Python/pytest/ruff
 
 # === Cycle 12 — Orchestration Airflow (D-022) ===
 
-airflow-up:  ## C12 - build + démarre Airflow (UI http://localhost:8088, admin/admin)
-	$(AIRFLOW_COMPOSE) up -d --build
+# === Cycle 13.2 — Stack unifiée (D-025) ===
 
-airflow-down:  ## C12 - arrête Airflow (préserve le volume Postgres)
-	$(AIRFLOW_COMPOSE) down
+up:  ## C13.2 - build + démarre TOUTE la stack (api, frontend, airflow, postgres)
+	$(COMPOSE) up -d --build
 
-airflow-logs:  ## C12 - suit les logs du scheduler + webserver
-	$(AIRFLOW_COMPOSE) logs -f airflow-scheduler airflow-webserver
+down:  ## C13.2 - arrête la stack (préserve les volumes Postgres + data)
+	$(COMPOSE) down
+
+logs:  ## C13.2 - suit les logs (ex: make logs SVC=api ou tous par défaut)
+	$(COMPOSE) logs -f $(SVC)
+
+ps:  ## C13.2 - état des services de la stack
+	$(COMPOSE) ps
+
+stack-build:  ## C13.2 - rebuild toutes les images de la stack sans démarrer
+	$(COMPOSE) build
+
+prod-up:  ## C13.2 - démarre la stack avec overlay prod (restart strict, ports internes)
+	$(COMPOSE) $(PROD) up -d --build
+
+prod-down:  ## C13.2 - arrête la stack prod
+	$(COMPOSE) $(PROD) down
 
 airflow-trigger:  ## C12 - déclenche manuellement le DAG rakuten_retrain
-	$(AIRFLOW_COMPOSE) exec airflow-scheduler airflow dags trigger rakuten_retrain
+	$(COMPOSE) exec airflow-scheduler airflow dags trigger rakuten_retrain
 
 # === Cycle 12.2 — Serving BentoML (D-022) ===
 
