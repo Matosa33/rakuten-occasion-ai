@@ -57,7 +57,10 @@ from src.config import (
     REPORTS_PRICING,
     SEED,
 )
-from src.mlops.mlflow_utils import log_training_run
+
+# NB: `log_training_run` (D-021) est importé LAZILY dans `main()`. Ce module est
+# aussi chargé par `src/api/pipeline.py` (importlib) pour réutiliser `suggest_price` ;
+# l'import au top tirait mlflow + ses 100 Mo dans l'image API (cf. smoke C13.1).
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -195,6 +198,9 @@ def suggest_price(
 
 
 def main() -> None:
+    # Import lazy : mlflow n'est nécessaire qu'au train standalone (cf. note module).
+    from src.mlops.mlflow_utils import log_training_run
+
     log.info("=== Cycle 7.1 — Pricing algorithmique transparent (M8) ===")
     REPORTS_PRICING.mkdir(parents=True, exist_ok=True)
     DATA_MODELS.mkdir(parents=True, exist_ok=True)

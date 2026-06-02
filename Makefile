@@ -1,7 +1,7 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger bento-import bento-serve drift-check promote-gate
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean airflow-up airflow-down airflow-logs airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build
 
 AIRFLOW_COMPOSE := docker compose -f infra/compose/docker-compose.airflow.yml
 
@@ -81,3 +81,11 @@ drift-check:  ## C12.3 - détection de drift Evidently (rapport HTML monitoring/
 
 promote-gate:  ## C12.3 - champion/challenger : bouge @Production si nouveau modèle meilleur
 	python -m src.mlops.promote_gate
+
+# === Cycle 13.1 — Images Docker API + Frontend ===
+
+api-build:  ## C13.1 - build image API (multi-stage CPU, ~quelques min)
+	docker build -f infra/docker/Dockerfile.api -t rakuten/api:dev .
+
+frontend-build:  ## C13.1 - build image Frontend (Node→nginx, ~1-2 min)
+	docker build -f infra/docker/Dockerfile.frontend -t rakuten/frontend:dev .

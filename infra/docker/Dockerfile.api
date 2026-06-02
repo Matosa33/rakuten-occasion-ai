@@ -1,0 +1,59 @@
+# Image API Rakuten — FastAPI sert /identify, /price, /describe (Cycle 13.1).
+# Multi-stage CPU only (la promesse soutenance `make up` cible une VM SANS GPU,
+# cf. context.md ; l'encodage GPU = worker isolé, hors API, cf. D-022).
+#
+# Build depuis la racine du repo :
+#   docker build -f infra/docker/Dockerfile.api -t rakuten/api:dev .
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 1 — builder : compile + installe TOUT dans un venv isolé /opt/venv.
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.12-slim AS builder
+
+# build-essential : nécessaire à certaines wheels (faiss, transformers tokenizers).
+# git : utilisé par MLflow (signature/lineage) si jamais l'API logge un run.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Venv isolé → la copie vers le runtime ne traîne pas le système.
+RUN python -m venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+
+# Deps projet : extras [api,ml]. Torch CPU explicite via l'index PyTorch officiel
+# (sinon Linux installerait le wheel CUDA, ~3 Go inutiles sur la VM soutenance).
+COPY pyproject.toml README.md /build/
+COPY src /build/src
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir \
+        --extra-index-url https://download.pytorch.org/whl/cpu \
+        "/build[api,ml]"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 2 — runtime : image mince, juste curl (healthcheck) + venv copié.
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.12-slim AS runtime
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Récupère le venv prêt-à-l'emploi (deps installées) + code source.
+COPY --from=builder /opt/venv /opt/venv
+COPY src /opt/rakuten/src
+COPY pyproject.toml README.md /opt/rakuten/
+
+ENV PATH=/opt/venv/bin:$PATH \
+    PYTHONPATH=/opt/rakuten \
+    PYTHONUNBUFFERED=1
+WORKDIR /opt/rakuten
+
+EXPOSE 8000
+
+# /health expose l'état des services (cf. src/api/main.py) → utilisable par
+# Traefik (13.3) / k8s readiness (13.5) sans changer de code.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -fsS http://localhost:8000/health || exit 1
+
+# Run direct (uvicorn dans le venv copié) — pas de `python -m` pour démarrage rapide.
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
