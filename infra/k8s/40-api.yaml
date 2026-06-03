@@ -1,0 +1,76 @@
+# API FastAPI (Cycle 13.5). image `rakuten/api:dev` built en C13.1.
+# HPA CPU-based (custom metric Prometheus = différé C14 observabilité).
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: rakuten
+  labels: { app: api }
+spec:
+  type: ClusterIP
+  ports:
+    - { name: http, port: 8000, targetPort: 8000 }
+  selector: { app: api }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: rakuten
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: api } }
+  template:
+    metadata: { labels: { app: api } }
+    spec:
+      containers:
+        - name: api
+          image: rakuten/api:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8000 }
+          env:
+            - name: MLFLOW_TRACKING_URI
+              valueFrom: { configMapKeyRef: { name: rakuten-config, key: MLFLOW_TRACKING_URI } }
+            - name: MLFLOW_S3_ENDPOINT_URL
+              valueFrom: { configMapKeyRef: { name: rakuten-config, key: MLFLOW_S3_ENDPOINT_URL } }
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom: { secretKeyRef: { name: rakuten-secrets, key: MINIO_ROOT_USER } }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: rakuten-secrets, key: MINIO_ROOT_PASSWORD } }
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { cpu: "1000m", memory: "2Gi" }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            # Tolère le first-load (lifespan API charge data ; sans volumes data
+            # le lifespan est tolérant et /health = 200 rapidement, cf. C13.1).
+            failureThreshold: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+---
+# HPA CPU-based : 2 → 5 réplicas, déclenche à 70% CPU.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api
+  namespace: rakuten
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

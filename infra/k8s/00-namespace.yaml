@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rakuten
+  labels:
+    name: rakuten
+    cycle: c13.5

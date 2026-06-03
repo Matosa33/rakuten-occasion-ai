@@ -1,0 +1,25 @@
+# Config kind pour le cluster local Rakuten (Cycle 13.5, D-028).
+# Le port hôte ${K8S_INGRESS_PORT:-8095} est forwardé au port 80 du nœud ingress.
+# `kind create cluster --config infra/k8s/kind-cluster.yaml --name rakuten`
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: rakuten
+nodes:
+  - role: control-plane
+    # Labels exigés par le contrôleur ingress-nginx pour kind.
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      # HTTP entrée ingress. 8095 par défaut (8080 souvent pris par Apache/XAMPP).
+      - containerPort: 80
+        hostPort: 8095
+        protocol: TCP
+      # HTTPS prévu pour overlay TLS prod (différé hors-scope 13.5).
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP

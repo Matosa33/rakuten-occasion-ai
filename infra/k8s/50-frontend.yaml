@@ -1,0 +1,38 @@
+# Frontend React/Vite servi par nginx (Cycle 13.5). image `rakuten/frontend:dev` built en C13.1.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: rakuten
+  labels: { app: frontend }
+spec:
+  type: ClusterIP
+  ports:
+    - { name: http, port: 80, targetPort: 80 }
+  selector: { app: frontend }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: rakuten
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: frontend } }
+  template:
+    metadata: { labels: { app: frontend } }
+    spec:
+      containers:
+        - name: nginx
+          image: rakuten/frontend:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 80 }
+          resources:
+            requests: { cpu: "50m", memory: "64Mi" }
+            limits:   { cpu: "200m", memory: "256Mi" }
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 3
+            periodSeconds: 10

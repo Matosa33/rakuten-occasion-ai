@@ -1,0 +1,13 @@
+# Variables non-secrètes partagées entre services (D-028).
+# Les noms d'hôte K8s suivent <service>.<namespace>.svc.cluster.local.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rakuten-config
+  namespace: rakuten
+data:
+  MLFLOW_TRACKING_URI: "http://mlflow-server.rakuten.svc.cluster.local:5000"
+  MLFLOW_S3_ENDPOINT_URL: "http://minio.rakuten.svc.cluster.local:9000"
+  POSTGRES_MLFLOW_HOST: "postgres-mlflow.rakuten.svc.cluster.local"
+  POSTGRES_MLFLOW_DB: "mlflow"
+  POSTGRES_MLFLOW_USER: "mlflow"

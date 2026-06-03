@@ -118,6 +118,12 @@ infra/airflow/logs/
 infra/airflow/plugins/*
 !infra/airflow/plugins/.gitkeep
 
+# === K8s (Cycle 13.5) ===
+# Binaire kind téléchargé localement (cf. infra/k8s/README), pas un dep du repo.
+.local/
+# Secrets K8s effectifs (gabarit committé sous infra/k8s/secrets.example.yaml).
+infra/k8s/secrets.yaml
+
 # === Monitoring (P15) ===
 monitoring/prometheus/data/
 monitoring/grafana/data/

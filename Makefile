@@ -1,7 +1,12 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean up down logs ps stack-build airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build prod-up prod-down
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean up down logs ps stack-build airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build prod-up prod-down k8s-up k8s-load k8s-deploy k8s-smoke k8s-down
+
+KIND := ./.local/bin/kind.exe
+KIND_VERSION := v0.24.0
+KIND_URL := https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-windows-amd64
+K8S_INGRESS_PORT ?= 8095
 
 # Stack Compose unifiée à la racine (D-025). Override prod via `-f`.
 COMPOSE := docker compose
@@ -105,3 +110,34 @@ api-build:  ## C13.1 - build image API (multi-stage CPU, ~quelques min)
 
 frontend-build:  ## C13.1 - build image Frontend (Node→nginx, ~1-2 min)
 	docker build -f infra/docker/Dockerfile.frontend -t rakuten/frontend:dev .
+
+# === Cycle 13.5 — Kubernetes (kind cluster local) — D-028 ===
+
+$(KIND):  ## Télécharge le binaire kind si absent (idempotent)
+	@mkdir -p $(dir $(KIND))
+	@if [ ! -x "$(KIND)" ]; then echo "Téléchargement kind $(KIND_VERSION)..."; curl -fsSL -o $(KIND) $(KIND_URL); fi
+
+k8s-up: $(KIND)  ## C13.5 - crée le cluster kind + installe ingress-nginx
+	$(KIND) create cluster --config infra/k8s/kind-cluster.yaml --name rakuten
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/kind/deploy.yaml
+	@echo "Attente readiness ingress-nginx (max 90s)..."
+	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+
+k8s-load: $(KIND)  ## C13.5 - charge les images locales dans le cluster (pas de registry)
+	$(KIND) load docker-image rakuten/api:dev --name rakuten
+	$(KIND) load docker-image rakuten/frontend:dev --name rakuten
+	$(KIND) load docker-image rakuten/mlflow:dev --name rakuten
+
+k8s-deploy:  ## C13.5 - applique les manifests (copie secrets.yaml si absent)
+	@if [ ! -f infra/k8s/secrets.yaml ]; then cp infra/k8s/02-secrets.example.yaml infra/k8s/secrets.yaml; echo "secrets.yaml créé depuis le gabarit (dev defaults)"; fi
+	kubectl apply -k infra/k8s/
+	@echo "Attente readiness API (max 180s)..."
+	kubectl -n rakuten wait deployment/api --for=condition=available --timeout=180s || true
+
+k8s-smoke:  ## C13.5 - curl via ingress sur les 3 hôtes (.localhost:$(K8S_INGRESS_PORT))
+	@echo "→ rakuten.localhost:" && curl -s -o /dev/null -w "HTTP %{http_code}\n" -H "Host: rakuten.localhost" http://localhost:$(K8S_INGRESS_PORT)/
+	@echo "→ api.localhost/health:" && curl -s -o /dev/null -w "HTTP %{http_code}\n" -H "Host: api.localhost" http://localhost:$(K8S_INGRESS_PORT)/health
+	@echo "→ mlflow.localhost/health:" && curl -s -o /dev/null -w "HTTP %{http_code}\n" -H "Host: mlflow.localhost" http://localhost:$(K8S_INGRESS_PORT)/health
+
+k8s-down: $(KIND)  ## C13.5 - supprime le cluster kind (idempotent)
+	$(KIND) delete cluster --name rakuten 2>/dev/null || true

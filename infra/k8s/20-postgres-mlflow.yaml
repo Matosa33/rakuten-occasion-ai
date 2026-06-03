@@ -1,0 +1,52 @@
+# PostgreSQL dédié à MLflow (Cycle 13.5, équivalent K8s du `postgres-mlflow` Compose).
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-mlflow
+  namespace: rakuten
+  labels: { app: postgres-mlflow }
+spec:
+  type: ClusterIP
+  ports:
+    - { name: postgres, port: 5432, targetPort: 5432 }
+  selector: { app: postgres-mlflow }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-mlflow
+  namespace: rakuten
+spec:
+  serviceName: postgres-mlflow
+  replicas: 1
+  selector: { matchLabels: { app: postgres-mlflow } }
+  template:
+    metadata: { labels: { app: postgres-mlflow } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - { name: postgres, containerPort: 5432 }
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { configMapKeyRef: { name: rakuten-config, key: POSTGRES_MLFLOW_USER } }
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: rakuten-config, key: POSTGRES_MLFLOW_DB } }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                { secretKeyRef: { name: rakuten-secrets, key: POSTGRES_MLFLOW_PASSWORD } }
+            # Évite que Postgres essaie d'initdb sur un sous-dossier monté.
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "mlflow"] }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: { requests: { storage: 2Gi } }

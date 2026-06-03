@@ -1,0 +1,37 @@
+# Ingress nginx pour la stack Rakuten (Cycle 13.5, D-028).
+# Routing host-based identique à Traefik C13.3 :
+#   - rakuten.localhost   → frontend
+#   - api.localhost       → api
+#   - mlflow.localhost    → mlflow-server
+# Accès depuis l'hôte via http://<host>.localhost:${K8S_INGRESS_PORT:-8095}
+# (kind forward host 8095 → port 80 du nœud ingress).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rakuten-ingress
+  namespace: rakuten
+  annotations:
+    # Pas de bufferisation pour les SSE (cf. /identify/stream API).
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: rakuten.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: frontend, port: { number: 80 } } }
+    - host: api.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: api, port: { number: 8000 } } }
+    - host: mlflow.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: mlflow-server, port: { number: 5000 } } }
