@@ -21,6 +21,7 @@ Usage dans un script d'entraînement :
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 
 import mlflow
@@ -32,15 +33,28 @@ from src.config import REPO_ROOT
 log = logging.getLogger(__name__)
 
 EXPERIMENT_NAME = "rakuten-mvp"
-TRACKING_URI = f"sqlite:///{(REPO_ROOT / 'mlflow.db').as_posix()}"
-ARTIFACTS_URI = (REPO_ROOT / "mlartifacts").as_uri()
+# MLflow tracking URI : env var `MLFLOW_TRACKING_URI` prioritaire (D-027 :
+# http://mlflow-server:5000 en Compose), fallback sqlite local pour dev hôte
+# sans Docker (rétrocompat workflow C11). Idem pour artifact_location.
+_DEFAULT_TRACKING_URI = f"sqlite:///{(REPO_ROOT / 'mlflow.db').as_posix()}"
+TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", _DEFAULT_TRACKING_URI)
+# Si le tracking est un serveur HTTP, ne PAS forcer un artifact_location local :
+# c'est le serveur (cf. --default-artifact-root s3://...) qui décide. Pour le
+# fallback sqlite local, on garde l'ancien dossier mlartifacts/ hôte.
+_HTTP_BACKEND = TRACKING_URI.startswith(("http://", "https://"))
+ARTIFACTS_URI = None if _HTTP_BACKEND else (REPO_ROOT / "mlartifacts").as_uri()
 REGISTERED_MODEL = "rakuten-classifier"
 
 _SETUP_DONE = False
 
 
 def setup_mlflow() -> None:
-    """Configure tracking SQLite + expérience (idempotent)."""
+    """Configure tracking + expérience (idempotent).
+
+    Tracking : `MLFLOW_TRACKING_URI` env var (D-027) ou sqlite local par défaut.
+    artifact_location : transmis seulement en backend local (le serveur HTTP
+    décide via `--default-artifact-root`).
+    """
     global _SETUP_DONE
     mlflow.set_tracking_uri(TRACKING_URI)
     if not _SETUP_DONE and mlflow.get_experiment_by_name(EXPERIMENT_NAME) is None:

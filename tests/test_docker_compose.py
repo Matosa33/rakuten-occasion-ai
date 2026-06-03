@@ -154,6 +154,40 @@ def test_routing_host_based_pour_chaque_backend():
         )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Cycle 13.4 — MinIO + MLflow tracking server (D-027).
+# 2 tests qui catchent les vraies régressions de D-027 (sans padding).
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_services_C134_present_pour_rembourser_D023():
+    """MinIO + Postgres dédié MLflow + serveur MLflow + init des buckets (D-027)."""
+    services = _load(COMPOSE)["services"]
+    for name in ("minio", "minio-init", "postgres-mlflow", "mlflow-server"):
+        assert name in services, f"service C13.4 manquant : {name} (D-027)"
+    # mlflow-server doit attendre Postgres + buckets MinIO créés.
+    mlflow_deps = services["mlflow-server"].get("depends_on") or {}
+    assert "postgres-mlflow" in mlflow_deps, "mlflow-server doit dépendre de postgres-mlflow"
+    assert "minio-init" in mlflow_deps, "mlflow-server doit dépendre de minio-init"
+
+
+def test_airflow_pointe_sur_mlflow_server_http_pas_sqlite():
+    """Régression D-023 : les tâches Airflow doivent pousser au serveur MLflow HTTP
+    (et donc artifacts dans MinIO S3), plus jamais en SQLite local hôte."""
+    raw = COMPOSE.read_text(encoding="utf-8")
+    # Le bloc anchor x-airflow-env défini une fois et réutilisé par les 3 services.
+    assert "MLFLOW_TRACKING_URI: http://mlflow-server:5000" in raw, (
+        "Airflow doit pointer sur le serveur MLflow HTTP (D-027), pas SQLite"
+    )
+    assert "MLFLOW_S3_ENDPOINT_URL: http://minio:9000" in raw, (
+        "Airflow doit savoir où est l'endpoint S3 (MinIO) pour les artifacts"
+    )
+    # Pas de double config conflictuelle : aucune ligne sqlite:////opt/rakuten/mlflow.db ailleurs.
+    assert raw.count("sqlite:////opt/rakuten/mlflow.db") == 0, (
+        "Plus de tracking SQLite hôte dans le compose (D-027 supersede)"
+    )
+
+
 def test_middlewares_securite_et_ratelimit_appliques():
     """sec-headers global + api-ratelimit appliqués à l'API (D-026)."""
     services = _load(COMPOSE)["services"]

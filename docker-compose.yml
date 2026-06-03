@@ -12,15 +12,17 @@
 #   - Frontend         : http://localhost:8082   (var FRONTEND_PORT)
 #   - API              : http://localhost:8010   (var API_PORT)
 #   - Airflow UI       : http://localhost:8088   (var AIRFLOW_PORT)  admin/admin
+#   - MLflow UI        : http://localhost:5000   (var MLFLOW_PORT, C13.4 D-027)
+#   - MinIO console    : http://localhost:9011   (var MINIO_CONSOLE_PORT, login minioadmin)
 #
 # (b) Unifié derrière Traefik (proche de la prod) :
 #   - http://rakuten.localhost:8090/    → frontend
 #   - http://api.localhost:8090/        → API (rate-limited, secure headers)
 #   - http://airflow.localhost:8090/    → Airflow UI
+#   - http://mlflow.localhost:8090/     → MLflow server (C13.4)
 #   - http://localhost:8091/            → dashboard Traefik (dev only, à fermer en prod)
 #
 # Les *.localhost se résolvent automatiquement (RFC 6761) sans modifier /etc/hosts.
-# MLflow UI : `mlflow ui --backend-store-uri sqlite:///mlflow.db` (host, hors stack).
 #
 # Conflits de ports (XAMPP, autres uvicorn...) ? Créer un `.env` :
 #   API_PORT=8011 / FRONTEND_PORT=8082 / AIRFLOW_PORT=8089 / TRAEFIK_PORT=8091
@@ -37,7 +39,12 @@ x-airflow-env: &airflow-env
   AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
   AIRFLOW__CORE__FERNET_KEY: "${AIRFLOW_FERNET_KEY:-}"
   PYTHONPATH: /opt/rakuten
-  MLFLOW_TRACKING_URI: sqlite:////opt/rakuten/mlflow.db
+  # MLflow tracking via HTTP server (D-027) → artifacts S3 dans MinIO (rembourse
+  # D-023, plus de `artifact_logging=deferred` sur les futurs runs in-container).
+  MLFLOW_TRACKING_URI: http://mlflow-server:5000
+  MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+  AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+  AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
 
 x-airflow-volumes: &airflow-volumes
   # repo entier monté (code + data + mlflow.db + mlartifacts live).
@@ -51,6 +58,100 @@ x-airflow-depends: &airflow-depends
     condition: service_healthy
 
 services:
+  # ───────────────────────────────────────────────────────────────────────────
+  # MinIO object store (Cycle 13.4, D-027). S3-compatible, héberge 2 buckets :
+  # `mlflow-artifacts` (artefacts MLflow) et `dvc` (remote DVC). Console UI :9001,
+  # endpoint S3 :9000. Rembourse D-023 (artefacts portables hôte↔conteneur).
+  # ───────────────────────────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      # Personnalisable via .env si 9010/9011 sont pris. Note : à l'intérieur du
+      # réseau Docker, MinIO écoute toujours sur 9000/9001 (les services internes
+      # `mlflow-server` / `airflow-*` utilisent `http://minio:9000`).
+      - "127.0.0.1:${MINIO_API_PORT:-9010}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9011}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-shot : crée les buckets `mlflow-artifacts` + `dvc` au démarrage.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}
+        mc mb -p local/mlflow-artifacts || true
+        mc mb -p local/dvc || true
+        echo "buckets ready: mlflow-artifacts, dvc"
+    restart: "no"
+
+  # Postgres dédié MLflow (séparation des concerns vs Postgres Airflow, D-027).
+  postgres-mlflow:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    volumes:
+      - mlflow-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mlflow"]
+      interval: 5s
+      retries: 5
+
+  # MLflow tracking server : backend Postgres + artifacts S3 (MinIO). Rembourse
+  # D-023 — les runs in-container peuvent enfin pousser leurs artefacts.
+  mlflow-server:
+    image: rakuten/mlflow:dev
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.mlflow
+    depends_on:
+      postgres-mlflow:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command:
+      - mlflow
+      - server
+      - --host=0.0.0.0
+      - --port=5000
+      - --backend-store-uri=postgresql://mlflow:mlflow@postgres-mlflow/mlflow
+      - --default-artifact-root=s3://mlflow-artifacts/
+    ports:
+      - "127.0.0.1:${MLFLOW_PORT:-5000}:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    labels:
+      # Optionnel : expose mlflow.localhost via Traefik (cohérent avec D-026).
+      - "traefik.enable=true"
+      - "traefik.http.routers.mlflow.rule=Host(`mlflow.localhost`)"
+      - "traefik.http.routers.mlflow.entrypoints=web"
+      - "traefik.http.services.mlflow.loadbalancer.server.port=5000"
+      - "traefik.http.routers.mlflow.middlewares=sec-headers@docker"
+
   # ───────────────────────────────────────────────────────────────────────────
   # Reverse proxy Traefik (Cycle 13.3, D-026). Routing host-based via labels
   # Docker (api.localhost / rakuten.localhost / airflow.localhost). HTTP only
@@ -227,3 +328,6 @@ services:
 
 volumes:
   airflow-pgdata:
+  # Nouveaux volumes pour la stack C13.4 (MinIO + MLflow tracking server).
+  minio-data:
+  mlflow-pgdata:
