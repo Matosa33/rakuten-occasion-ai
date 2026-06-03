@@ -11,11 +11,11 @@ enregistre `rakuten-classifier@Production`. L'encodage GPU est une tâche amont 
 Depuis la racine du repo :
 
 ```bash
-make airflow-up        # build l'image + démarre Postgres + scheduler + webserver
-# UI : http://localhost:8088  (admin / admin)
-make airflow-trigger   # déclenche le DAG rakuten_retrain
-make airflow-logs      # suit les logs
-make airflow-down      # arrête (le volume Postgres est préservé)
+make up                # build + démarre TOUTE la stack (api, frontend, airflow, postgres)
+# UI Airflow : http://localhost:8088 (admin / admin)
+make airflow-trigger   # déclenche le DAG rakuten_retrain (cible Airflow)
+make logs SVC=airflow-scheduler  # suit les logs d'un service (ex : scheduler)
+make down              # arrête toute la stack (préserve volumes)
 ```
 
 > Sous Windows, Docker Desktop doit utiliser le backend **WSL2**.
