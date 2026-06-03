@@ -6,16 +6,24 @@
 #   docker compose logs -f api         # suit les logs d'un service
 #   docker compose down                # arrête (préserve les volumes)
 #
-# UI (ports par défaut, customisables via `.env`) :
-#   - Frontend     : http://localhost:8082  (var FRONTEND_PORT)
-#   - API          : http://localhost:8010  (var API_PORT)
-#   - Airflow UI   : http://localhost:8088  (var AIRFLOW_PORT)  — admin/admin
-#   - MLflow UI    : `mlflow ui --backend-store-uri sqlite:///mlflow.db` (host, hors stack)
+# UI — DEUX modes d'accès (depuis C13.3, D-026) :
 #
-# Si tes ports par défaut sont pris (XAMPP, autre uvicorn...), créer un `.env` :
-#   API_PORT=8011
-#   FRONTEND_PORT=8082
-#   AIRFLOW_PORT=8089
+# (a) Direct sur chaque service (debug, dev) — ports customisables via .env :
+#   - Frontend         : http://localhost:8082   (var FRONTEND_PORT)
+#   - API              : http://localhost:8010   (var API_PORT)
+#   - Airflow UI       : http://localhost:8088   (var AIRFLOW_PORT)  admin/admin
+#
+# (b) Unifié derrière Traefik (proche de la prod) :
+#   - http://rakuten.localhost:8090/    → frontend
+#   - http://api.localhost:8090/        → API (rate-limited, secure headers)
+#   - http://airflow.localhost:8090/    → Airflow UI
+#   - http://localhost:8091/            → dashboard Traefik (dev only, à fermer en prod)
+#
+# Les *.localhost se résolvent automatiquement (RFC 6761) sans modifier /etc/hosts.
+# MLflow UI : `mlflow ui --backend-store-uri sqlite:///mlflow.db` (host, hors stack).
+#
+# Conflits de ports (XAMPP, autres uvicorn...) ? Créer un `.env` :
+#   API_PORT=8011 / FRONTEND_PORT=8082 / AIRFLOW_PORT=8089 / TRAEFIK_PORT=8091
 #
 # Overlay prod : `docker compose -f docker-compose.yml -f docker-compose.prod.yml up`.
 
@@ -44,6 +52,41 @@ x-airflow-depends: &airflow-depends
 
 services:
   # ───────────────────────────────────────────────────────────────────────────
+  # Reverse proxy Traefik (Cycle 13.3, D-026). Routing host-based via labels
+  # Docker (api.localhost / rakuten.localhost / airflow.localhost). HTTP only
+  # en dev (TLS en overlay prod, hors-scope 13.3).
+  # ───────────────────────────────────────────────────────────────────────────
+  traefik:
+    image: traefik:v3.2
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"      # dashboard sans auth en dev ; à fermer en prod
+      - "--ping=true"               # endpoint /ping pour healthcheck
+      - "--log.level=INFO"
+    ports:
+      - "127.0.0.1:${TRAEFIK_PORT:-8090}:80"
+      - "127.0.0.1:${TRAEFIK_DASHBOARD_PORT:-8091}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      # Middlewares globaux (références : `nom@docker`).
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.sec-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.sec-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.sec-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.sec-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=50"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+
+  # ───────────────────────────────────────────────────────────────────────────
   # API FastAPI (Cycle 9 / image C13.1). Sert /identify, /price, /describe.
   # Volumes data en READ-ONLY (l'API ne ré-écrit pas les artefacts ML).
   # ───────────────────────────────────────────────────────────────────────────
@@ -68,6 +111,12 @@ services:
       # 300 s pour tolérer le premier load de l'index FAISS 13,8 Go via bind-mount
       # RO Docker Desktop Windows (5-15 min). Sous Linux natif c'est instantané.
       start_period: 300s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
+      - "traefik.http.routers.api.middlewares=sec-headers@docker,api-ratelimit@docker"
 
   # ───────────────────────────────────────────────────────────────────────────
   # Frontend React/Vite servi par nginx (image C13.1).
@@ -88,6 +137,12 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`rakuten.localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend.middlewares=sec-headers@docker"
 
   # ───────────────────────────────────────────────────────────────────────────
   # Métadonnées Airflow (Cycle 12.1). Volume nommé → durabilité du registry DAG.
@@ -163,6 +218,12 @@ services:
       interval: 15s
       timeout: 10s
       retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.airflow.rule=Host(`airflow.localhost`)"
+      - "traefik.http.routers.airflow.entrypoints=web"
+      - "traefik.http.services.airflow.loadbalancer.server.port=8080"
+      - "traefik.http.routers.airflow.middlewares=sec-headers@docker"
 
 volumes:
   airflow-pgdata:

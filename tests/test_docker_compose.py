@@ -102,3 +102,72 @@ def test_pas_d_ancien_compose_oublie():
     assert not obsolete.exists(), (
         "`infra/compose/` doit avoir été supprimé (consolidé dans docker-compose.yml, D-025)"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cycle 13.3 — Traefik gateway (D-026).
+# Tests qui catchent des régressions réelles (pas de padding) :
+#   1. service traefik présent
+#   2. routing host-based déclaré pour les 3 backends
+#   3. middlewares sec-headers + api-ratelimit définis et référencés par l'api
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _labels(service: dict) -> list[str]:
+    """Renvoie les labels d'un service comme liste (Compose accepte liste OU dict)."""
+    lbls = service.get("labels") or []
+    if isinstance(lbls, dict):
+        return [f"{k}={v}" for k, v in lbls.items()]
+    return list(lbls)
+
+
+def test_traefik_service_declare():
+    """Le reverse proxy Traefik est présent + monte le socket Docker (D-026)."""
+    services = _load(COMPOSE)["services"]
+    assert "traefik" in services, "service `traefik` manquant (D-026)"
+    tk = services["traefik"]
+    # Image v3.x (pas v2 ; v2 a une syntaxe middleware différente).
+    assert str(tk.get("image", "")).startswith("traefik:v3"), "Traefik doit être en v3"
+    # Socket Docker en RO (sinon le provider Docker n'a pas la liste des services).
+    vols = tk.get("volumes", [])
+    assert any("docker.sock" in v and ":ro" in v for v in vols), (
+        "Traefik doit monter /var/run/docker.sock en RO"
+    )
+
+
+def test_routing_host_based_pour_chaque_backend():
+    """Chaque backend public a un routeur Traefik avec sa règle Host(...) (D-026)."""
+    services = _load(COMPOSE)["services"]
+    expected = {
+        "api": "api.localhost",
+        "frontend": "rakuten.localhost",
+        "airflow-webserver": "airflow.localhost",
+    }
+    for svc_name, host in expected.items():
+        labels = _labels(services[svc_name])
+        assert any(f"Host(`{host}`)" in lab for lab in labels), (
+            f"Service `{svc_name}` doit router sur Host(`{host}`)"
+        )
+        # Doit traverser l'entrypoint `web` (pas un autre)
+        assert any("entrypoints=web" in lab for lab in labels), (
+            f"Service `{svc_name}` doit utiliser entrypoints=web"
+        )
+
+
+def test_middlewares_securite_et_ratelimit_appliques():
+    """sec-headers global + api-ratelimit appliqués à l'API (D-026)."""
+    services = _load(COMPOSE)["services"]
+    # Middlewares déclarés sur le service traefik (point unique).
+    tk_labels = _labels(services["traefik"])
+    assert any("middlewares.sec-headers." in lab for lab in tk_labels), (
+        "middleware sec-headers manquant"
+    )
+    assert any("middlewares.api-ratelimit." in lab for lab in tk_labels), (
+        "middleware api-ratelimit manquant"
+    )
+    # L'API consomme les deux (en référençant @docker).
+    api_labels = _labels(services["api"])
+    api_mw = next((lab for lab in api_labels if "routers.api.middlewares=" in lab), "")
+    assert "sec-headers@docker" in api_mw and "api-ratelimit@docker" in api_mw, (
+        f"L'API doit appliquer sec-headers + api-ratelimit ; vu : {api_mw}"
+    )

@@ -75,6 +75,18 @@ def test_pyproject_api_extra_contient_polars():
     assert "pyarrow" in api_block, "pyarrow manquant dans pyproject extra [api]"
 
 
+def test_nginx_ecoute_ipv4_et_ipv6():
+    """Régression C13.3 : healthcheck `wget http://localhost/` résout `::1` (IPv6)
+    en premier dans Alpine. Si nginx n'a pas `listen [::]:80;`, connection refused
+    → conteneur frontend unhealthy → Traefik v3 filtre → routing cassé.
+    """
+    src = _read("nginx.conf")
+    assert "listen 80;" in src
+    assert "listen [::]:80;" in src, (
+        "nginx doit écouter IPv6 aussi (sinon healthcheck localhost casse)"
+    )
+
+
 def test_pricing_lazy_import_mlflow():
     """Régression smoke C13.1 : `src/api/pipeline.py` charge `01_algorithmique.py`
     via importlib pour réutiliser `suggest_price`. Si mlflow_utils est importé au

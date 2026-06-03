@@ -9,15 +9,28 @@
 #   - frontend reste exposé (point d'entrée HTTP du user final)
 
 services:
+  traefik:
+    restart: unless-stopped
+    # En prod, le dashboard Traefik est fermé (port direct retiré) ; en accès
+    # réel = à mettre derrière basic auth + TLS via une overlay TLS plus tard.
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--ping=true"
+      - "--log.level=WARN"
+    ports: !reset
+      - "80:80"
+
   api:
     restart: unless-stopped
-    # Plus de port hôte : on accédera via Traefik (C13.3) → réseau Docker interne.
+    # Plus de port hôte direct : accès via Traefik uniquement.
     ports: !reset []
 
   frontend:
     restart: unless-stopped
-    # Frontend reste accessible (sera derrière Traefik en C13.3 mais reste exposé
-    # pour démo si Traefik pas encore en place).
+    # Idem : Traefik prend la main, plus de port direct exposé.
+    ports: !reset []
 
   postgres:
     restart: unless-stopped
@@ -27,5 +40,5 @@ services:
 
   airflow-webserver:
     restart: unless-stopped
-    # UI Airflow pas exposée publiquement en prod ; Traefik (13.3) la protègera.
+    # UI Airflow pas exposée publiquement en prod ; Traefik la protègera.
     ports: !reset []
