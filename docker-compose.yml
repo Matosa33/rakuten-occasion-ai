@@ -167,6 +167,12 @@ services:
       - "--api.insecure=true"      # dashboard sans auth en dev ; à fermer en prod
       - "--ping=true"               # endpoint /ping pour healthcheck
       - "--log.level=INFO"
+      # Métriques Prometheus (Cycle 14.2, D-030) — scraping par le service `prometheus`
+      # sur le port admin 8080 (interne). Labels enrichis = panels Grafana plus utiles.
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
     ports:
       - "127.0.0.1:${TRAEFIK_PORT:-8090}:80"
       - "127.0.0.1:${TRAEFIK_DASHBOARD_PORT:-8091}:8080"
@@ -196,6 +202,11 @@ services:
     build:
       context: .
       dockerfile: infra/docker/Dockerfile.api
+    environment:
+      # Active /metrics Prometheus (C14.2, D-030). Opt-in pour permettre aux tests
+      # pytest qui ré-instancient l'app de tourner sans `Duplicated timeseries`
+      # (la lib leak la Gauge inprogress vers le REGISTRY global).
+      ENABLE_METRICS: "true"
     ports:
       # Personnalisable via `API_PORT=xxxx` dans `.env` (8000 souvent pris par
       # uvicorn dev / XAMPP). Par défaut 8010 = libre sur la plupart des postes.
@@ -326,8 +337,72 @@ services:
       - "traefik.http.services.airflow.loadbalancer.server.port=8080"
       - "traefik.http.routers.airflow.middlewares=sec-headers@docker"
 
+  # ───────────────────────────────────────────────────────────────────────────
+  # Prometheus (Cycle 14.2, D-030). Scrape les /metrics : api, traefik, self.
+  # Config statique en bind-mount → lisible et versionnable.
+  # ───────────────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.http.routers.prometheus.middlewares=sec-headers@docker"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Grafana (Cycle 14.2, D-030). Datasource Prometheus + dashboard 4 golden
+  # signals provisionnés via fichiers (reproductible, pas de clic-clic UI).
+  # ───────────────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Auth anonyme désactivée par défaut → dashboard visible après login admin/admin.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.middlewares=sec-headers@docker"
+
 volumes:
   airflow-pgdata:
   # Nouveaux volumes pour la stack C13.4 (MinIO + MLflow tracking server).
   minio-data:
   mlflow-pgdata:
+  # Nouveaux volumes pour la stack C14.2 (observabilité Prometheus + Grafana).
+  prometheus-data:
+  grafana-data:

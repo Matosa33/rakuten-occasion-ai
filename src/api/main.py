@@ -32,6 +32,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.api import persistence
 from src.api.middleware import request_id_middleware
@@ -105,6 +106,18 @@ app = FastAPI(
 # Ajouté EN PREMIER → le request_id est dispo dans tous les autres middlewares
 # et handlers (CORS, body parsing, etc.).
 app.middleware("http")(request_id_middleware)
+
+# Observabilité C14.2 (D-030) : Prometheus /metrics (histogram latence + counter
+# requêtes + gauge in-progress = saturation 4ᵉ golden signal). Activé via env var
+# `ENABLE_METRICS=true` (mise en compose `api`) — opt-in propre qui évite
+# `ValueError: Duplicated timeseries` quand pytest recrée l'app : la lib leak la
+# Gauge inprogress vers le REGISTRY global, donc on désactive en tests.
+Instrumentator(
+    should_instrument_requests_inprogress=True,
+    should_respect_env_var=True,
+    env_var_name="ENABLE_METRICS",
+    excluded_handlers=["/metrics", "/health"],
+).instrument(app).expose(app)
 
 # CORS — autorise le frontend (Vite :5173) en dev. En prod, restreindre aux origines connues.
 app.add_middleware(

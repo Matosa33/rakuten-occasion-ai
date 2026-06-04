@@ -188,6 +188,92 @@ def test_airflow_pointe_sur_mlflow_server_http_pas_sqlite():
     )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Cycle 14.2 — Prometheus + Grafana (D-030).
+# Sans padding : chaque test attrape une régression réelle observable LIVE.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_services_prometheus_grafana_declares():
+    """Les services obs C14.2 sont présents + montent leur config en RO (D-030)."""
+    services = _load(COMPOSE)["services"]
+    for name in ("prometheus", "grafana"):
+        assert name in services, f"service C14.2 manquant : {name} (D-030)"
+
+    # Prometheus charge le fichier scrape attendu.
+    prom_vols = services["prometheus"].get("volumes", [])
+    assert any("monitoring/prometheus/prometheus.yml" in v and ":ro" in v for v in prom_vols), (
+        "prometheus doit bind-mounter monitoring/prometheus/prometheus.yml en RO"
+    )
+
+    # Grafana charge provisioning + dashboards en RO.
+    g_vols = services["grafana"].get("volumes", [])
+    assert any("monitoring/grafana/provisioning" in v and ":ro" in v for v in g_vols), (
+        "grafana doit bind-mounter monitoring/grafana/provisioning en RO"
+    )
+    assert any("monitoring/grafana/dashboards" in v and ":ro" in v for v in g_vols), (
+        "grafana doit bind-mounter monitoring/grafana/dashboards en RO"
+    )
+
+    # Grafana dépend de Prometheus (sinon datasource en erreur au boot).
+    g_deps = services["grafana"].get("depends_on") or {}
+    assert "prometheus" in g_deps, "grafana doit depends_on prometheus"
+
+
+def test_traefik_active_metrics_prometheus():
+    """Sans `--metrics.prometheus=true`, le job traefik dans prometheus.yml reste DOWN."""
+    services = _load(COMPOSE)["services"]
+    cmd = services["traefik"].get("command", [])
+    assert any("metrics.prometheus=true" in str(c) for c in cmd), (
+        "Traefik doit exposer ses métriques Prometheus (sinon scrape job traefik DOWN)"
+    )
+
+
+def test_dashboard_datasource_uid_match_le_provisioning():
+    """Régression silencieuse : si on change l'UID d'un côté sans l'autre, les
+    panels Grafana affichent 'Datasource not found' (visible seulement en UI)."""
+    import json
+
+    ds = yaml.safe_load(
+        (ROOT / "monitoring/grafana/provisioning/datasources/prometheus.yml").read_text()
+    )
+    ds_uid = ds["datasources"][0]["uid"]
+
+    dashboard = json.loads(
+        (ROOT / "monitoring/grafana/dashboards/golden_signals.json").read_text(encoding="utf-8")
+    )
+    panel_uids = {p["datasource"]["uid"] for p in dashboard["panels"]}
+    target_uids = {
+        t["datasource"]["uid"]
+        for p in dashboard["panels"]
+        for t in p.get("targets", [])
+        if isinstance(t.get("datasource"), dict)
+    }
+
+    # Tous les UIDs (panels + targets) doivent matcher l'UID du datasource provisionné.
+    all_uids = panel_uids | target_uids
+    assert all_uids == {ds_uid}, (
+        f"UIDs dashboard {all_uids} ne matchent pas datasource provisionné {ds_uid!r}"
+    )
+
+
+def test_dashboard_couvre_4_golden_signals():
+    """4 panels obligatoires (Latency, Traffic, Errors, Saturation) — sans ça
+    la D-030 n'est pas honorée (SRE book § Monitoring distributed systems)."""
+    import json
+
+    dashboard = json.loads(
+        (ROOT / "monitoring/grafana/dashboards/golden_signals.json").read_text(encoding="utf-8")
+    )
+    assert len(dashboard["panels"]) == 4, (
+        "Dashboard doit avoir exactement 4 panels (golden signals)"
+    )
+
+    titles = " ".join(p["title"].lower() for p in dashboard["panels"])
+    for signal in ("latency", "traffic", "error", "saturation"):
+        assert signal in titles, f"signal '{signal}' absent des titres de panels"
+
+
 def test_middlewares_securite_et_ratelimit_appliques():
     """sec-headers global + api-ratelimit appliqués à l'API (D-026)."""
     services = _load(COMPOSE)["services"]

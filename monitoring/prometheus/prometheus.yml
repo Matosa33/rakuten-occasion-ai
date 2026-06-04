@@ -1,0 +1,27 @@
+# Config Prometheus (Cycle 14.2, D-030).
+# Scrape les /metrics des services Rakuten + de Prometheus lui-même.
+# Les noms d'hôtes sont les noms de services du docker-compose.yml racine.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    stack: rakuten
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # API FastAPI (Cycle 9 + /metrics ajouté C14.2 via prometheus-fastapi-instrumentator).
+  - job_name: api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+
+  # Traefik (Cycle 13.3) — métriques exposées sur le port admin 8080 interne
+  # via `--metrics.prometheus=true` ajouté au command Traefik (D-030).
+  - job_name: traefik
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["traefik:8080"]

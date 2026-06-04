@@ -1,0 +1,17 @@
+# Provisioning datasource Grafana (Cycle 14.2, D-030).
+# Auto-chargé au démarrage : aucune action UI requise.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    # UID fixe → référencé en dur dans les dashboards JSON (sinon Grafana en génère
+    # un random et les panels affichent "Datasource not found").
+    uid: rakuten-prom
+    access: proxy
+    # Nom de service Docker → résolu par le DNS interne du compose.
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s
