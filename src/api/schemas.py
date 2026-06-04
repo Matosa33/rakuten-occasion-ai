@@ -43,8 +43,11 @@ class ConfidenceLevelEnum(StrEnum):
 
 
 class IdentifyRequest(BaseModel):
-    image_url: str = Field(..., description="URL ou data URI de l'image vendeur")
-    text_hint: str = Field(default="", description="Texte libre du vendeur (optionnel)")
+    # MVP text-only (D-014) : image_url réservé à la branche vision post-MVP. Default
+    # vide → permet aux clients (frontend, curl) d'envoyer juste `text_hint`.
+    # Finding test interface : Field(...) obligatoire forçait un body invalide.
+    image_url: str = Field(default="", description="URL ou data URI (post-MVP D-014)")
+    text_hint: str = Field(default="", description="Texte libre du vendeur (requis MVP)")
     already_observed: dict[str, str] = Field(
         default_factory=dict,
         description="Observations déjà demandées dans la session Akinator (attribut → valeur)",

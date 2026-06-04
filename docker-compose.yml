@@ -202,6 +202,12 @@ services:
     build:
       context: .
       dockerfile: infra/docker/Dockerfile.api
+    # Propage le .env hôte au container — sinon `OPENROUTER_API_KEY` n'arrive pas et
+    # `/describe` dégrade silencieusement en mock (D-013) au lieu d'utiliser Gemma E4.
+    # Finding C14.X test interface : .env gitignored (R2 ok), expose juste la clé runtime.
+    env_file:
+      - path: .env
+        required: false
     environment:
       # Active /metrics Prometheus (C14.2, D-030). Opt-in pour permettre aux tests
       # pytest qui ré-instancient l'app de tourner sans `Duplicated timeseries`

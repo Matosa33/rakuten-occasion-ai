@@ -274,6 +274,55 @@ def test_dashboard_couvre_4_golden_signals():
         assert signal in titles, f"signal '{signal}' absent des titres de panels"
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Finding test interface (post-C14.99) — vrais bugs détectés en smoke E2E :
+#   1. .env hôte non propagé au container API → /describe en mock silencieux
+#   2. nginx `proxy_pass http://$var/;` ne strip pas /api/ (variable désactive
+#      le rewrite auto) → frontend /api/health → 404 silencieux
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_api_compose_propage_env_file_hote():
+    """Sans `env_file: .env`, le container API ne reçoit pas OPENROUTER_API_KEY
+    → /describe dégrade en mock (D-013) sans warning. Régression silencieuse."""
+    services = _load(COMPOSE)["services"]
+    api = services["api"]
+    env_file = api.get("env_file")
+    assert env_file is not None, (
+        "service `api` doit déclarer `env_file: .env` (sinon OPENROUTER_API_KEY perdue)"
+    )
+    # Compose accepte string, list[str] ou list[dict{path, required}].
+    if isinstance(env_file, list):
+        sources = []
+        for ef in env_file:
+            sources.append(ef["path"] if isinstance(ef, dict) else ef)
+    else:
+        sources = [env_file]
+    assert ".env" in sources, f"api.env_file doit inclure .env (vu : {sources})"
+
+
+def test_nginx_strip_api_prefix_avec_rewrite_explicite():
+    """Régression bug critique frontend : `proxy_pass http://$var/;` avec variable
+    désactive le path-rewrite auto de nginx → `/api/health` arrive tel quel au
+    backend → 404. Le `rewrite ^/api/(.*) /$1 break;` est obligatoire."""
+    nginx_conf = (ROOT / "infra" / "docker" / "nginx.conf").read_text(encoding="utf-8")
+    assert "rewrite ^/api/(.*)" in nginx_conf, (
+        "nginx.conf doit contenir le `rewrite ^/api/(.*)` pour strip /api/ avant proxy"
+    )
+    assert "break;" in nginx_conf, "le rewrite nginx doit utiliser le flag `break`"
+
+
+def test_identify_request_image_url_optional():
+    """Le MVP text-only (D-014) doit accepter un body sans `image_url`. Régression :
+    `Field(...)` rendait le champ obligatoire mais l'endpoint l'ignore."""
+    from src.api.schemas import IdentifyRequest
+
+    # Construction sans image_url → ne doit pas lever
+    req = IdentifyRequest(text_hint="iPhone 13")
+    assert req.image_url == "", "image_url default doit être '' (MVP text-only)"
+    assert req.text_hint == "iPhone 13"
+
+
 def test_middlewares_securite_et_ratelimit_appliques():
     """sec-headers global + api-ratelimit appliqués à l'API (D-026)."""
     services = _load(COMPOSE)["services"]
