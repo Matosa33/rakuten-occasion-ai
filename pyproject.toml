@@ -98,10 +98,12 @@ mlops = [
 
 # Phase P13 — observabilité / drift detection (Cycle 12.3, étendu C14).
 # Evidently : drift detection sur features texte + catégories. CPU only.
+# prometheus-client : push des drift scores au Pushgateway (D-031, C14.3).
 monitoring = [
     "evidently>=0.4.0",
     "pandas>=2.2.0",
     "polars>=1.0.0",
+    "prometheus-client>=0.20.0",
 ]
 
 # Phase P13 — serving BentoML (Cycle 12.2) : sert le modèle @Production du Registry
@@ -124,6 +126,8 @@ train = [
     "joblib>=1.4.0",
     "mlflow>=2.16.0",
     "boto3>=1.28.0",
+    # promote_gate.py push sa décision vers Pushgateway (D-031, C14.3).
+    "prometheus-client>=0.20.0",
 ]
 
 # Extra [frontend] géré séparément via npm (cf. frontend/package.json).

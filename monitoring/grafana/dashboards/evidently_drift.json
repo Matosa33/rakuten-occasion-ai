@@ -1,0 +1,192 @@
+{
+  "uid": "rakuten-evidently-drift",
+  "title": "Rakuten — Evidently Drift",
+  "tags": ["rakuten", "drift", "evidently", "batch"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {"list": []},
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Drift Share (DriftedColumnsCount.share) vs Threshold",
+      "description": "Part de colonnes driftées (Evidently DataDriftPreset). Si ≥ seuil → drift déclaré → trigger retrain DAG.",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 0.3},
+              {"color": "red", "value": 0.5}
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"]},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "rakuten_drift_share{stage=\"drift_check\"}",
+          "legendFormat": "drift share",
+          "refId": "A"
+        },
+        {
+          "expr": "rakuten_drift_threshold{stage=\"drift_check\"}",
+          "legendFormat": "threshold",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Drifted Columns Count",
+      "description": "Nombre absolu de colonnes dont la distribution a drifté depuis la référence.",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 1},
+              {"color": "red", "value": 3}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "targets": [
+        {
+          "expr": "rakuten_drift_columns_count{stage=\"drift_check\"}",
+          "legendFormat": "drifted",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Drift Detected ?",
+      "description": "0 = OK (sous seuil), 1 = drift détecté (alerte). Mappé en rouge/vert.",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"0": {"text": "OK", "color": "green"}}},
+            {"type": "value", "options": {"1": {"text": "DRIFT", "color": "red"}}}
+          ],
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "red", "value": 1}
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value",
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "expr": "rakuten_drift_detected{stage=\"drift_check\"}",
+          "legendFormat": "detected",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Last Drift Check (seconds ago)",
+      "description": "Temps écoulé depuis le dernier run du DAG drift_check. Si trop ancien → vérifier Airflow.",
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 6},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 86400},
+              {"color": "red", "value": 172800}
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "expr": "time() - rakuten_drift_last_run_timestamp{stage=\"drift_check\"}",
+          "legendFormat": "seconds since last run",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Sample sizes (reference / current)",
+      "description": "Tailles des échantillons utilisés pour la comparaison.",
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 6},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {"unit": "short", "decimals": 0}
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value_and_name",
+        "colorMode": "none",
+        "graphMode": "none",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "rakuten_drift_reference_sample_size{stage=\"drift_check\"}",
+          "legendFormat": "reference",
+          "refId": "A"
+        },
+        {
+          "expr": "rakuten_drift_current_sample_size{stage=\"drift_check\"}",
+          "legendFormat": "current",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

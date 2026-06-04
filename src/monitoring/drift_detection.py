@@ -102,6 +102,15 @@ def detect_drift() -> dict:
 
 def main() -> None:
     result = detect_drift()
+    # C14.3 (D-031) : push les drift scores vers Pushgateway pour visibilité
+    # Grafana. Import lazy → pas de coupling fort obs sur le module de calcul,
+    # et le run reste fonctionnel si prometheus_client n'est pas dispo.
+    try:
+        from src.monitoring.push_metrics import push_drift_metrics
+
+        push_drift_metrics(result)
+    except ImportError:
+        log.warning("prometheus_client non installé → push Pushgateway skip (R15 graceful).")
     # CLI output JSON consommable par script aval (pipe / jq), pas un log → R6 ok (D-029).
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

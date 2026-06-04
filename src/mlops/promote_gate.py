@@ -115,6 +115,14 @@ def decide_and_promote(metric: str = METRIC, epsilon: float = EPSILON) -> dict:
 
 def main() -> None:
     result = decide_and_promote()
+    # C14.3 (D-031) : push la décision promote_gate vers Pushgateway pour
+    # visibilité Grafana. Import lazy + try/except → fonctionnel sans la stack obs.
+    try:
+        from src.monitoring.push_metrics import push_promote_metrics
+
+        push_promote_metrics(result)
+    except ImportError:
+        log.warning("prometheus_client non installé → push Pushgateway skip (R15 graceful).")
     # CLI output JSON consommable par script aval (pipe / jq), pas un log → R6 ok (D-029).
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

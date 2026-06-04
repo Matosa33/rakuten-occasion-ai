@@ -366,6 +366,27 @@ services:
       - "traefik.http.routers.prometheus.middlewares=sec-headers@docker"
 
   # ───────────────────────────────────────────────────────────────────────────
+  # Pushgateway (Cycle 14.3, D-031). Hub de métriques batch (drift Evidently +
+  # promote_gate). Les jobs Python pushent sur `pushgateway:9091/metrics/job/...`,
+  # Prometheus scrape via le job `pushgateway` (cf. prometheus.yml).
+  # ───────────────────────────────────────────────────────────────────────────
+  pushgateway:
+    image: prom/pushgateway:v1.10.0
+    command:
+      - "--web.listen-address=:9091"
+      - "--persistence.file=/data/pushgateway.bin"
+      - "--persistence.interval=30s"
+    volumes:
+      - pushgateway-data:/data
+    ports:
+      - "127.0.0.1:${PUSHGATEWAY_PORT:-9091}:9091"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9091/-/healthy"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ───────────────────────────────────────────────────────────────────────────
   # Grafana (Cycle 14.2, D-030). Datasource Prometheus + dashboard 4 golden
   # signals provisionnés via fichiers (reproductible, pas de clic-clic UI).
   # ───────────────────────────────────────────────────────────────────────────
@@ -406,3 +427,5 @@ volumes:
   # Nouveaux volumes pour la stack C14.2 (observabilité Prometheus + Grafana).
   prometheus-data:
   grafana-data:
+  # Nouveau volume pour la stack C14.3 (Pushgateway métriques batch, D-031).
+  pushgateway-data:

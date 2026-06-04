@@ -1,0 +1,153 @@
+{
+  "uid": "rakuten-mlops-promote",
+  "title": "Rakuten — MLOps Promote Gate (Champion / Challenger)",
+  "tags": ["rakuten", "mlops", "promote", "registry"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {"list": []},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Current Decision (last promote_gate run)",
+      "description": "Décision du dernier run du DAG promote_gate. Une seule valeur = 1 à la fois, les autres = 0.",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"1": {"text": "ACTIVE", "color": "blue"}}},
+            {"type": "value", "options": {"0": {"text": "—", "color": "text"}}}
+          ],
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "text", "value": null},
+              {"color": "blue", "value": 1}
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value_and_name",
+        "colorMode": "background",
+        "graphMode": "none",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "rakuten_promote_decision{stage=\"promote_gate\"}",
+          "legendFormat": "{{decision}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Last Run (seconds ago)",
+      "description": "Temps écoulé depuis le dernier promote_gate. > 7 jours = vérifier la fréquence du DAG.",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 604800},
+              {"color": "red", "value": 1209600}
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "expr": "time() - rakuten_promote_last_run_timestamp{stage=\"promote_gate\"}",
+          "legendFormat": "seconds since last run",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Champion vs Challenger F1 weighted (test set)",
+      "description": "Évolution du score F1 du champion @Production et du challenger candidat. Promotion si challenger ≥ champion + ε.",
+      "gridPos": {"x": 0, "y": 6, "w": 16, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 4,
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null}
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"]},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "rakuten_promote_champion_f1{stage=\"promote_gate\"}",
+          "legendFormat": "champion @Production",
+          "refId": "A"
+        },
+        {
+          "expr": "rakuten_promote_challenger_f1{stage=\"promote_gate\"}",
+          "legendFormat": "challenger (latest)",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Epsilon margin (anti-bruit)",
+      "description": "Marge minimum challenger - champion pour promouvoir. Évite les oscillations sur bruit (D-024).",
+      "gridPos": {"x": 16, "y": 6, "w": 8, "h": 8},
+      "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 4
+        }
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto",
+        "colorMode": "none",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "expr": "rakuten_promote_epsilon{stage=\"promote_gate\"}",
+          "legendFormat": "epsilon",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

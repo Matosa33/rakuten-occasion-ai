@@ -25,3 +25,13 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ["traefik:8080"]
+
+  # Pushgateway (Cycle 14.3, D-031) — métriques batch (drift Evidently +
+  # promote_gate). Les jobs Python pushent ; Prometheus scrape la gateway.
+  # `honor_labels: true` → garde le label `job=rakuten_batch` envoyé par
+  # les pushers (sinon Prometheus l'écrase par `job=pushgateway`).
+  - job_name: pushgateway
+    honor_labels: true
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["pushgateway:9091"]
