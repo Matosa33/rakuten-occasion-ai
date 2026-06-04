@@ -18,9 +18,14 @@ from src.api.pipeline import (
     IdentificationResult,
     PricingService,
 )
+from src.auth.jwt_utils import create_access_token
 from src.config import DATA_MODELS
 
 client = TestClient(api_main.app)
+
+# Bearer JWT valide pour tous les endpoints protégés (Cycle 15.1, D-032).
+# /health reste public donc ne reçoit pas ces headers.
+AUTH = {"Authorization": f"Bearer {create_access_token(subject='demo')}"}
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +50,7 @@ class TestHealth:
 
 class TestIdentify:
     def test_503_when_service_not_loaded(self):
-        r = client.post("/identify", json={"image_url": "x", "text_hint": "iPhone"})
+        r = client.post("/identify", headers=AUTH, json={"image_url": "x", "text_hint": "iPhone"})
         assert r.status_code == 503
 
     def test_422_on_empty_text_hint(self):
@@ -57,7 +62,7 @@ class TestIdentify:
                 raise AssertionError("ne doit pas être appelé sur texte vide")
 
         api_main.APP_STATE["identification"] = FakeIdent()
-        r = client.post("/identify", json={"image_url": "x", "text_hint": "   "})
+        r = client.post("/identify", headers=AUTH, json={"image_url": "x", "text_hint": "   "})
         assert r.status_code == 422
 
     def test_identified_path(self):
@@ -80,7 +85,9 @@ class TestIdentify:
                 )
 
         api_main.APP_STATE["identification"] = FakeIdent()
-        r = client.post("/identify", json={"image_url": "x", "text_hint": "iPhone 14 noir"})
+        r = client.post(
+            "/identify", headers=AUTH, json={"image_url": "x", "text_hint": "iPhone 14 noir"}
+        )
         assert r.status_code == 200
         body = r.json()
         assert body["status"] == "identified"
@@ -114,7 +121,7 @@ class TestIdentify:
                 )
 
         api_main.APP_STATE["identification"] = FakeIdent()
-        r = client.post("/identify", json={"image_url": "x", "text_hint": "appareil"})
+        r = client.post("/identify", headers=AUTH, json={"image_url": "x", "text_hint": "appareil"})
         assert r.status_code == 200
         body = r.json()
         assert body["status"] == "to_confirm"
@@ -123,7 +130,7 @@ class TestIdentify:
 
 class TestPrice:
     def test_503_when_pricing_not_loaded(self):
-        r = client.post("/price", json={"category": "Electronics"})
+        r = client.post("/price", headers=AUTH, json={"category": "Electronics"})
         assert r.status_code == 503
 
     @pytest.mark.skipif(
@@ -136,6 +143,7 @@ class TestPrice:
         api_main.APP_STATE["pricing"] = pricing
         r = client.post(
             "/price",
+            headers=AUTH,
             json={"category": "Electronics", "condition": "bon_etat", "age_years": 2.0},
         )
         assert r.status_code == 200
@@ -148,7 +156,7 @@ class TestPrice:
 class TestDescribe:
     def test_describe_503_when_not_loaded(self):
         # /describe est câblé (9.3b) → 503 quand le service n'est pas chargé
-        r = client.post("/describe", json={"parent_asin": "B001"})
+        r = client.post("/describe", headers=AUTH, json={"parent_asin": "B001"})
         assert r.status_code == 503
 
 

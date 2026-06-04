@@ -38,6 +38,20 @@ class ConfidenceLevelEnum(StrEnum):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# /auth/login — JWT auth stub démo (Cycle 15.1, D-032)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TokenResponse(BaseModel):
+    """Réponse standard OAuth2 password flow : Bearer token + type."""
+
+    access_token: str = Field(
+        ..., description="JWT HS256 signé, à mettre dans Authorization: Bearer"
+    )
+    token_type: str = Field(default="bearer", description="Type de schema (toujours 'bearer' ici)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # /identify — pipeline complet (retrieval + VLM validate + Akinator si ambig)
 # ─────────────────────────────────────────────────────────────────────────────
 

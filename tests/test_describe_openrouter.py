@@ -54,7 +54,10 @@ class TestDescribeEndpoint:
         importlib.reload(api_main)
         api_main.APP_STATE["describe"] = None
         client = TestClient(api_main.app)
-        r = client.post("/describe", json={"parent_asin": "B001"})
+        from src.auth.jwt_utils import create_access_token
+
+        auth = {"Authorization": f"Bearer {create_access_token(subject='demo')}"}
+        r = client.post("/describe", headers=auth, json={"parent_asin": "B001"})
         assert r.status_code == 503
 
     @pytest.mark.skipif(

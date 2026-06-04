@@ -64,7 +64,10 @@ class TestHistoryEndpoint:
         persistence_tmp.log_identification(query_text="test", status="identified")
 
         client = TestClient(api_main.app)
-        r = client.get("/history?limit=5")
+        from src.auth.jwt_utils import create_access_token
+
+        auth = {"Authorization": f"Bearer {create_access_token(subject='demo')}"}
+        r = client.get("/history?limit=5", headers=auth)
         assert r.status_code == 200
         body = r.json()
         assert "logs" in body
@@ -78,7 +81,12 @@ class TestStreamEndpoint:
         importlib.reload(api_main)
         api_main.APP_STATE["identification"] = None
         client = TestClient(api_main.app)
-        r = client.post("/identify/stream", json={"image_url": "x", "text_hint": "iphone"})
+        from src.auth.jwt_utils import create_access_token
+
+        auth = {"Authorization": f"Bearer {create_access_token(subject='demo')}"}
+        r = client.post(
+            "/identify/stream", headers=auth, json={"image_url": "x", "text_hint": "iphone"}
+        )
         assert r.status_code == 503
 
     def test_stream_emits_events(self):
@@ -100,8 +108,14 @@ class TestStreamEndpoint:
 
         api_main.APP_STATE["identification"] = FakeIdent()
         client = TestClient(api_main.app)
+        from src.auth.jwt_utils import create_access_token
+
+        auth = {"Authorization": f"Bearer {create_access_token(subject='demo')}"}
         with client.stream(
-            "POST", "/identify/stream", json={"image_url": "x", "text_hint": "iphone"}
+            "POST",
+            "/identify/stream",
+            headers=auth,
+            json={"image_url": "x", "text_hint": "iphone"},
         ) as r:
             assert r.status_code == 200
             content = "".join(chunk for chunk in r.iter_text())

@@ -88,6 +88,11 @@ api = [
     "pyarrow>=15.0.0",
     # /metrics Prometheus (Cycle 14.2, D-030).
     "prometheus-fastapi-instrumentator>=7.0.0",
+    # JWT auth stub démo (Cycle 15.1, D-032). HS256 signing + bcrypt password.
+    # NB : pas de `passlib` car incompatible bcrypt>=5.0 (`__about__` API
+    # removed) ; on utilise bcrypt direct, suffisant pour un stub démo.
+    "python-jose[cryptography]>=3.3.0",
+    "bcrypt>=4.0.0",
 ]
 
 # Phase P12-P13 — MLOps tracking + versioning (Cycles 11-12).

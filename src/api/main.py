@@ -29,9 +29,10 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.api import persistence
@@ -47,7 +48,9 @@ from src.api.schemas import (
     ObservationToRequest,
     PriceRequest,
     PriceResponse,
+    TokenResponse,
 )
+from src.auth import authenticate, create_access_token, get_current_user
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -129,6 +132,29 @@ app.add_middleware(
 )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Auth (Cycle 15.1, D-032) — `/auth/login` reste PUBLIC pour pouvoir s'authentifier,
+# `/health` + `/metrics` restent publics pour les sondes K8s + scrape Prometheus.
+# Tous les autres endpoints métier sont protégés par `Depends(get_current_user)`.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@app.post("/auth/login", response_model=TokenResponse)
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:  # noqa: B008 — pattern FastAPI standard
+    """OAuth2 password flow stub démo. Retourne un Bearer JWT HS256.
+
+    `form.username` + `form.password` arrivent en `application/x-www-form-urlencoded`
+    (standard OAuth2). Stub : seul `demo/demo` est valide (cf. D-032, `src/auth/users.py`).
+    """
+    if not authenticate(form.username, form.password):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return TokenResponse(access_token=create_access_token(subject=form.username))
+
+
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     ident = APP_STATE.get("identification")
@@ -146,8 +172,12 @@ async def health() -> HealthResponse:
 
 
 @app.post("/identify", response_model=IdentifyResponse)
-async def identify(req: IdentifyRequest) -> IdentifyResponse:
+async def identify(
+    req: IdentifyRequest,
+    user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
+) -> IdentifyResponse:
     """Identification retrieval-first (text-only MVP) : FAISS → OOD → Akinator."""
+    log.info("identify by user=%s", user)
     ident: IdentificationService | None = APP_STATE.get("identification")
     if ident is None or not ident.ready:
         raise HTTPException(
@@ -210,8 +240,12 @@ async def identify(req: IdentifyRequest) -> IdentifyResponse:
 
 
 @app.post("/price", response_model=PriceResponse)
-async def price(req: PriceRequest) -> PriceResponse:
+async def price(
+    req: PriceRequest,
+    user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
+) -> PriceResponse:
     """Pricing transparent cascade L1-L4 (M8)."""
+    log.info("price by user=%s", user)
     pricing: PricingService | None = APP_STATE.get("pricing")
     if pricing is None or not pricing.ready:
         raise HTTPException(503, "PricingService indisponible. Vérifie Cycle 7.1 (M8).")
@@ -235,8 +269,12 @@ async def price(req: PriceRequest) -> PriceResponse:
 
 
 @app.post("/describe", response_model=DescribeResponse)
-async def describe(req: DescribeRequest) -> DescribeResponse:
+async def describe(
+    req: DescribeRequest,
+    user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
+) -> DescribeResponse:
     """Génération titre + description grounded RAG (E4 OpenRouter si clé, sinon mock D-013)."""
+    log.info("describe by user=%s", user)
     desc: DescribeService | None = APP_STATE.get("describe")
     if desc is None or not desc.ready:
         raise HTTPException(
@@ -256,8 +294,12 @@ async def describe(req: DescribeRequest) -> DescribeResponse:
 
 
 @app.get("/history")
-async def history(limit: int = 20) -> dict:
+async def history(
+    limit: int = 20,
+    user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
+) -> dict:
     """Cycle 9.5 — N dernières identifications historisées (traçabilité)."""
+    log.info("history by user=%s", user)
     try:
         return {"logs": persistence.recent_logs(limit=limit)}
     except Exception as e:  # noqa: BLE001
@@ -265,12 +307,16 @@ async def history(limit: int = 20) -> dict:
 
 
 @app.post("/identify/stream")
-async def identify_stream(req: IdentifyRequest):
+async def identify_stream(
+    req: IdentifyRequest,
+    user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
+):
     """Cycle 9.4 — SSE : streame les étapes du pipeline pour UX progressive.
 
     Chaque étape = un event JSON. Le frontend (Cycle 10) affiche la
     progression (encodage → recherche → garde-fous → résultat).
     """
+    log.info("identify/stream by user=%s", user)
     ident: IdentificationService | None = APP_STATE.get("identification")
     if ident is None or not ident.ready:
         raise HTTPException(503, "IdentificationService indisponible.")
