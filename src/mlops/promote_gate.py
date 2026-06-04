@@ -115,6 +115,7 @@ def decide_and_promote(metric: str = METRIC, epsilon: float = EPSILON) -> dict:
 
 def main() -> None:
     result = decide_and_promote()
+    # CLI output JSON consommable par script aval (pipe / jq), pas un log → R6 ok (D-029).
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 

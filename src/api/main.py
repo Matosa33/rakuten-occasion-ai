@@ -34,6 +34,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from src.api import persistence
+from src.api.middleware import request_id_middleware
 from src.api.pipeline import DescribeService, IdentificationService, PricingService
 from src.api.schemas import (
     CandidateMeta,
@@ -100,12 +101,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Observabilité C14.1 (D-029) : middleware request_id + access log structuré JSON.
+# Ajouté EN PREMIER → le request_id est dispo dans tous les autres middlewares
+# et handlers (CORS, body parsing, etc.).
+app.middleware("http")(request_id_middleware)
+
 # CORS — autorise le frontend (Vite :5173) en dev. En prod, restreindre aux origines connues.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["x-request-id"],
 )
 
 

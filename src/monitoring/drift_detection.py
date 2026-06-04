@@ -102,6 +102,7 @@ def detect_drift() -> dict:
 
 def main() -> None:
     result = detect_drift()
+    # CLI output JSON consommable par script aval (pipe / jq), pas un log → R6 ok (D-029).
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 
