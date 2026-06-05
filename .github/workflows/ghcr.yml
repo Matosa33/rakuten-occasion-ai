@@ -1,0 +1,92 @@
+# Build & push Docker images vers GitHub Container Registry (Cycle 15.2, D-033).
+# 4 images (api, frontend, airflow, mlflow) construites en matrix.
+#   - push sur main → tag :latest
+#   - push tag v*.*.* → tags semver (:0.1.0, :0.1, :0)
+# Architecture : amd64 seul (multi-arch arm64 = post-soutenance, +5 min/image).
+
+name: Build & push images to GHCR
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write # requis pour push à ghcr.io
+
+concurrency:
+  group: ghcr-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false # ne pas annuler un push de tag (release)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: ${{ github.repository_owner }}
+
+jobs:
+  build-and-push:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # un build qui échoue n'arrête pas les autres
+      matrix:
+        include:
+          - image: api
+            dockerfile: infra/docker/Dockerfile.api
+            context: .
+          - image: frontend
+            dockerfile: infra/docker/Dockerfile.frontend
+            context: .
+          - image: airflow
+            dockerfile: infra/docker/Dockerfile.airflow
+            context: .
+          - image: mlflow
+            dockerfile: infra/docker/Dockerfile.mlflow
+            context: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        # Login via GITHUB_TOKEN (auto-provisioned, scope packages:write).
+        # Aucun secret manuel à configurer côté repo.
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image tags + labels
+        # `docker/metadata-action` génère les tags propres :
+        #   - main → :latest
+        #   - v0.1.0 → :0.1.0, :0.1, :0
+        # + labels OCI conformes (org.opencontainers.image.*).
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/rakuten-${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,format=short
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64 # arm64 = post-soutenance (D-033)
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Cache officiel GHA — 10 Go gratuits par repo, build incrémental ~2 min
+          # au lieu de ~10 min cold (torch CPU 1 Go à retélécharger sinon).
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
