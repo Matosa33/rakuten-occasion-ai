@@ -323,6 +323,66 @@ def test_identify_request_image_url_optional():
     assert req.text_hint == "iPhone 13"
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Cycle 15.3 (D-034) — garde-fou command base ↔ overlay prod.
+# L'audit 15.0 a trouvé que le command Traefik prod (C13.3) avait perdu les
+# flags metrics ajoutés en C14.2 au command de base : un `command:` overlay
+# REMPLACE (ne merge pas) → régression d'observabilité invisible en prod.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class _ComposeLoader(yaml.SafeLoader):
+    """SafeLoader qui tolère les tags Compose custom (`!reset`, `!override`) —
+    PyYAML pur lèverait ConstructorError sur l'overlay prod."""
+
+
+_ComposeLoader.add_multi_constructor(
+    "!",
+    lambda loader, suffix, node: None,  # les valeurs taguées ne nous servent pas
+)
+
+
+def _load_prod() -> dict:
+    return yaml.load(PROD.read_text(encoding="utf-8"), Loader=_ComposeLoader)  # noqa: S506 — loader dérivé de SafeLoader
+
+
+def test_traefik_command_overlay_prod_garde_les_flags_critiques():
+    """Tout flag critique du command Traefik de base doit exister dans l'overlay
+    prod (sauf ceux retirés VOLONTAIREMENT : dashboard insecure, log level)."""
+    base = _load(COMPOSE)["services"]["traefik"]["command"]
+    prod = _load_prod()["services"]["traefik"]["command"]
+
+    # Flags retirés volontairement en prod (documentés dans l'overlay).
+    intentionally_dropped = {"--api.dashboard=true", "--api.insecure=true", "--log.level=INFO"}
+
+    missing = [flag for flag in base if flag not in prod and flag not in intentionally_dropped]
+    assert not missing, (
+        f"Flags du command Traefik de base absents de l'overlay prod : {missing}. "
+        "Un command overlay REMPLACE le command de base — resynchroniser "
+        "docker-compose.prod.yml (cf. erreur compose-overlay-command-remplace)."
+    )
+
+
+def test_prod_overlay_couvre_tous_les_services_long_running():
+    """Chaque service long-running du compose de base doit avoir un restart
+    policy en prod (l'audit 15.0 a trouvé 6 services oubliés de l'overlay)."""
+    base_services = _load(COMPOSE)["services"]
+    prod_services = _load_prod()["services"]
+
+    # One-shot exclus : init containers (restart: "no" voulu).
+    one_shot = {"minio-init", "airflow-init"}
+    long_running = set(base_services) - one_shot
+
+    missing_restart = [
+        name
+        for name in sorted(long_running)
+        if prod_services.get(name, {}).get("restart") != "unless-stopped"
+    ]
+    assert not missing_restart, (
+        f"Services sans `restart: unless-stopped` dans l'overlay prod : {missing_restart}"
+    )
+
+
 def test_middlewares_securite_et_ratelimit_appliques():
     """sec-headers global + api-ratelimit appliqués à l'API (D-026)."""
     services = _load(COMPOSE)["services"]

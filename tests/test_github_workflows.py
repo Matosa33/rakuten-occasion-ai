@@ -48,11 +48,38 @@ def test_ci_triggers_push_pr_main():
 
 
 def test_ci_jobs_lint_test_brain_present():
-    """Les 3 jobs canoniques sont déclarés (régression si on en supprime un)."""
+    """Les 5 jobs canoniques sont déclarés (régression si on en supprime un).
+    security + docker-build ajoutés en C15.3 (D-034)."""
     jobs = _load(CI)["jobs"]
     assert "lint" in jobs, "job `lint` manquant"
     assert "test" in jobs, "job `test` manquant"
     assert "brain-structure" in jobs, "job `brain-structure` manquant"
+    assert "security" in jobs, "job `security` (pip-audit, D-034) manquant"
+    assert "docker-build" in jobs, "job `docker-build` (D-034) manquant"
+
+
+def test_ci_security_job_pip_audit_avec_ignore_justifie():
+    """Le job security lance pip-audit ; les CVE ignorées doivent être listées
+    EXPLICITEMENT (pas de --ignore-vuln générique non documenté)."""
+    raw = CI.read_text(encoding="utf-8")
+    assert "pip-audit" in raw, "pip-audit absent du CI"
+    # La seule CVE ignorée autorisée = diskcache (sans fix publié, D-034).
+    assert "--ignore-vuln CVE-2025-69872" in raw, (
+        "CVE diskcache doit être ignorée explicitement avec justification"
+    )
+
+
+def test_ci_docker_build_les_4_images_sans_push():
+    """docker-build vérifie les 4 Dockerfiles sur PR SANS pousser (push: false)."""
+    jobs = _load(CI)["jobs"]
+    db = jobs["docker-build"]
+    matrix = db["strategy"]["matrix"]["include"]
+    images = {m["image"] for m in matrix}
+    assert images == {"api", "frontend", "airflow", "mlflow"}, (
+        f"docker-build doit couvrir les 4 images, vu : {images}"
+    )
+    raw = CI.read_text(encoding="utf-8")
+    assert "push: false" in raw, "docker-build ne doit JAMAIS pousser (CI PR)"
 
 
 def test_ci_test_depends_on_lint():

@@ -66,8 +66,9 @@ def setup_mlflow() -> None:
 def git_commit() -> str:
     """SHA court du commit courant (tag de traçabilité), ou 'unknown'."""
     try:
+        # noqa S607 : binaire `git` du PATH voulu (un chemin absolu ne serait pas portable).
         return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"],
+            ["git", "rev-parse", "--short", "HEAD"],  # noqa: S607
             cwd=REPO_ROOT,
             text=True,
             stderr=subprocess.DEVNULL,

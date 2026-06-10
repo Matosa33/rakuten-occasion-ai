@@ -60,7 +60,8 @@ TRAIN_FRAC = 0.70
 VAL_FRAC = 0.15
 TEST_FRAC = 0.15  # = 1 - TRAIN_FRAC - VAL_FRAC
 
-assert abs(TRAIN_FRAC + VAL_FRAC + TEST_FRAC - 1.0) < 1e-9, "Fractions doivent sommer à 1"
+if abs(TRAIN_FRAC + VAL_FRAC + TEST_FRAC - 1.0) >= 1e-9:
+    raise ValueError("Fractions doivent sommer à 1")
 
 
 def _stratified_split_one_category(df: pl.DataFrame, cat: str) -> pl.DataFrame:

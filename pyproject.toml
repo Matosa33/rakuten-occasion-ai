@@ -161,13 +161,15 @@ select = [
     "B",    # flake8-bugbear
     "C4",   # flake8-comprehensions
     "SIM",  # flake8-simplify
+    "S",    # flake8-bandit — règles sécurité (Cycle 15.3, D-034)
 ]
 ignore = [
     "E501",  # line too long (gérée par formatter)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["B"]
+# S101 : assert est LA primitive pytest ; S105/S106 : credentials stub dans les tests.
+"tests/*" = ["B", "S101", "S105", "S106"]
 
 # === pytest config ===
 [tool.pytest.ini_options]

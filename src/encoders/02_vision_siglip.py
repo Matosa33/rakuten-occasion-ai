@@ -139,8 +139,8 @@ def _process_batch_images(
                 if img_bytes:
                     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
                     images_pil[pa] = img
-            except Exception:
-                pass  # silently skip corrupted images
+            except Exception as e:  # noqa: BLE001 — une image corrompue ne doit pas tuer le batch
+                log.debug("Image %s corrompue, skip : %s", pa, e)
 
     if not images_pil:
         return [], np.zeros((0, EMBED_DIM), dtype=DTYPE_OUT)
