@@ -75,6 +75,19 @@ def test_pyproject_api_extra_contient_polars():
     assert "pyarrow" in api_block, "pyarrow manquant dans pyproject extra [api]"
 
 
+def test_pyproject_api_extra_contient_les_deps_auth():
+    """Régression smoke C15.4 : OAuth2PasswordRequestForm (/auth/login) exige
+    python-multipart — présent transitivement dans le venv dev, ABSENT de
+    l'image API → container crash au boot (RuntimeError au build des routes).
+    Même famille d'erreur que polars C13.1 : dep transitive locale masquée."""
+    pyproject = (DOCKER_DIR.parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+    # Split sur `\n]` (fin de liste TOML) — un `]` simple couperait au milieu
+    # de `python-jose[cryptography]`.
+    api_block = pyproject.split("api = [", 1)[1].split("\n]", 1)[0]
+    for dep in ("python-multipart", "python-jose", "bcrypt"):
+        assert dep in api_block, f"{dep} manquant dans pyproject extra [api] (auth D-032)"
+
+
 def test_nginx_ecoute_ipv4_et_ipv6():
     """Régression C13.3 : healthcheck `wget http://localhost/` résout `::1` (IPv6)
     en premier dans Alpine. Si nginx n'a pas `listen [::]:80;`, connection refused

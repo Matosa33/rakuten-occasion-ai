@@ -97,6 +97,10 @@ api = [
     # removed) ; on utilise bcrypt direct, suffisant pour un stub démo.
     "python-jose[cryptography]>=3.3.0",
     "bcrypt>=4.0.0",
+    # OAuth2PasswordRequestForm (/auth/login form-data) exige python-multipart.
+    # Présent transitivement dans le venv dev → l'absence dans l'image API n'a
+    # été vue qu'au smoke C15.4 (container crash au boot). Toujours expliciter.
+    "python-multipart>=0.0.9",
 ]
 
 # Phase P12-P13 — MLOps tracking + versioning (Cycles 11-12).
