@@ -122,12 +122,15 @@ Instrumentator(
     excluded_handlers=["/metrics", "/health"],
 ).instrument(app).expose(app)
 
-# CORS — autorise le frontend (Vite :5173) en dev. En prod, restreindre aux origines connues.
+# CORS — autorise le frontend (Vite :5173) en dev. En prod (build statique servi
+# par nginx + proxy /api/ même-origine), CORS n'est pas sollicité. Audit 2026-06-05
+# (P1) : méthodes + headers explicites (au lieu de "*") pour réduire le vecteur
+# CSRF sur /auth/login public.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["authorization", "content-type"],
     expose_headers=["x-request-id"],
 )
 

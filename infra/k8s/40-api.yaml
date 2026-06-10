@@ -39,6 +39,13 @@ spec:
               valueFrom: { secretKeyRef: { name: rakuten-secrets, key: MINIO_ROOT_USER } }
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom: { secretKeyRef: { name: rakuten-secrets, key: MINIO_ROOT_PASSWORD } }
+            # Audit 2026-06-05 : sans ENABLE_METRICS, /metrics est silencieusement
+            # absent en K8s (opt-in C14.2 D-030) — drift Compose↔K8s corrigé.
+            - name: ENABLE_METRICS
+              valueFrom: { configMapKeyRef: { name: rakuten-config, key: ENABLE_METRICS } }
+            # JWT_SECRET (D-032) : depuis le Secret (jamais en ConfigMap).
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: rakuten-secrets, key: JWT_SECRET } }
           resources:
             requests: { cpu: "200m", memory: "512Mi" }
             limits:   { cpu: "1000m", memory: "2Gi" }

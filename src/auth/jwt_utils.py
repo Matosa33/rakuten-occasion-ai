@@ -20,8 +20,25 @@ _DEFAULT_DEV_SECRET = "dev-secret-change-me-in-prod"  # noqa: S105 — stub dém
 _DEFAULT_EXPIRE_MINUTES = 60
 
 
+_warned_default_secret = False
+
+
 def _secret() -> str:
-    return os.environ.get("JWT_SECRET", _DEFAULT_DEV_SECRET)
+    secret = os.environ.get("JWT_SECRET", _DEFAULT_DEV_SECRET)
+    # Audit 2026-06-05 (P1) : sans ce warning, une API déployée sans JWT_SECRET
+    # signe silencieusement avec le secret par défaut committé → tokens forgeables
+    # par quiconque lit le repo. Warning une seule fois (pas à chaque requête).
+    global _warned_default_secret
+    if secret == _DEFAULT_DEV_SECRET and not _warned_default_secret:
+        _warned_default_secret = True
+        from src.observability.logging import get_logger
+
+        get_logger(__name__).warning(
+            "jwt_secret_default_in_use",
+            hint="JWT_SECRET non défini — tokens signés avec le secret DEV committé. "
+            "Inacceptable hors développement local.",
+        )
+    return secret
 
 
 def _expire_minutes() -> int:

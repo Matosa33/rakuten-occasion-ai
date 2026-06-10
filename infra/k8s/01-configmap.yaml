@@ -11,3 +11,5 @@ data:
   POSTGRES_MLFLOW_HOST: "postgres-mlflow.rakuten.svc.cluster.local"
   POSTGRES_MLFLOW_DB: "mlflow"
   POSTGRES_MLFLOW_USER: "mlflow"
+  # Audit 2026-06-05 : opt-in /metrics (C14.2 D-030) — manquait → /metrics absent en K8s.
+  ENABLE_METRICS: "true"

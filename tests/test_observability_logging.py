@@ -4,20 +4,22 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 
 import pytest
 import structlog
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-# Force le format JSON dans les tests (pas TTY).
-os.environ["LOG_FORMAT"] = "json"
-
 
 @pytest.fixture(autouse=True)
-def _reset_structlog():
-    """Reset structlog config + context entre tests pour éviter les fuites."""
+def _reset_structlog(monkeypatch):
+    """Reset structlog config + context entre tests pour éviter les fuites.
+
+    Audit 2026-06-05 (P1) : LOG_FORMAT était muté au module-level via os.environ
+    → pollution de l'état global du process pour tous les tests suivants. Migré
+    vers monkeypatch (scope function, restore automatique).
+    """
+    monkeypatch.setenv("LOG_FORMAT", "json")
     structlog.reset_defaults()
     structlog.contextvars.clear_contextvars()
     # Force la reconfig au prochain get_logger.

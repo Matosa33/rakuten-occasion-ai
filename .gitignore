@@ -41,7 +41,8 @@ desktop.ini
 .env.local
 *.pem
 *.key
-secrets.yaml
+# Audit 2026-06-05 : pattern générique (couvre infra/k8s/ et tout futur chemin).
+**/secrets.yaml
 
 # === Notebooks ===
 .ipynb_checkpoints/

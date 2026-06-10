@@ -11,14 +11,21 @@
 services:
   traefik:
     restart: unless-stopped
-    # En prod, le dashboard Traefik est fermé (port direct retiré) ; en accès
+    # En prod, le dashboard Traefik est fermé (pas de --api.insecure) ; en accès
     # réel = à mettre derrière basic auth + TLS via une overlay TLS plus tard.
+    # NB audit 2026-06-05 : ce `command:` REMPLACE celui de la base → il doit
+    # re-déclarer les flags metrics C14.2 (sinon le job Prometheus `traefik`
+    # devient DOWN en prod, régression silencieuse).
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--ping=true"
       - "--log.level=WARN"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addRoutersLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
     ports: !reset
       - "80:80"
 
@@ -41,4 +48,31 @@ services:
   airflow-webserver:
     restart: unless-stopped
     # UI Airflow pas exposée publiquement en prod ; Traefik la protègera.
+    ports: !reset []
+
+  # ── Services C13.4 + C14.2/14.3 (audit 2026-06-05 : manquaient à l'overlay,
+  # donc pas de restart policy ni de fermeture de ports en prod). Les ports
+  # restent fermés (accès interne réseau Docker + Traefik pour mlflow/grafana/
+  # prometheus via leurs labels).
+  minio:
+    restart: unless-stopped
+    ports: !reset []
+
+  postgres-mlflow:
+    restart: unless-stopped
+
+  mlflow-server:
+    restart: unless-stopped
+    ports: !reset []
+
+  prometheus:
+    restart: unless-stopped
+    ports: !reset []
+
+  grafana:
+    restart: unless-stopped
+    ports: !reset []
+
+  pushgateway:
+    restart: unless-stopped
     ports: !reset []

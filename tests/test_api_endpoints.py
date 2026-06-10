@@ -30,12 +30,13 @@ AUTH = {"Authorization": f"Bearer {create_access_token(subject='demo')}"}
 
 @pytest.fixture(autouse=True)
 def _clear_state():
-    """Reset APP_STATE avant chaque test."""
-    api_main.APP_STATE["identification"] = None
-    api_main.APP_STATE["pricing"] = None
+    """Reset APP_STATE avant ET après chaque test (audit 2026-06-05 : `describe`
+    manquait au reset → un test describe pouvait polluer le suivant)."""
+    for key in ("identification", "pricing", "describe"):
+        api_main.APP_STATE[key] = None
     yield
-    api_main.APP_STATE["identification"] = None
-    api_main.APP_STATE["pricing"] = None
+    for key in ("identification", "pricing", "describe"):
+        api_main.APP_STATE[key] = None
 
 
 class TestHealth:

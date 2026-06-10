@@ -133,22 +133,19 @@ def test_push_drift_construit_les_7_gauges_attendues():
         assert f"\n{name} " in "\n" + text, f"gauge {name} non exposée"
 
 
-def test_push_degrade_proprement_si_pushgateway_injoignable():
+def test_push_degrade_proprement_si_pushgateway_injoignable(monkeypatch):
     """Si le Pushgateway n'est pas joignable (smoke standalone), le helper doit
     retourner False mais NE PAS lever — R15 dégradation propre, sinon les DAGs
-    Airflow plantent pour un problème obs et perdent tout le calcul amont."""
-    import os
+    Airflow plantent pour un problème obs et perdent tout le calcul amont.
 
-    os.environ["PUSHGATEWAY_URL"] = "http://localhost:1"  # port fermé
-
-    # Re-import du helper avec la nouvelle URL
-    import importlib
-
+    Audit 2026-06-05 (P1) : os.environ muté + importlib.reload laissaient le
+    module pollué (URL cassée) pour tout test suivant. Migré : monkeypatch sur
+    l'ATTRIBUT du module (pas de reload), restore automatique en teardown.
+    """
     from src.monitoring import push_metrics as pm
 
-    importlib.reload(pm)
+    monkeypatch.setattr(pm, "PUSHGATEWAY_URL", "http://localhost:1")  # port fermé
 
-    assert pm.PUSHGATEWAY_URL == "http://localhost:1"
     result = pm.push_drift_metrics(
         {
             "drift_share": 0.1,

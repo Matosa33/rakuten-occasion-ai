@@ -20,6 +20,10 @@ dependencies = [
     "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
     "python-dotenv>=1.0.0",
+    # Planchers sécurité (audit pip-audit 2026-06-05) : versions minimales sans
+    # CVE connue pour les deps transitives présentes dans toutes les images.
+    "urllib3>=2.7.0",
+    "idna>=3.15",
 ]
 
 [project.optional-dependencies]

@@ -79,6 +79,8 @@ stack-build:  ## C13.2 - rebuild toutes les images de la stack sans démarrer
 	$(COMPOSE) build
 
 prod-up:  ## C13.2 - démarre la stack avec overlay prod (restart strict, ports internes)
+	@test -f .env || (echo "ERREUR: .env manquant. Un déploiement prod sans .env tournerait avec les credentials par défaut publics (minioadmin, admin/admin, JWT dev). Copier .env.example puis générer des secrets réels." && exit 1)
+	@grep -q "^JWT_SECRET=" .env || (echo "ERREUR: JWT_SECRET absent du .env (les tokens seraient signés avec le secret dev committé). Générer : python -c \"import secrets; print('JWT_SECRET=' + secrets.token_urlsafe(32))\" >> .env" && exit 1)
 	$(COMPOSE) $(PROD) up -d --build
 
 prod-down:  ## C13.2 - arrête la stack prod
