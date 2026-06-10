@@ -1,5 +1,9 @@
 // Cycle 10 — Client API typé pour le backend FastAPI (Cycle 9).
 // En dev, les appels passent par le proxy Vite /api → http://localhost:8000.
+// Cycle 15 (D-032) : tous les endpoints métier exigent un Bearer JWT —
+// injecté ici, point unique de passage de tous les appels.
+
+import { clearToken, getToken } from "./auth";
 
 const BASE = "/api";
 
@@ -56,14 +60,24 @@ export interface DescribeResponse {
 }
 
 async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
+  if (res.status === 401) {
+    // Token absent/expiré/invalide → purge → App re-render vers LoginPage.
+    clearToken();
+    throw new Error("Session expirée — reconnectez-vous.");
+  }
   if (!res.ok) {
     const detail = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(detail.detail ?? `Erreur ${res.status}`);
+    throw new Error(
+      typeof detail.detail === "string" ? detail.detail : `Erreur ${res.status}`
+    );
   }
   return res.json() as Promise<T>;
 }

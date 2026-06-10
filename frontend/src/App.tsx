@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   type Category,
@@ -10,10 +10,12 @@ import {
   identify,
   priceProduct,
 } from "./api";
+import { clearToken, getToken, subscribe } from "./auth";
 import { StepBar } from "./components/StepBar";
 import { CandidatePicker } from "./components/CandidatePicker";
 import { PriceCard } from "./components/PriceCard";
 import { ListingCard } from "./components/ListingCard";
+import { LoginPage } from "./components/LoginPage";
 
 const CONDITIONS: { value: Condition; label: string }[] = [
   { value: "neuf", label: "Neuf" },
@@ -23,6 +25,9 @@ const CONDITIONS: { value: Condition; label: string }[] = [
 ];
 
 export default function App() {
+  // Auth D-032 : store externe (localStorage) → re-render auto au login/logout/401.
+  const token = useSyncExternalStore(subscribe, getToken);
+
   const [step, setStep] = useState(1);
   const [textHint, setTextHint] = useState("");
   const [condition, setCondition] = useState<Condition>("bon_etat");
@@ -103,6 +108,10 @@ export default function App() {
     setError(null);
   }
 
+  if (!token) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <header className="mb-8 text-center">
@@ -110,6 +119,12 @@ export default function App() {
         <p className="mt-2 text-slate-600">
           Décrivez votre objet, l'IA l'identifie, fixe un prix juste et rédige l'annonce.
         </p>
+        <button
+          onClick={() => clearToken()}
+          className="mt-2 text-xs text-slate-400 underline transition hover:text-slate-600"
+        >
+          Se déconnecter
+        </button>
       </header>
 
       <StepBar step={step} total={3} />
