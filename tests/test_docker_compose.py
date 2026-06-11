@@ -36,16 +36,19 @@ def test_compose_les_6_services_attendus():
 
 
 def test_api_volumes_data_en_lecture_seule():
-    """L'API monte data + mlflow.db + mlartifacts en READ-ONLY (sécurité D-025)."""
+    """L'API monte data + mlflow.db + mlartifacts en READ-ONLY (sécurité D-025),
+    SAUF le sous-dossier uploads (volume nommé writable, C17.4 D-035 — sans lui :
+    OSError 30 sur POST /upload, attrapé au smoke)."""
     api = _load(COMPOSE)["services"]["api"]
     vols = api.get("volumes", [])
     expected = (
         "./data:/opt/rakuten/data:ro",
+        "uploads-data:/opt/rakuten/data/uploads",
         "./mlflow.db:/opt/rakuten/mlflow.db:ro",
         "./mlartifacts:/opt/rakuten/mlartifacts:ro",
     )
     for vol in expected:
-        assert vol in vols, f"volume manquant/non-RO : {vol}"
+        assert vol in vols, f"volume manquant : {vol}"
 
 
 def test_healthchecks_sur_services_exposes():

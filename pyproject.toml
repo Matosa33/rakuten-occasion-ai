@@ -101,6 +101,10 @@ api = [
     # Présent transitivement dans le venv dev → l'absence dans l'image API n'a
     # été vue qu'au smoke C15.4 (container crash au boot). Toujours expliciter.
     "python-multipart>=0.0.9",
+    # photo_extraction + validator (C17, D-035) appellent OpenRouter via requests.
+    # 3ᵉ occurrence du pattern "dep transitive masquée" (polars C13.1,
+    # python-multipart C15.4) — attrapée au smoke C17.4.
+    "requests>=2.31.0",
 ]
 
 # Phase P12-P13 — MLOps tracking + versioning (Cycles 11-12).

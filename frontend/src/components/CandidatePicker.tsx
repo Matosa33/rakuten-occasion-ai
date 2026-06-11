@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Category, IdentifyResponse } from "../api";
 import { bestDiscriminativeFacet, FACET_LABELS } from "../facets";
+import { PhotoLightbox } from "./PhotoLightbox";
 
 // Hick's Law : top 3 mis en avant, liste complète déroulable (triée par similarité).
 const TOP_HIGHLIGHT = 3;
@@ -25,6 +26,15 @@ export function CandidatePicker({
   const status = STATUS_LABEL[ident.status];
   // Akinator multi-étapes (D-019) : filtres appliqués {facette: valeur}.
   const [applied, setApplied] = useState<Record<string, string>>({});
+  // Visionneuse 17.4 (D-035) : photos catalogue du candidat survolé/cliqué.
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+
+  function openGallery(images: string[]) {
+    if (images.length === 0) return;
+    setGalleryImages(images);
+    setGalleryIndex(0);
+  }
 
   const visible = useMemo(
     () =>
@@ -51,10 +61,31 @@ export function CandidatePicker({
     });
   }
 
+  const validation = ident.vlm_validation;
+
   return (
     <div className="rounded-2xl bg-white p-6 shadow-sm">
       <p className={`text-sm font-semibold ${status.color}`}>{status.text}</p>
       <p className="mt-1 text-xs text-slate-500">{ident.explanation}</p>
+
+      {/* Badge de correspondance visuelle (VLM validateur F0.4, 17.2/17.4 D-035) :
+          l'IA a comparé VOS photos à l'image catalogue du meilleur candidat. */}
+      {validation && (
+        <div
+          className={`mt-3 rounded-xl border p-3 text-xs ${
+            validation.match
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              : "border-orange-200 bg-orange-50 text-orange-800"
+          }`}
+        >
+          <span className="font-semibold">
+            {validation.match
+              ? `✓ Correspondance visuelle vérifiée (${Math.round(validation.confidence * 100)}%)`
+              : `⚠ Vos photos ne semblent pas correspondre au 1ᵉʳ candidat (${Math.round(validation.confidence * 100)}%)`}
+          </span>
+          {validation.reason && <span className="mt-0.5 block">{validation.reason}</span>}
+        </div>
+      )}
 
       {/* Filtres déjà appliqués (retirables) */}
       {Object.keys(applied).length > 0 && (
@@ -94,27 +125,43 @@ export function CandidatePicker({
       {visible.length > 0 ? (
         <ul className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1">
           {visible.map((c, idx) => (
-            <li key={c.parent_asin}>
-              <button
-                disabled={loading}
-                onClick={() => onChoose(c.parent_asin, c.category)}
-                className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-40 ${
-                  idx < TOP_HIGHLIGHT ? "border-slate-200" : "border-slate-100"
-                }`}
-              >
-                {c.image_url ? (
+            <li
+              key={c.parent_asin}
+              className={`flex items-center gap-3 rounded-xl border p-2.5 transition hover:border-rose-300 hover:bg-rose-50 ${
+                idx < TOP_HIGHLIGHT ? "border-slate-200" : "border-slate-100"
+              }`}
+            >
+              {/* Vignette = ouvre la visionneuse (17.4) ; le reste = choisir. */}
+              {c.image_url ? (
+                <button
+                  type="button"
+                  onClick={() => openGallery(c.images?.length ? c.images : [c.image_url])}
+                  title={`Voir les ${c.images?.length || 1} photo(s) du produit`}
+                  className="relative shrink-0"
+                >
                   <img
                     src={c.image_url}
                     alt=""
                     loading="lazy"
                     onError={(e) => (e.currentTarget.style.visibility = "hidden")}
-                    className="h-12 w-12 shrink-0 rounded-lg border border-slate-100 object-contain"
+                    className="h-12 w-12 rounded-lg border border-slate-100 object-contain"
                   />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-300">
-                    📦
-                  </div>
-                )}
+                  {(c.images?.length ?? 0) > 1 && (
+                    <span className="absolute -bottom-1 -right-1 rounded-full bg-slate-700 px-1 text-[10px] leading-4 text-white">
+                      {c.images.length}
+                    </span>
+                  )}
+                </button>
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-300">
+                  📦
+                </div>
+              )}
+              <button
+                disabled={loading}
+                onClick={() => onChoose(c.parent_asin, c.category)}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left disabled:opacity-40"
+              >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-slate-800">
                     {c.title || "(sans titre)"}
@@ -142,6 +189,13 @@ export function CandidatePicker({
       >
         ← Recommencer
       </button>
+
+      <PhotoLightbox
+        images={galleryImages}
+        index={galleryIndex}
+        onIndexChange={setGalleryIndex}
+        onClose={() => setGalleryIndex(null)}
+      />
     </div>
   );
 }

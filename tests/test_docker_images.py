@@ -84,8 +84,10 @@ def test_pyproject_api_extra_contient_les_deps_auth():
     # Split sur `\n]` (fin de liste TOML) — un `]` simple couperait au milieu
     # de `python-jose[cryptography]`.
     api_block = pyproject.split("api = [", 1)[1].split("\n]", 1)[0]
-    for dep in ("python-multipart", "python-jose", "bcrypt"):
-        assert dep in api_block, f"{dep} manquant dans pyproject extra [api] (auth D-032)"
+    for dep in ("python-multipart", "python-jose", "bcrypt", "requests"):
+        assert dep in api_block, (
+            f"{dep} manquant dans pyproject extra [api] (auth D-032 / photo D-035)"
+        )
 
 
 def test_nginx_ecoute_ipv4_et_ipv6():

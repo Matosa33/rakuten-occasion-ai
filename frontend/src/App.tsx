@@ -15,6 +15,7 @@ import { checklistToText, type ProductKind } from "./condition";
 import { StepBar } from "./components/StepBar";
 import { CandidatePicker } from "./components/CandidatePicker";
 import { ConditionChecklist } from "./components/ConditionChecklist";
+import { PhotoLightbox } from "./components/PhotoLightbox";
 import { PhotoUploader, type UploadedPhoto } from "./components/PhotoUploader";
 import { PriceCard } from "./components/PriceCard";
 import { ListingCard } from "./components/ListingCard";
@@ -45,6 +46,7 @@ export default function App() {
   const [chosenCategory, setChosenCategory] = useState<Category | null>(null);
   const [price, setPrice] = useState<PriceResponse | null>(null);
   const [listing, setListing] = useState<DescribeResponse | null>(null);
+  const [listingPhotoIndex, setListingPhotoIndex] = useState<number | null>(null); // lightbox étape 3
 
   async function runIdentify() {
     if (photos.length === 0) return; // photo-first : la photo est la preuve
@@ -239,6 +241,38 @@ export default function App() {
             exit={{ opacity: 0, y: -12 }}
             className="mt-6 space-y-4"
           >
+            {/* 17.4 (D-035) : VOS photos dans l'annonce — la preuve acheteur.
+                Clic = zoom plein écran. */}
+            {photos.length > 0 && (
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <span className="text-sm font-medium text-slate-700">
+                  Photos de votre annonce ({photos.length})
+                </span>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {photos.map((p, i) => (
+                    <button
+                      key={p.imageId}
+                      type="button"
+                      onClick={() => setListingPhotoIndex(i)}
+                      title="Agrandir"
+                      className="overflow-hidden rounded-lg border border-slate-200 transition hover:ring-2 hover:ring-rose-300"
+                    >
+                      <img
+                        src={p.url}
+                        alt={`Photo ${i + 1} de l'annonce`}
+                        className="h-24 w-24 object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+                <PhotoLightbox
+                  images={photos.map((p) => p.url)}
+                  index={listingPhotoIndex}
+                  onIndexChange={setListingPhotoIndex}
+                  onClose={() => setListingPhotoIndex(null)}
+                />
+              </div>
+            )}
             <PriceCard price={price} />
             <ListingCard
               key={chosenAsin ?? "listing"}
