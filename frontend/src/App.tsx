@@ -11,8 +11,11 @@ import {
   priceProduct,
 } from "./api";
 import { clearToken, getToken, subscribe } from "./auth";
+import { checklistToText, type ProductKind } from "./condition";
 import { StepBar } from "./components/StepBar";
 import { CandidatePicker } from "./components/CandidatePicker";
+import { ConditionChecklist } from "./components/ConditionChecklist";
+import { PhotoUploader, type UploadedPhoto } from "./components/PhotoUploader";
 import { PriceCard } from "./components/PriceCard";
 import { ListingCard } from "./components/ListingCard";
 import { LoginPage } from "./components/LoginPage";
@@ -29,6 +32,9 @@ export default function App() {
   const token = useSyncExternalStore(subscribe, getToken);
 
   const [step, setStep] = useState(1);
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]); // ≥ 1 OBLIGATOIRE (D-035)
+  const [kind, setKind] = useState<ProductKind | null>(null);
+  const [checklist, setChecklist] = useState<Record<string, string>>({});
   const [textHint, setTextHint] = useState("");
   const [condition, setCondition] = useState<Condition>("bon_etat");
   const [loading, setLoading] = useState(false);
@@ -41,7 +47,7 @@ export default function App() {
   const [listing, setListing] = useState<DescribeResponse | null>(null);
 
   async function runIdentify() {
-    if (!textHint.trim()) return;
+    if (photos.length === 0) return; // photo-first : la photo est la preuve
     setLoading(true);
     setError(null);
     // Nettoie tout l'état aval d'une analyse précédente (évite de rester
@@ -52,11 +58,14 @@ export default function App() {
     setPrice(null);
     setListing(null);
     try {
-      const res = await identify(textHint);
+      const res = await identify(
+        photos.map((p) => p.imageId),
+        textHint
+      );
       setIdent(res);
       setStep(2);
     } catch (e) {
-      setError((e as Error).message);
+      setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
@@ -88,10 +97,12 @@ export default function App() {
         describe(asin, condition),
       ]);
       setPrice(p);
-      setListing(l);
+      // 17.3 (D-035) : la checklist état (les « bābā ») enrichit la description —
+      // l'annonce finale porte l'état détaillé déclaré par le vendeur.
+      setListing({ ...l, description: l.description + checklistToText(checklist) });
       setStep(3);
     } catch (e) {
-      setError((e as Error).message);
+      setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
@@ -99,6 +110,9 @@ export default function App() {
 
   function reset() {
     setStep(1);
+    setPhotos([]);
+    setKind(null);
+    setChecklist({});
     setTextHint("");
     setIdent(null);
     setChosenAsin(null);
@@ -148,18 +162,28 @@ export default function App() {
             exit={{ opacity: 0, y: -12 }}
             className="mt-6 rounded-2xl bg-white p-6 shadow-sm"
           >
-            <label className="block text-sm font-medium text-slate-700">
-              Décrivez votre produit
+            {/* 17.3 (D-035) : la PHOTO d'abord — preuve acheteur + entrée du pipeline */}
+            <PhotoUploader photos={photos} onChange={setPhotos} disabled={loading} />
+
+            <ConditionChecklist
+              kind={kind}
+              onKindChange={setKind}
+              answers={checklist}
+              onAnswersChange={setChecklist}
+            />
+
+            <label className="mt-4 block text-sm font-medium text-slate-700">
+              Précisions <span className="font-normal text-slate-400">(facultatif)</span>
             </label>
             <textarea
               value={textHint}
               onChange={(e) => setTextHint(e.target.value)}
-              placeholder="Ex : iPhone 13 128 Go noir débloqué, très bon état"
-              rows={3}
+              placeholder="Ex : modèle exact, capacité, défaut particulier…"
+              rows={2}
               className="mt-2 w-full resize-none rounded-xl border border-slate-300 p-3 text-slate-800 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
             />
             <div className="mt-4">
-              <span className="text-sm font-medium text-slate-700">État de l'objet</span>
+              <span className="text-sm font-medium text-slate-700">État général</span>
               <div className="mt-2 flex flex-wrap gap-2">
                 {CONDITIONS.map((c) => (
                   <button
@@ -178,10 +202,14 @@ export default function App() {
             </div>
             <button
               onClick={runIdentify}
-              disabled={loading || !textHint.trim()}
+              disabled={loading || photos.length === 0}
               className="mt-6 w-full rounded-xl bg-rose-600 py-3 font-semibold text-white transition hover:bg-rose-700 disabled:opacity-40"
             >
-              {loading ? "Identification…" : "Identifier mon produit"}
+              {loading
+                ? "Analyse de vos photos…"
+                : photos.length === 0
+                  ? "Ajoutez au moins une photo"
+                  : "Identifier mon produit"}
             </button>
           </motion.section>
         )}

@@ -20,10 +20,22 @@ export interface CandidateMeta {
   brand: string;
   category: Category;
   image_url: string;
+  images: string[]; // toutes les vues catalogue (visionneuse 17.2/17.4)
   score: number;
   price: number | null;
   category_fine: string;
   attributes: Record<string, string>;
+}
+
+export interface VLMValidation {
+  match: boolean;
+  confidence: number;
+  reason: string;
+}
+
+export interface UploadResponse {
+  image_id: string;
+  url: string;
 }
 
 export interface ObservationToRequest {
@@ -36,7 +48,7 @@ export interface ObservationToRequest {
 export interface IdentifyResponse {
   status: "identified" | "to_confirm" | "uncertain";
   top_candidates: CandidateMeta[];
-  vlm_validation: unknown | null;
+  vlm_validation: VLMValidation | null;
   next_observation: ObservationToRequest | null;
   explanation: string;
 }
@@ -82,9 +94,34 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function identify(textHint: string, alreadyObserved: Record<string, string> = {}) {
+/** Upload d'une photo vendeur (≥ 1 obligatoire, D-035). Bearer requis. */
+export async function uploadPhoto(file: File): Promise<UploadResponse> {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${BASE}/upload`, { method: "POST", headers, body: form });
+  if (res.status === 401) {
+    clearToken();
+    throw new Error("Session expirée — reconnectez-vous.");
+  }
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(
+      typeof detail.detail === "string" ? detail.detail : `Erreur ${res.status}`
+    );
+  }
+  return res.json() as Promise<UploadResponse>;
+}
+
+export function identify(
+  imageIds: string[],
+  textHint: string,
+  alreadyObserved: Record<string, string> = {}
+) {
   return postJson<IdentifyResponse>("/identify", {
-    image_url: "",
+    image_ids: imageIds,
     text_hint: textHint,
     already_observed: alreadyObserved,
   });
