@@ -66,6 +66,7 @@ class Candidate:
     category_fine: str = ""  # catégorie feuille du breadcrumb (L2/L3, ex: "Graphics Cards")
     brand: str = ""  # vraie marque fabricant (details['Brand'], fallback store)
     attributes: dict[str, str] = field(default_factory=dict)  # facettes Akinator (color, capacity…)
+    images: list[str] = field(default_factory=list)  # toutes les vues (visionneuse 17.2, D-035)
 
 
 @dataclass
@@ -89,6 +90,7 @@ class IdentificationService:
         self._train_labels: np.ndarray | None = None
         self._train_prices: np.ndarray | None = None
         self._image_lookup: dict[str, str] = {}
+        self._images_all_lookup: dict[str, list[str]] = {}  # 17.2 : toutes les vues
         self._category_lookup: dict[str, str] = {}
         self._brand_lookup: dict[str, str] = {}
         self._facets_lookup: dict[str, dict[str, str]] = {}
@@ -143,6 +145,15 @@ class IdentificationService:
                     a: _json.loads(f)
                     for a, f in zip(asins, lk["facets_json"].to_list(), strict=False)
                     if f
+                }
+            # 17.2 (D-035) : toutes les vues (visionneuse + VLM validateur).
+            if "images_json" in lk.columns:
+                import json as _json
+
+                self._images_all_lookup = {
+                    a: _json.loads(i)
+                    for a, i in zip(asins, lk["images_json"].to_list(), strict=False)
+                    if i
                 }
             log.info(
                 "  Lookup produit : %s vignettes, %s cat fines, %s marques, %s avec facettes",
@@ -252,6 +263,7 @@ class IdentificationService:
                     category_fine=category_fine,
                     brand=brand,
                     attributes=attributes,
+                    images=self._images_all_lookup.get(asin, []),
                 )
             )
 

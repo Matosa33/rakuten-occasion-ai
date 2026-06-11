@@ -90,6 +90,9 @@ class CandidateMeta(BaseModel):
     brand: str = ""
     category: CategoryEnum
     image_url: str = ""
+    images: list[str] = Field(
+        default_factory=list, description="Toutes les vues catalogue (visionneuse 17.2, D-035)"
+    )
     score: float = Field(..., ge=0.0, le=1.0)
     price: float | None = None  # prix catalogue USD (pour le pricing F4)
     category_fine: str = ""  # catégorie L2/L3 réelle du produit (ex: "Graphics Cards")

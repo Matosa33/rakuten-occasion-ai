@@ -55,6 +55,9 @@ FACET_KEYS: dict[str, tuple[str, ...]] = {
 }
 
 
+MAX_IMAGES_PER_PRODUCT = 8  # borne la taille du lookup (la visionneuse n'a pas besoin de 30 vues)
+
+
 def _extract_thumb_url(images_str: str | None) -> str | None:
     """URL vignette de l'entrée MAIN (thumb > large > hi_res, petit = charge vite)."""
     if not images_str or images_str in ("[]", "null", "None"):
@@ -74,6 +77,33 @@ def _extract_thumb_url(images_str: str | None) -> str | None:
     if main is None:
         return None
     return main.get("thumb") or main.get("large") or main.get("hi_res")
+
+
+def _extract_all_image_urls(images_str: str | None) -> list[str]:
+    """TOUTES les vues du produit en grande taille (large > hi_res > thumb).
+
+    Cycle 17.2 (D-035) : la visionneuse candidats + le VLM validateur ont besoin
+    des N vues, pas seulement de la vignette MAIN. MAIN d'abord (cohérence avec
+    la vignette), puis les autres variants dans l'ordre du listing.
+    """
+    if not images_str or images_str in ("[]", "null", "None"):
+        return []
+    try:
+        images_list = ast.literal_eval(images_str)
+    except (ValueError, SyntaxError):
+        return []
+    if not isinstance(images_list, list):
+        return []
+    entries = [img for img in images_list if isinstance(img, dict)]
+    entries.sort(key=lambda img: 0 if img.get("variant") == "MAIN" else 1)
+    urls: list[str] = []
+    for img in entries:
+        u = img.get("large") or img.get("hi_res") or img.get("thumb")
+        if u and u not in urls:
+            urls.append(u)
+        if len(urls) >= MAX_IMAGES_PER_PRODUCT:
+            break
+    return urls
 
 
 def _extract_category_leaf(categories_str: str | None) -> str | None:
@@ -148,6 +178,10 @@ def main() -> None:
             meta_path, columns=["parent_asin", "images", "categories", "details", "store"]
         )
         image_urls = [_extract_thumb_url(s) for s in df["images"]]
+        # 17.2 (D-035) : toutes les vues pour visionneuse + VLM validateur.
+        images_all_json = [
+            json.dumps(urls) if (urls := _extract_all_image_urls(s)) else None for s in df["images"]
+        ]
         cat_leaves = [_extract_category_leaf(s) for s in df["categories"]]
         # Parse details UNE fois → marque + facettes discriminantes
         brands: list[str | None] = []
@@ -161,6 +195,7 @@ def main() -> None:
             {
                 "parent_asin": df["parent_asin"],
                 "image_url": image_urls,
+                "images_json": images_all_json,
                 "category_leaf": cat_leaves,
                 "brand": brands,
                 "facets_json": facets_json,

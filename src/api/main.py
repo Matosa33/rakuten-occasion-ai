@@ -54,6 +54,7 @@ from src.api.schemas import (
 from src.auth import authenticate, create_access_token, get_current_user
 from src.vlm.photo_extraction import PhotoExtractionUnavailable
 from src.vlm.photo_extraction import extract as extract_from_photos
+from src.vlm.validator import validate_top1
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -262,6 +263,22 @@ async def identify(
 
     # Persistence (Cycle 9.5) : trace l'identification
     top1 = result.candidates[0] if result.candidates else None
+
+    # VLM validateur F0.4 (17.2, D-035) : « la photo du vendeur montre-t-elle le
+    # top-1 ? » → badge de confiance visuelle. Best-effort (None si pas de photos,
+    # pas d'image catalogue, ou VLM down) — jamais bloquant (R15).
+    vlm_validation = None
+    if req.image_ids and top1 is not None:
+        catalog_img = (top1.images[0] if top1.images else "") or top1.image_url
+        if catalog_img:
+            paths = [p for p in (uploads.get_upload_path(i) for i in req.image_ids) if p]
+            verdict = await asyncio.to_thread(validate_top1, paths, catalog_img, top1.title)
+            if verdict is not None:
+                vlm_validation = {
+                    "match": verdict.match,
+                    "confidence": verdict.confidence,
+                    "reason": verdict.reason,
+                }
     try:
         persistence.log_identification(
             query_text=query,
@@ -292,6 +309,7 @@ async def identify(
                 brand=c.brand,
                 category=c.category,
                 image_url=c.image_url,
+                images=c.images,
                 score=max(0.0, min(1.0, c.score)),
                 price=c.price,
                 category_fine=c.category_fine,
@@ -299,7 +317,7 @@ async def identify(
             )
             for c in result.candidates
         ],
-        vlm_validation=None,  # Cycle 9.3b
+        vlm_validation=vlm_validation,  # F0.4 (17.2, D-035) — None si pas de photos
         next_observation=next_obs,
         explanation=result.explanation,
     )
