@@ -1,8 +1,12 @@
 # Rakuten AI — Document de cadrage
 
-> Version 2.1 — 2026-05-04
+> Version 3.0 — 2026-06-11
 > Auteur(s) : Mathieu Klopp
-> Statut : active (supersede v1 du 2026-04-29 sur F0 et hors-scope, cf. ADR D-010 ; périmètre opérationnel réduit à 4 cat MVP cf. ADR D-011)
+> Statut : active (v3 réaffirme le **photo-first** fondateur après dérive text-only,
+> cf. ADR D-035 : la photo (≥ 1, preuve acheteur) est l'entrée OBLIGATOIRE du flow ;
+> la branche photo passe par **VLM-extraction** (mesuré PoC 17.0) — l'encodage
+> vision du catalogue (SigLIP) reste gated sur mesure réelle du domain shift (D-014/17.6).
+> Supersede v2.1 sur la modalité d'entrée de F0/F5 ; périmètre 4 cat inchangé (D-011).
 
 > **Note méthodologique** : ce document distingue **chiffres sourcés** (web,
 > études, mesures internes) et **hypothèses à valider** (à confirmer par tests
@@ -38,17 +42,17 @@ Le différentiateur vs les outils AI existants type VintyLook : **un seul flux e
 
 > **F0** est le cœur du projet. F1-F7 sont les fonctionnalités produit. F8 est optionnel.
 
-- **F0 — Cœur d'identification grounded** : pipeline **retrieval-first** qui identifie un produit à partir d'une ou plusieurs photos en cherchant son **plus proche voisin** dans un catalogue indexé (~4,5 M items issus du dataset proxy Amazon Reviews 2023, périmètre **MVP focused 4 cat** Electronics + Cell_Phones_and_Accessories + Video_Games + Tools_and_Home_Improvement, cf. ADR D-011 supersede partiel D-008). Étapes :
-  1. Encodage vision (SigLIP frozen) + texte (Arctic Embed L v2 frozen) → embeddings.
-  2. Recherche FAISS HNSW multi-view + RRF (Reciprocal Rank Fusion) → top-K candidats avec score de confiance.
-  3. Si ambiguïté (top1-top2 < seuil) → **Akinator backend** : observation dirigée (vue à demander, OCR ciblé sur étiquette) plutôt que question textuelle.
-  4. **VLM zero-shot validateur** (Gemini Flash, Qwen-VL, etc.) sur le top-1 : "l'image montre-t-elle ce produit ?" → garde-fou anti-hallucination.
+- **F0 — Cœur d'identification grounded photo-first** : pipeline **retrieval-first** qui identifie un produit à partir d'**une ou plusieurs photos (≥ 1 obligatoire — preuve acheteur)** en cherchant son **plus proche voisin** dans un catalogue indexé (~4,5 M items, périmètre **MVP focused 4 cat** cf. D-011). Étapes (v3, D-035) :
+  1. **VLM-extraction** (OpenRouter, mesuré PoC 17.0) : la photo → titre catalogue probable + attributs observés (marque, couleur, texte/étiquette lisible) ; le texte vendeur reste un complément optionnel.
+  2. Encodage texte (Arctic Embed L v2 frozen) → recherche FAISS HNSW → top-K candidats avec score de confiance. (Multi-view vision SigLIP = gated sur mesure réelle du domain shift, D-014/17.6.)
+  3. Si ambiguïté (top1-top2 < seuil) → **Akinator** : facettes discriminantes (entropie) pré-remplies par les attributs VLM + guidage de prise de vue (« montrez le dos/l'étiquette »).
+  4. **VLM validateur** sur le top-1 : « la photo du vendeur montre-t-elle ce produit ? » → garde-fou anti-hallucination (badge de confiance visuelle).
   5. Garde-fous OOD si aucun candidat ne dépasse le seuil → mode dégradé "produit non identifié, saisie assistée".
 - **F1 — Classification automatique** : prédire la catégorie L2 du produit avec F1 weighted ≥ 0.90 (mesurable en P04). Plusieurs modèles benchmarkés (k-NN, SVM, RF, MLP) + baseline TF-IDF + fusion adaptive multimodale.
 - **F2 — Extraction d'attributs** : peupler marque, modèle, couleur, matière, version depuis la fiche meta du produit identifié, **complétée par observations dirigées** si la fiche ne contient pas l'info (OCR étiquette, code-barres). Pas d'extraction par hallucination VLM.
 - **F3 — Génération texte ancrée** : produire titre + description en français vendeur particulier, **ancrés sur les reviews Amazon réelles du produit identifié** (RAG : retrieval des phrases vendeur → augmentation prompt LLM → génération style-cohérente). BLEU-4 ≥ +5 % vs zero-shot mesurable en P07.
 - **F4 — Pricing transparent** : prix indicatif **algorithmique** (KNN voisins prix + dépréciation par catégorie + pénalité état + ajustement complétude info) avec **niveau de confiance** et **fourchette explicable**. Pas de ML opaque pour le prix (cf. hors-scope §6).
-- **F5 — UI progressive multi-modes** : express (30 s, photo seule), assisté (avec quelques observations ciblées par l'Akinator backend), batch déménagement (queue de N photos avec persistance navigateur).
+- **F5 — UI progressive multi-modes** : express (30 s, photo seule + checklist état rapide), assisté (observations ciblées Akinator + guidage prises de vue par type de produit), **batch déménagement « mitrailler »** (queue de N objets photo-first avec persistance navigateur). Les photos du vendeur figurent dans l'annonce finale (+ zoom) ; visionneuse des photos catalogue sur les candidats.
 - **F6 — Garde-fous OOD** : détecter les produits hors-catalogue d'identification et basculer en mode dégradé "produit non reconnu, saisie assistée" plutôt que d'inventer.
 - **F7 — Cycle de vie modèle automatisé** : retraining hebdomadaire des classifieurs benchmarks, drift detection sur embeddings et distribution catégorielle, hot-reload du modèle servi sans downtime de l'API.
 - **F8 — [OPTIONNEL] Fine-tuning VLM en QLoRA** : à activer **uniquement** si les benchmarks du Cycle 5 (VLM zero-shot grounded) montrent un gain mesurable > +0.05 F1 macro vs baseline. Cf. ADR D-009.
