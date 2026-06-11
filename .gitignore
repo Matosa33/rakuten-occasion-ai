@@ -57,6 +57,8 @@ data/raw/*.jsonl
 data/raw/*.json
 data/raw/cache/
 data/raw/full/
+# Photos vendeur uploadées (Cycle 17.1, D-035) — jamais committées (R2/vie privée).
+data/uploads/
 data/processed/*.parquet
 data/processed/**/*.parquet
 data/processed/*.json

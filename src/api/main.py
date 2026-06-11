@@ -29,13 +29,13 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from src.api import persistence
+from src.api import persistence, uploads
 from src.api.middleware import request_id_middleware
 from src.api.pipeline import DescribeService, IdentificationService, PricingService
 from src.api.schemas import (
@@ -49,8 +49,11 @@ from src.api.schemas import (
     PriceRequest,
     PriceResponse,
     TokenResponse,
+    UploadResponse,
 )
 from src.auth import authenticate, create_access_token, get_current_user
+from src.vlm.photo_extraction import PhotoExtractionUnavailable
+from src.vlm.photo_extraction import extract as extract_from_photos
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -158,6 +161,37 @@ async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:  
     return TokenResponse(access_token=create_access_token(subject=form.username))
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Photos vendeur (Cycle 17.1, D-035) — la photo est l'entrée du flow photo-first.
+# POST protégé (vendeur connecté) ; GET public (capability-URL uuid4 non devinable,
+# nécessaire pour afficher les photos dans l'annonce).
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@app.post("/upload", response_model=UploadResponse)
+async def upload_photo(
+    file: UploadFile,
+    user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
+) -> UploadResponse:
+    """Stocke une photo vendeur (≥ 1 obligatoire dans le flow, D-035)."""
+    content = await file.read()
+    try:
+        image_id = uploads.save_upload(content, file.content_type or "")
+    except uploads.UploadError as e:
+        raise HTTPException(422, str(e)) from e
+    log.info("upload by user=%s id=%s (%d o)", user, image_id, len(content))
+    return UploadResponse(image_id=image_id, url=f"/uploads/{image_id}")
+
+
+@app.get("/uploads/{image_id}")
+async def serve_upload(image_id: str) -> FileResponse:
+    """Sert une photo vendeur (annonce, préviews). Public : capability-URL."""
+    path = uploads.get_upload_path(image_id)
+    if path is None:
+        raise HTTPException(404, "Photo introuvable")
+    return FileResponse(path)
+
+
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     ident = APP_STATE.get("identification")
@@ -180,22 +214,51 @@ async def identify(
     user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
 ) -> IdentifyResponse:
     """Identification retrieval-first (text-only MVP) : FAISS → OOD → Akinator."""
-    log.info("identify by user=%s", user)
+    log.info("identify by user=%s photos=%d", user, len(req.image_ids))
     ident: IdentificationService | None = APP_STATE.get("identification")
     if ident is None or not ident.ready:
         raise HTTPException(
             503, "IdentificationService indisponible. Vérifie Cycle 2.4 (index FAISS)."
         )
 
+    # v3 photo-first (D-035) : les photos vendeur sont extraites par le VLM
+    # (titre probable + attributs observés) → requête catalogue. Le texte
+    # vendeur (optionnel) complète la requête.
     query = req.text_hint.strip()
+    observed = dict(req.already_observed)
+    if req.image_ids:
+        paths = [p for p in (uploads.get_upload_path(i) for i in req.image_ids) if p]
+        if not paths:
+            raise HTTPException(422, "Aucune photo valide (image_ids inconnus ou expirés).")
+        try:
+            extraction = await asyncio.to_thread(extract_from_photos, paths)
+        except PhotoExtractionUnavailable as e:
+            raise HTTPException(
+                503,
+                "Analyse photo indisponible (clé OpenRouter absente). "
+                "Décrivez le produit en texte pour continuer.",
+            ) from e
+        except Exception as e:  # noqa: BLE001 — VLM down ≠ flow mort si texte fourni
+            if not query:
+                raise HTTPException(
+                    503, f"Analyse photo en échec ({e}). Réessayez ou décrivez en texte."
+                ) from e
+            log.warning("photo extraction échouée, fallback texte seul : %s", e)
+            extraction = None
+        if extraction is not None:
+            query = f"{extraction.title_guess} {query}".strip()
+            # Attributs observés par le VLM = observations Akinator pré-remplies.
+            for k, v in extraction.attributes.items():
+                observed.setdefault(k, v)
+
     if not query:
         raise HTTPException(
             422,
-            "text_hint vide. Le MVP text-only requiert une description texte "
-            "(la branche vision image_url est différée post-MVP, cf. D-014).",
+            "Aucune entrée exploitable : envoyez au moins une photo (image_ids) "
+            "ou décrivez le produit (text_hint).",
         )
 
-    result = ident.identify(query, already_observed=req.already_observed)
+    result = ident.identify(query, already_observed=observed)
 
     # Persistence (Cycle 9.5) : trace l'identification
     top1 = result.candidates[0] if result.candidates else None

@@ -52,16 +52,32 @@ class TokenResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# /upload — photos vendeur (Cycle 17.1, D-035)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class UploadResponse(BaseModel):
+    """Photo stockée : id (capability) + URL servable par le frontend."""
+
+    image_id: str
+    url: str = Field(..., description="URL relative GET /uploads/{image_id}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # /identify — pipeline complet (retrieval + VLM validate + Akinator si ambig)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 class IdentifyRequest(BaseModel):
-    # MVP text-only (D-014) : image_url réservé à la branche vision post-MVP. Default
-    # vide → permet aux clients (frontend, curl) d'envoyer juste `text_hint`.
-    # Finding test interface : Field(...) obligatoire forçait un body invalide.
-    image_url: str = Field(default="", description="URL ou data URI (post-MVP D-014)")
-    text_hint: str = Field(default="", description="Texte libre du vendeur (requis MVP)")
+    # v3 photo-first (D-035) : `image_ids` = photos uploadées via POST /upload.
+    # L'API accepte photo(s) ET/OU texte (le frontend impose ≥ 1 photo ; l'API
+    # reste tolérante pour le text-only legacy + tests). `image_url` historique
+    # conservé pour compat schémas (ignoré).
+    image_ids: list[str] = Field(
+        default_factory=list, description="IDs des photos vendeur (POST /upload)"
+    )
+    image_url: str = Field(default="", description="(déprécié, ignoré)")
+    text_hint: str = Field(default="", description="Texte vendeur (optionnel si photos)")
     already_observed: dict[str, str] = Field(
         default_factory=dict,
         description="Observations déjà demandées dans la session Akinator (attribut → valeur)",
