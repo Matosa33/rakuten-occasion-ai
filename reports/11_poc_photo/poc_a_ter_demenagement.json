@@ -1,0 +1,208 @@
+{
+  "protocol": "TARGETED demenagement sample (branded products) -> VLM title -> /identify FULL 3.16M",
+  "model": "google/gemma-4-31b-it",
+  "n": 33,
+  "hit_at_1": 0.09090909090909091,
+  "hit_at_5": 0.24242424242424243,
+  "hit_at_30": 0.36363636363636365,
+  "results": [
+    {
+      "parent_asin": "B0776JVYX1",
+      "title": "Apple iPhone 8 Plus, Fully Unlocked, 256GB - Gold (Renewed)",
+      "vlm_description": "Apple iPhone 7 Plus, 128GB, Starlight White - Unlocked",
+      "rank": null
+    },
+    {
+      "parent_asin": "B07SVJXFV8",
+      "title": "Samsung Galaxy Fit 2019, Smartwatch Fitness Band, Stress & Sleep Tracker, AMOLED Display, ",
+      "vlm_description": "Samsung Gear Fit2 Pro SM-R370 Smartwatch, Fitness Tracker, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B07SCQLPNJ",
+      "title": "Lenovo ThinkPad E495 14\" Full HD Laptop, AMD Ryzen 5 3500U, 8GB Memory, 256GB SSD, Windows",
+      "vlm_description": "Lenovo ThinkPad P15 Gen 2 Mobile Workstation Laptop, 15.6\" FHD Display, Intel Core i7, NVIDIA Quadro, 32GB RAM, 512GB SSD, Windows 10 Pro, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B01MD0CGGS",
+      "title": "Apple MacBook Pro MLW82LL/A 15.4-inch Laptop with Touch Bar, 2.7GHz quad-core Intel Core i",
+      "vlm_description": "Apple MacBook Pro Laptop, Retina Display, Space Gray",
+      "rank": null
+    },
+    {
+      "parent_asin": "B08PTWHG6F",
+      "title": "Microsoft Xbox Series S 128GB Game All-Digital Console + 1 Xbox Wireless Controller, White",
+      "vlm_description": "Xbox Series X Gaming Console with Wireless Controller - Robot White",
+      "rank": 27
+    },
+    {
+      "parent_asin": "B00B7EU1WK",
+      "title": "Bosch PB120 12-Volt Max Lithium-Ion Compact AM/FM Radio with MP3 Player Connection Bay",
+      "vlm_description": "Bosch JobRadio Jobsite Radio/Speaker with Digital Tuner, Blue",
+      "rank": null
+    },
+    {
+      "parent_asin": "B01GCKOA16",
+      "title": "GoPro Seeker Backpack (All GoPro Cameras) - Official GoPro Accessory",
+      "vlm_description": "GoPro Backpack, Water-Resistant Camera Bag with Dedicated Compartments, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B07YBKQ7HV",
+      "title": "Canon EOS 90D DSLR Camera with Canon 18-55mm STM Lens + Canon 55-250mm STM & 420-800mm Tel",
+      "vlm_description": "Canon EOS 90D DSLR Camera Body, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B076DKFYF9",
+      "title": "Dell Latitude E7450 14in HD High Performance Ultra Book Business Laptop NoteBook (Intel Du",
+      "vlm_description": "Dell Latitude Laptop - Intel Core Processor, Windows 10, 15.6\" HD Display - Black (Renewed)",
+      "rank": null
+    },
+    {
+      "parent_asin": "B0797ZGJZX",
+      "title": "HP Business Laptop PC 17.3\" HD+ WLED-backlit Display Intel i7-7500U Processor 16GB DDR4 RA",
+      "vlm_description": "HP 15-inch Laptop, Intel Core Processor, Windows 10, Space Gray",
+      "rank": null
+    },
+    {
+      "parent_asin": "B077BNJHVJ",
+      "title": "ASUS UX430UN-NB71 ZenBook 14\" Ultra-Slim Laptop with 14 inch FHD Display, Intel Core i7-85",
+      "vlm_description": "ASUS Laptop, 15.6\" HD Display, Intel Processor, Windows 10, Blue",
+      "rank": null
+    },
+    {
+      "parent_asin": "B00SK0FOHG",
+      "title": "Logitech Wireless Touch Keyboard K400 with Built-In Multi-Touch Touchpad, Black (Renewed)",
+      "vlm_description": "Logitech K400 Plus Wireless Touch Keyboard, Compact Layout with Integrated Touchpad, Black",
+      "rank": 9
+    },
+    {
+      "parent_asin": "B07Z5G499R",
+      "title": "Garmin eTrex 32x, Rugged Handheld GPS Navigator (Renewed)",
+      "vlm_description": "Garmin eTrex 32x Handheld GPS Navigator, Color Display, Grey/Tan",
+      "rank": 15
+    },
+    {
+      "parent_asin": "B01L6RCIQ4",
+      "title": "Fitbit Charge 2 Accessory Band, Leather, Blush Pink, Large",
+      "vlm_description": "Replacement Band for Fitbit Versa, Soft Silicone Strap with Stainless Steel Buckle, Compatible with Fitbit Versa Smartwatch, Blush Pink",
+      "rank": null
+    },
+    {
+      "parent_asin": "B075XGBDPS",
+      "title": "Sony WH-H800 h.Ear Series Wireless On-Ear High Resolution Headphones (International Versio",
+      "vlm_description": "Sony WH-CH520 Wireless On-Ear Noise Canceling Headphones with Microphone, Up to 50 Hours Battery Life, Blue",
+      "rank": null
+    },
+    {
+      "parent_asin": "B08K2T4JFQ",
+      "title": "JBL FLIP 5 - Waterproof Portable Bluetooth Speaker Made from 100% Recycled Plastic - Blue ",
+      "vlm_description": "JBL Charge 5 Portable Bluetooth Speaker, Waterproof, Dustproof, IP67, Teal",
+      "rank": null
+    },
+    {
+      "parent_asin": "B0BY5V82W4",
+      "title": "Apple iPhone 14 Plus, 512GB, (PRODUCT) Red - Unlocked (Renewed)",
+      "vlm_description": "Apple iPhone 13, 128GB, Unlocked - (PRODUCT)RED",
+      "rank": null
+    },
+    {
+      "parent_asin": "B01NBPHBJO",
+      "title": "Samsung Galaxy Note 5 N920T 64GB Unlocked GSM - Black Sapphire",
+      "vlm_description": "Samsung Galaxy Note 8 - 64GB Storage, 6GB RAM, Stylus S Pen - Midnight Black (Unlocked)",
+      "rank": null
+    },
+    {
+      "parent_asin": "B004MTQDOW",
+      "title": "GoPro HD HERO 960 High-Definition Waterproof Digital Camera + SD 8GB Memory Card",
+      "vlm_description": "GoPro HERO Action Camera, Waterproof HD Video Camera, White",
+      "rank": 4
+    },
+    {
+      "parent_asin": "B001CC1VGC",
+      "title": "HP iPAQ 910 Business Messenger",
+      "vlm_description": "HP iPAQ Smartphone with QWERTY Keyboard, Black",
+      "rank": 5
+    },
+    {
+      "parent_asin": "B07X1WL39V",
+      "title": "ASUS ROG Phone 2 (ZS660KL) Smartphone 8GB RAM 128GB ROM Snapdragon 855 Plus 6000 mAh NFC A",
+      "vlm_description": "ASUS ROG Phone II Gaming Smartphone, Snapdragon 855+, 128GB/256GB Storage, 6GB/12GB RAM, 6.6\" Display, 120Hz, 5G Ready - Black",
+      "rank": 3
+    },
+    {
+      "parent_asin": "B00SYGFIG8",
+      "title": "Garmin Cycle Map US microSD/SD",
+      "vlm_description": "Garmin Cycle Map, Bike-Specific Maps and POIs, Data Card, White",
+      "rank": 1
+    },
+    {
+      "parent_asin": "B01A5IIWCY",
+      "title": "Fitbit Blaze Accessory Band, Leather, Black, Large",
+      "vlm_description": "Replacement Watch Band for Samsung Galaxy Watch - Genuine Leather Strap, 20mm, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B00535COG0",
+      "title": "Lenovo ThinkPad X1 (129127U) 13.3\" LED Notebook - Core i5 i5-2520M 2.50GHz - 4G DDR3 160G ",
+      "vlm_description": "Lenovo ThinkPad Laptop, 14\" HD Display, Intel Core i5, 8GB RAM, 256GB SSD, Windows 10 Pro, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B097CKMVZW",
+      "title": "Sony PlayStation 5 DualSense Charging Station - White (Renewed)",
+      "vlm_description": "Sony PlayStation DualSense Charging Station for PS5 - Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B07GJ5W7HV",
+      "title": "Microsoft Xbox Wireless Controller - Phantom Black Special Edition - Xbox One (Discontinue",
+      "vlm_description": "Xbox Wireless Controller for Xbox Series X|S, Xbox One, and Windows 10/11 PC - Carbon Ombre",
+      "rank": 28
+    },
+    {
+      "parent_asin": "B09SRXBT8Y",
+      "title": "Nintendo Switch Sports (Nintendo Switch) (European Version)",
+      "vlm_description": "Nintendo Switch Sports - Multi-Sport Game for Nintendo Switch, Neon Blue/Red Joy-Con compatible",
+      "rank": null
+    },
+    {
+      "parent_asin": "B07XVRCHSP",
+      "title": "Dell Alienware Advanced AW Wired Gaming Mechanical Brown Switch Keyboard with RGB Ambient ",
+      "vlm_description": "Alienware Mechanical Gaming Keyboard, RGB Backlit, Wired, Black",
+      "rank": 1
+    },
+    {
+      "parent_asin": "B09MW19Y15",
+      "title": "Logitech G G435 Wireless Gaming Headset (Black)",
+      "vlm_description": "Logitech G435 LIGHTSPEED Wireless Gaming Headset, Low Latency, High Fidelity Audio, Black",
+      "rank": 4
+    },
+    {
+      "parent_asin": "B09NCGG61L",
+      "title": "JBL Quantum 100 Over-Ear Surround Sound Gaming Headphones Bundle with Deluxe CCI Cleaning ",
+      "vlm_description": "Sony MDR-ZX110 Wired On-Ear Headphones, Foldable Design, Black",
+      "rank": null
+    },
+    {
+      "parent_asin": "B08SKDPR86",
+      "title": "Nintendo Switch Horipad Mini - Pokemon: Pikachu & Eevee (Nintendo Switch)",
+      "vlm_description": "HORI Nintendo Switch Wired Controller, Pokémon Let's Go Pikachu & Eevee Edition, Turbo Button, Green/Brown",
+      "rank": 2
+    },
+    {
+      "parent_asin": "B0000224Z6",
+      "title": "DEWALT DW5348 10-Inch SDS Plus Bull Point Bit,Silver",
+      "vlm_description": "Industrial Grade Tungsten Carbide Rotary Burr Set, Double Cut Cylinder Shape, High Speed Steel Engraving Tool, Silver",
+      "rank": null
+    },
+    {
+      "parent_asin": "B08NXVYFR2",
+      "title": "Bosch IMSDC2 3/16 In. to 7/8 In. High-Speed Steel Turbo Impact Step Drill Bit",
+      "vlm_description": "Bosch Turbo Step Drill Bit, High Speed Steel, 1/8\" to 7/8\" (12 in 1), IMSDC2",
+      "rank": 1
+    }
+  ]
+}

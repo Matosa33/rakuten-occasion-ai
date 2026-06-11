@@ -1,0 +1,212 @@
+{
+  "protocol": "2nd catalog view -> VLM describe -> /identify on FULL 3.16M index",
+  "model": "google/gemma-4-31b-it",
+  "n_products": 25,
+  "n_calls_ok": 25,
+  "hit_at_1": 0.04,
+  "hit_at_5": 0.16,
+  "hit_at_30": 0.24,
+  "median_t_vlm_sec": 3.26,
+  "results": [
+    {
+      "parent_asin": "B00E62J98M",
+      "title": "DURAGADGET Black Rucksack w/Adjustable Padded Interior & Raincover - Compatible with Canon",
+      "vlm_description": "Lowepro ProTactic BP 350 AW II Professional Camera Backpack, DSLR Camera Bag with Customizable Dividers, Black",
+      "rank": null,
+      "t_vlm_sec": 1.3,
+      "t_retrieval_sec": 4.65
+    },
+    {
+      "parent_asin": "B08W6PQ4Q3",
+      "title": "Linksys EA6100 AC1200 Wi-Fi Wireless Dual-Band Router, Black (Renewed)",
+      "vlm_description": "Netgear Nighthawk RAX40 AC1900 Dual-Band WiFi 5 Router, 4 Ethernet Ports, USB Port, Black",
+      "rank": null,
+      "t_vlm_sec": 5.91,
+      "t_retrieval_sec": 13.6
+    },
+    {
+      "parent_asin": "B015O53L74",
+      "title": "LFEEY Vinyl Thin Backdrop 3x5ft Photography Background,Ancient Wooden Board Wall,Personal ",
+      "vlm_description": "Wood Backdrop Photography Background for Studio Portrait, Rustic Brown Wooden Plank Texture, 5x7ft Vinyl Backdrop",
+      "rank": null,
+      "t_vlm_sec": 3.67,
+      "t_retrieval_sec": 6.41
+    },
+    {
+      "parent_asin": "B09PXYSTSJ",
+      "title": "YI 1080P Home Camera 4pc Dome Pet Dog Camera 2pc Bundle",
+      "vlm_description": "YI Home Camera, 360° Pan-Tilt Smart Security Camera with 355° Horizontal & 84° Vertical Tracking, 1080p Full HD, White",
+      "rank": 18,
+      "t_vlm_sec": 1.72,
+      "t_retrieval_sec": 4.6
+    },
+    {
+      "parent_asin": "B076PLTWMX",
+      "title": "Qotom-Q355G4 Fanless Mini PC Home Server with 4 Ethernet LAN Intel Core i5 5200U Computer ",
+      "vlm_description": "Mini PC Industrial Fanless Computer, Intel Processor, HDMI, COM Port, USB 3.0, Aluminum Case, Black",
+      "rank": null,
+      "t_vlm_sec": 2.21,
+      "t_retrieval_sec": 3.47
+    },
+    {
+      "parent_asin": "B09BBZVCYR",
+      "title": "Imirell Women Birthday Backdrop 8Wx6H Feet Rose Gold (Not Glitter) Pink Balloon Girls Love",
+      "vlm_description": "Rose Gold Happy Birthday Backdrop Party Decorations - Glittery Heart Black Background Photo Booth Backdrop with Balloons and Foil Curtains for Adults Women Girls Birthday Party Supplies",
+      "rank": null,
+      "t_vlm_sec": 2.96,
+      "t_retrieval_sec": 3.61
+    },
+    {
+      "parent_asin": "B003L3HNRG",
+      "title": "HP 598861-001 1GB, 800MHz, PC2-6400, SDRAM Small Outline Dual In-Line Memory Module (SODIM",
+      "vlm_description": "Crucial R880595TMWE327 1GB DDR2 RAM Memory Module, Blue",
+      "rank": null,
+      "t_vlm_sec": 1.63,
+      "t_retrieval_sec": 4.95
+    },
+    {
+      "parent_asin": "B00X551Z0G",
+      "title": "Sunsonny Random Color Water Transfer Printing Design Mouse USB Optical Mouse",
+      "vlm_description": "Sunsonny Wireless Optical Mouse, Ergonomic 2.4GHz USB Computer Mouse, White and Green",
+      "rank": 3,
+      "t_vlm_sec": 1.95,
+      "t_retrieval_sec": 4.95
+    },
+    {
+      "parent_asin": "B06X9RNV2S",
+      "title": "CrossLandy Classic School Bookbag Lightweight College 15“ Laptop Backpack Set (Black8)",
+      "vlm_description": "Generic Business Laptop Backpack for Men and Women, Water Resistant Computer Bag with Padded Sleeve for 13\", 14\", 15.6\" Laptops, Tablet Compartment and Accessories Pocket, Black",
+      "rank": null,
+      "t_vlm_sec": 2.84,
+      "t_retrieval_sec": 5.67
+    },
+    {
+      "parent_asin": "B08D4SGBLW",
+      "title": "Acer Chromebook 314 CB314-1H-C66Z 14&quot; HD Notebook Computer, Intel Celeron N4000 1.10G",
+      "vlm_description": "Acer Chromebook 11, 11.6\" Full HD (1920x1080) Display, Silver",
+      "rank": null,
+      "t_vlm_sec": 4.92,
+      "t_retrieval_sec": 3.38
+    },
+    {
+      "parent_asin": "B00Q572P5A",
+      "title": "iPad Air 2 Case (iPad 6) - KHOMO DUAL Super Slim GOLD Cover with with See Through Clear ba",
+      "vlm_description": "Apple iPad Smart Cover - Gold",
+      "rank": null,
+      "t_vlm_sec": 3.53,
+      "t_retrieval_sec": 3.24
+    },
+    {
+      "parent_asin": "B0C6G6MWDR",
+      "title": "USB WiFi Adapter 1200Mbps Techkey USB 3.0 WiFi Dongle 802.11 ac Wireless Network Adapter w",
+      "vlm_description": "TECHKEY AC1200 Ultra Fast Dual-Band WiFi USB 3.0 Wireless Network Adapter, 1200Mbps, Black",
+      "rank": 1,
+      "t_vlm_sec": 2.05,
+      "t_retrieval_sec": 4.07
+    },
+    {
+      "parent_asin": "B06VWRS6XL",
+      "title": "Hoya 62 mm HMC Close-Up Filter Set - Black",
+      "vlm_description": "HOYA Close-up Lens Set II (+1, +2, +4) Multi-Coated",
+      "rank": 5,
+      "t_vlm_sec": 8.39,
+      "t_retrieval_sec": 2.91
+    },
+    {
+      "parent_asin": "B009KBGF6I",
+      "title": "Aquatuning G1/4\" to 10mm ID, 16mm OD Compression Fitting for Soft Tubing, 90° Rotary, Matt",
+      "vlm_description": "Universal Rubber Vacuum Hose Adapter Connector, Flexible Vacuum Cleaner Hose Coupling Joint, Black",
+      "rank": null,
+      "t_vlm_sec": 1.49,
+      "t_retrieval_sec": 3.69
+    },
+    {
+      "parent_asin": "B09YKTQGM3",
+      "title": "ALAZA Pineapple Marble Large Backpack Laptop School Bag with Multiple Pockets",
+      "vlm_description": "Generic Pineapple Print Backpack for Adults and Children, Lightweight School Bag with Front Pocket, White/Gold",
+      "rank": null,
+      "t_vlm_sec": 3.44,
+      "t_retrieval_sec": 12.93
+    },
+    {
+      "parent_asin": "B09SNWYPS6",
+      "title": "Skytech Chronos Gaming PC Desktop – Intel Core i5 12600K 3.7 GHz, NVIDIA RTX 3070, 1TB NVM",
+      "vlm_description": "Dexter Gaming PC Case, Mid Tower ATX, 3 RGB Fans, Mesh Front Panel, Black",
+      "rank": null,
+      "t_vlm_sec": 5.98,
+      "t_retrieval_sec": 13.07
+    },
+    {
+      "parent_asin": "B004CHNOGE",
+      "title": "rooCASE Neoprene Netbook Sleeve Case Cover for Acer Aspire One 10.1-Inch AOD255-2640 Netbo",
+      "vlm_description": "Generic Protective Laptop Sleeve Case, Shockproof Soft Shell Carrying Bag with Zipper Pocket, Light Blue",
+      "rank": null,
+      "t_vlm_sec": 2.82,
+      "t_retrieval_sec": 3.7
+    },
+    {
+      "parent_asin": "B01FIR1O4A",
+      "title": "Plugable USB C to DVI Adapter - Connect Your USB-C Laptop to a DVI Display up to 1920x1200",
+      "vlm_description": "Plugable USB to Serial RS232 Adapter Cable, FTDI Chip, DB9 Male, Black",
+      "rank": null,
+      "t_vlm_sec": 3.11,
+      "t_retrieval_sec": 3.37
+    },
+    {
+      "parent_asin": "B00YKF5KK6",
+      "title": "Lenovo ThinkPad X220 Laptop 12.5\" Core i5 2.6GHz 8GB 128GB SSD Intel HD WIN7 64Bit",
+      "vlm_description": "Lenovo ThinkPad Laptop, Windows 7 Professional, Black",
+      "rank": null,
+      "t_vlm_sec": 2.88,
+      "t_retrieval_sec": 4.09
+    },
+    {
+      "parent_asin": "B005OQEW18",
+      "title": "Acer AS5250-BZ669 15.6-Inch Laptop",
+      "vlm_description": "AOC Laptop - 15.6\" HD Display, Intel Processor, Windows 10, Black",
+      "rank": null,
+      "t_vlm_sec": 3.26,
+      "t_retrieval_sec": 4.15
+    },
+    {
+      "parent_asin": "B076WTLJFB",
+      "title": "Heyuni. Punk Rock Bracelet Force PU Rivet Hip-hop Wrist Vintage Bracelet Black",
+      "vlm_description": "Generic Punk Rock Leather Wristband Bracelet with Metal Studs, Adjustable Buckle Cuff for Men and Women, Black",
+      "rank": 3,
+      "t_vlm_sec": 3.3,
+      "t_retrieval_sec": 3.05
+    },
+    {
+      "parent_asin": "B00CO9XRQE",
+      "title": "Kindle Fire Skin Kit/Decal - Dragon Legend - Sanctus (will not fit HD or HDX models)",
+      "vlm_description": "Generic Protective Case for Samsung Galaxy Tab, Dragon Art Print Slim Fit Hard Shell Cover, Multicolor",
+      "rank": null,
+      "t_vlm_sec": 4.78,
+      "t_retrieval_sec": 4.15
+    },
+    {
+      "parent_asin": "B01N53L90X",
+      "title": "Fintie 2018 RCA 10 Viking Pro / Cambio W1013 DK / W101V2 B Case - Premium PU Leather Cover",
+      "vlm_description": "Battery Replacement for RCA Cambio W101 V2 / W1013 DK 10.1\" Tablet, Black",
+      "rank": 11,
+      "t_vlm_sec": 4.45,
+      "t_retrieval_sec": 3.34
+    },
+    {
+      "parent_asin": "B004J60FW4",
+      "title": "Mini Gadgets Inc BICSTICK-SA Lighter Covert Camera with Voice Activation",
+      "vlm_description": "Health Disposable Gas Lighter, Portable Windproof Flint Lighter, Yellow",
+      "rank": null,
+      "t_vlm_sec": 8.4,
+      "t_retrieval_sec": 4.54
+    },
+    {
+      "parent_asin": "B012N6EW6G",
+      "title": "Gigabyte LGA1151 Intel Z170 ATX DDR4 Motherboards GA-Z170X-UD5",
+      "vlm_description": "Gigabyte Z270 Aorus Gaming 6 Motherboard, Intel Z270 Chipset, LGA 1151, DDR4, Dual M.2, Black/Gold",
+      "rank": null,
+      "t_vlm_sec": 6.07,
+      "t_retrieval_sec": 3.0
+    }
+  ]
+}
