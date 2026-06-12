@@ -13,6 +13,7 @@ import {
 import { clearToken, getToken, subscribe } from "./auth";
 import { checklistToText, type ProductKind } from "./condition";
 import { StepBar } from "./components/StepBar";
+import { BatchMode } from "./components/BatchMode";
 import { CandidatePicker } from "./components/CandidatePicker";
 import { ConditionChecklist } from "./components/ConditionChecklist";
 import { MarketplaceListing } from "./components/MarketplaceListing";
@@ -29,6 +30,9 @@ const CONDITIONS: { value: Condition; label: string }[] = [
 export default function App() {
   // Auth D-032 : store externe (localStorage) → re-render auto au login/logout/401.
   const token = useSyncExternalStore(subscribe, getToken);
+
+  // Mode batch « mitrailler » (17.5, F5 déménagement, lève D-016).
+  const [batchMode, setBatchMode] = useState(false);
 
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]); // ≥ 1 OBLIGATOIRE (D-035)
@@ -140,6 +144,30 @@ export default function App() {
         </button>
       </header>
 
+      {/* 17.5 (D-035) : bascule flow unitaire ↔ mode déménagement « mitrailler » */}
+      <div className="mb-6 flex justify-center gap-1 rounded-full bg-slate-100 p-1">
+        {[
+          { value: false, label: "🎯 Un objet" },
+          { value: true, label: "📦 Déménagement" },
+        ].map((m) => (
+          <button
+            key={m.label}
+            onClick={() => setBatchMode(m.value)}
+            className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              batchMode === m.value
+                ? "bg-white text-rose-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {batchMode ? (
+        <BatchMode />
+      ) : (
+        <>
       <StepBar step={step} total={3} />
 
       {error && (
@@ -263,6 +291,8 @@ export default function App() {
         Identification ancrée sur catalogue (RAG-grounded) — aucune invention. ASIN:{" "}
         {chosenAsin ?? "—"} · {chosenCategory ?? ""}
       </footer>
+        </>
+      )}
     </div>
   );
 }
