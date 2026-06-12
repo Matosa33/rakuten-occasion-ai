@@ -33,12 +33,15 @@ Fiche produit du catalogue (validée par retrieval) :
 - Catégorie : {category}
 - Caractéristiques observées : {observed_attrs_json}
 
+État indiqué par le vendeur : {seller_condition}
+
 Phrases tirées de vraies reviews acheteurs (à utiliser comme inspiration de ton/lexique) :
 {grounding_sentences}
 
 Contraintes :
 - Français impeccable, ton vendeur particulier (pas marketing pro)
-- Inclure marque + modèle + état + caractéristique distinctive si pertinente
+- Inclure marque + modèle + caractéristique distinctive si pertinente
+- Si tu mentionnes l'état, utilise EXACTEMENT « {seller_condition} » — jamais un autre
 - Pas d'émojis, pas de MAJUSCULES INTÉGRALES
 - Pas d'invention de spécifications absentes du contexte ci-dessus
 
@@ -105,6 +108,9 @@ class PromptInputs:
             title=self.title or "(modèle inconnu)",
             category=self.category or "(catégorie inconnue)",
             observed_attrs_json=self.observed_attrs_json,
+            # 17.4b : le titre doit refléter l'état RÉEL choisi par le vendeur
+            # (bug jugé par l'humain : « Très bon état » inventé vs « bon état » choisi).
+            seller_condition=self.seller_condition,
             grounding_sentences=self.grounding_sentences or "(aucune review disponible)",
         )
 

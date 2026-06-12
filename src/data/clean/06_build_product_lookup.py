@@ -123,6 +123,24 @@ def _extract_category_leaf(categories_str: str | None) -> str | None:
     return str(leaf) if leaf else None
 
 
+def _extract_category_path(categories_str: str | None) -> str | None:
+    """Breadcrumb COMPLET « A > B > C » (17.4b, D-035) — la preuve visible que
+    chaque annonce est rattachée à un rangement marketplace parfait.
+
+    Ex: "['Electronics', 'Computers', 'Laptops']" → "Electronics > Computers > Laptops".
+    """
+    if not categories_str or categories_str in ("[]", "null", "None"):
+        return None
+    try:
+        cats = ast.literal_eval(categories_str)
+    except (ValueError, SyntaxError):
+        return None
+    if not isinstance(cats, list) or not cats:
+        return None
+    parts = [str(c).strip() for c in cats if c]
+    return " > ".join(parts) if parts else None
+
+
 def _parse_details(details_str: str | None) -> dict:
     """Parse le dict `details` stringifié (une seule fois par item)."""
     if not details_str or details_str in ("{}", "null", "None"):
@@ -183,6 +201,7 @@ def main() -> None:
             json.dumps(urls) if (urls := _extract_all_image_urls(s)) else None for s in df["images"]
         ]
         cat_leaves = [_extract_category_leaf(s) for s in df["categories"]]
+        cat_paths = [_extract_category_path(s) for s in df["categories"]]
         # Parse details UNE fois → marque + facettes discriminantes
         brands: list[str | None] = []
         facets_json: list[str | None] = []
@@ -197,6 +216,7 @@ def main() -> None:
                 "image_url": image_urls,
                 "images_json": images_all_json,
                 "category_leaf": cat_leaves,
+                "category_path": cat_paths,
                 "brand": brands,
                 "facets_json": facets_json,
             }

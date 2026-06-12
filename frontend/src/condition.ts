@@ -40,39 +40,52 @@ export const UNIVERSAL_CHECKLIST: ChecklistQuestion[] = [
   { key: "invoice", label: "Facture / preuve d'achat ?", options: ["Oui", "Non"] },
 ];
 
-/** Questions spécifiques par type (2 max — vitesse avant exhaustivité). */
+/** Questions spécifiques par type (2 max — vitesse avant exhaustivité).
+ * 17.4b : clés PRÉFIXÉES par le type — bug jugé par l'humain : la clé `battery`
+ * partagée laptop/tool écrasait le label affiché (« Batterie(s) incluse(s) :
+ * Bonne » au lieu d'« Autonomie batterie : Bonne »). */
 export const KIND_CHECKLIST: Record<ProductKind, ChecklistQuestion[]> = {
   phone: [
-    { key: "battery", label: "Santé batterie", options: ["Bonne (>85%)", "Moyenne", "Faible", "Inconnue"] },
-    { key: "screen", label: "État écran", options: ["Parfait", "Micro-rayures", "Rayé / fêlé"] },
+    { key: "phone_battery", label: "Santé batterie", options: ["Bonne (>85%)", "Moyenne", "Faible", "Inconnue"] },
+    { key: "phone_screen", label: "État écran", options: ["Parfait", "Micro-rayures", "Rayé / fêlé"] },
   ],
   laptop: [
-    { key: "battery", label: "Autonomie batterie", options: ["Bonne", "Moyenne", "Faible", "Inconnue"] },
-    { key: "keyboard", label: "Clavier / châssis", options: ["Parfait", "Traces d'usage", "Usé"] },
+    { key: "laptop_battery", label: "Autonomie batterie", options: ["Bonne", "Moyenne", "Faible", "Inconnue"] },
+    { key: "laptop_keyboard", label: "Clavier / châssis", options: ["Parfait", "Traces d'usage", "Usé"] },
   ],
   console: [
-    { key: "controllers", label: "Manettes incluses", options: ["Oui, complètes", "Partielles", "Aucune"] },
-    { key: "storage", label: "Jeux / comptes effacés ?", options: ["Oui, réinitialisée", "À faire"] },
+    { key: "console_controllers", label: "Manettes incluses", options: ["Oui, complètes", "Partielles", "Aucune"] },
+    { key: "console_reset", label: "Jeux / comptes effacés", options: ["Oui, réinitialisée", "À faire"] },
   ],
   tool: [
-    { key: "usage", label: "Intensité d'usage", options: ["Léger", "Régulier", "Intensif"] },
-    { key: "battery", label: "Batterie(s) incluse(s)", options: ["Oui", "Non", "Sans objet"] },
+    { key: "tool_usage", label: "Intensité d'usage", options: ["Léger", "Régulier", "Intensif"] },
+    { key: "tool_battery", label: "Batterie(s) incluse(s)", options: ["Oui", "Non", "Sans objet"] },
   ],
   camera: [
-    { key: "lens", label: "Optique / objectif", options: ["Parfait", "Poussières", "Rayures"] },
-    { key: "shutter", label: "Usure (déclenchements)", options: ["Faible", "Moyenne", "Élevée", "Inconnue"] },
+    { key: "camera_lens", label: "Optique / objectif", options: ["Parfait", "Poussières", "Rayures"] },
+    { key: "camera_shutter", label: "Usure (déclenchements)", options: ["Faible", "Moyenne", "Élevée", "Inconnue"] },
   ],
   other: [],
 };
 
+// Labels SANS la ponctuation de question (17.4b : « Fonctionne parfaitement ? : Oui »
+// devenait illisible dans l'annonce — on strip le « ? » à l'affichage).
 const CHECKLIST_LABELS: Record<string, string> = Object.fromEntries(
-  [...UNIVERSAL_CHECKLIST, ...Object.values(KIND_CHECKLIST).flat()].map((q) => [q.key, q.label])
+  [...UNIVERSAL_CHECKLIST, ...Object.values(KIND_CHECKLIST).flat()].map((q) => [
+    q.key,
+    q.label.replace(/\s*\?$/, ""),
+  ])
 );
 
-/** Bloc « État détaillé » prêt à injecter dans la description de l'annonce. */
-export function checklistToText(answers: Record<string, string>): string {
-  const lines = Object.entries(answers)
+/** Lignes « État détaillé » structurées (label propre → valeur). */
+export function checklistEntries(answers: Record<string, string>): [string, string][] {
+  return Object.entries(answers)
     .filter(([, v]) => v)
-    .map(([k, v]) => `- ${CHECKLIST_LABELS[k] ?? k} : ${v}`);
+    .map(([k, v]) => [CHECKLIST_LABELS[k] ?? k, v]);
+}
+
+/** Bloc texte prêt à injecter dans la description de l'annonce. */
+export function checklistToText(answers: Record<string, string>): string {
+  const lines = checklistEntries(answers).map(([label, v]) => `- ${label} : ${v}`);
   return lines.length ? `\n\nÉtat détaillé :\n${lines.join("\n")}` : "";
 }

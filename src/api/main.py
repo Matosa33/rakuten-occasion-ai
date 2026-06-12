@@ -313,6 +313,7 @@ async def identify(
                 score=max(0.0, min(1.0, c.score)),
                 price=c.price,
                 category_fine=c.category_fine,
+                category_path=c.category_path,
                 attributes=c.attributes,
             )
             for c in result.candidates

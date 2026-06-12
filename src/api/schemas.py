@@ -96,6 +96,9 @@ class CandidateMeta(BaseModel):
     score: float = Field(..., ge=0.0, le=1.0)
     price: float | None = None  # prix catalogue USD (pour le pricing F4)
     category_fine: str = ""  # catégorie L2/L3 réelle du produit (ex: "Graphics Cards")
+    category_path: str = Field(
+        default="", description="Breadcrumb complet « A > B > C » (rangement marketplace, 17.4b)"
+    )
     attributes: dict[str, str] = Field(
         default_factory=dict, description="Facettes Akinator (color, capacity, brand…)"
     )

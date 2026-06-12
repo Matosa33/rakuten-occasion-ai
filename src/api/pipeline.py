@@ -64,6 +64,7 @@ class Candidate:
     image_url: str = ""
     price: float | None = None  # prix catalogue (USD) du produit, pour le pricing F4
     category_fine: str = ""  # catégorie feuille du breadcrumb (L2/L3, ex: "Graphics Cards")
+    category_path: str = ""  # breadcrumb COMPLET « A > B > C » (rangement marketplace, 17.4b)
     brand: str = ""  # vraie marque fabricant (details['Brand'], fallback store)
     attributes: dict[str, str] = field(default_factory=dict)  # facettes Akinator (color, capacity…)
     images: list[str] = field(default_factory=list)  # toutes les vues (visionneuse 17.2, D-035)
@@ -92,6 +93,7 @@ class IdentificationService:
         self._image_lookup: dict[str, str] = {}
         self._images_all_lookup: dict[str, list[str]] = {}  # 17.2 : toutes les vues
         self._category_lookup: dict[str, str] = {}
+        self._category_path_lookup: dict[str, str] = {}  # 17.4b : breadcrumb complet
         self._brand_lookup: dict[str, str] = {}
         self._facets_lookup: dict[str, dict[str, str]] = {}
         self._encoder = None
@@ -133,6 +135,12 @@ class IdentificationService:
                 for a, c in zip(asins, lk["category_leaf"].to_list(), strict=False)
                 if c is not None
             }
+            if "category_path" in lk.columns:
+                self._category_path_lookup = {
+                    a: p
+                    for a, p in zip(asins, lk["category_path"].to_list(), strict=False)
+                    if p is not None
+                }
             self._brand_lookup = (
                 {a: b for a, b in zip(asins, lk["brand"].to_list(), strict=False) if b is not None}
                 if "brand" in lk.columns
@@ -261,6 +269,7 @@ class IdentificationService:
                     image_url=self._image_lookup.get(asin, ""),
                     price=price,
                     category_fine=category_fine,
+                    category_path=self._category_path_lookup.get(asin, ""),
                     brand=brand,
                     attributes=attributes,
                     images=self._images_all_lookup.get(asin, []),
@@ -425,9 +434,19 @@ class DescribeService:
             return pl.DataFrame(schema={"text": pl.Utf8})
         return pl.DataFrame({"text": paragraphs})
 
+    # 17.4b : les codes API snake_case ne doivent jamais atteindre le prompt
+    # (Gemma recopiait « bon_etat » ou inventait un autre état dans le titre).
+    _CONDITION_LABELS_FR = {
+        "neuf": "Neuf",
+        "tres_bon_etat": "Très bon état",
+        "bon_etat": "Bon état",
+        "correct": "État correct",
+    }
+
     def describe(self, parent_asin: str, condition: str = "bon état") -> DescribeResult:
         if not self._loaded:
             raise RuntimeError("DescribeService non chargé.")
+        condition = self._CONDITION_LABELS_FR.get(condition, condition)
         row = self._train_meta.filter(pl.col("parent_asin") == parent_asin)
         if row.is_empty():
             raise ValueError(f"parent_asin {parent_asin} introuvable dans le catalogue.")

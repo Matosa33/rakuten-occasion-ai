@@ -24,6 +24,7 @@ export interface CandidateMeta {
   score: number;
   price: number | null;
   category_fine: string;
+  category_path: string; // breadcrumb complet « A > B > C » (rangement marketplace, 17.4b)
   attributes: Record<string, string>;
 }
 

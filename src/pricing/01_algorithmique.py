@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from dataclasses import asdict, dataclass
 
 import joblib
@@ -73,12 +74,27 @@ MIN_VALID_PRICE_USD = 0.01
 KNN_K = 10
 EVAL_N_QUERIES = 1000
 
+# Conversion USD→EUR (17.4b, D-036) : les prix catalogue sont en USD (Amazon),
+# l'UI affiche des EUR. Taux FIXE documenté (moyenne 2024-2026 ~0.92), override
+# par env `PRICE_USD_EUR_RATE` pour ajustement sans redéploiement. Un taux live
+# (API de change) serait de la sur-ingénierie pour un prix INDICATIF arrondi.
+USD_TO_EUR = float(os.environ.get("PRICE_USD_EUR_RATE", "0.92"))
+
 # Pénalités état (multiplicatives sur prix neuf)
 CONDITION_MULTIPLIER = {
     "neuf": 1.00,
     "tres_bon_etat": 0.75,
     "bon_etat": 0.55,
     "correct": 0.35,
+}
+
+# Libellés humains (17.4b) : les codes snake_case ne doivent JAMAIS fuiter
+# dans un texte montré au vendeur.
+CONDITION_LABELS_FR = {
+    "neuf": "Neuf",
+    "tres_bon_etat": "Très bon état",
+    "bon_etat": "Bon état",
+    "correct": "État correct",
 }
 
 # Dépréciation linéaire par catégorie (taux annuel)
@@ -125,11 +141,17 @@ def suggest_price(
     age_years: float = 0.0,
     category: str = "",
 ) -> PricingResult:
-    """Cascade L1→L4 pour suggérer un prix avec niveau de confiance."""
+    """Cascade L1→L4 pour suggérer un prix avec niveau de confiance.
+
+    Entrées en USD (catalogue Amazon) ; sorties en EUR (17.4b, D-036 :
+    conversion par taux fixe USD_TO_EUR appliquée APRÈS dépréciation+état).
+    """
+    cond_label = CONDITION_LABELS_FR.get(condition, condition)
+
     # L1 : catalogue meta
     if catalog_price is not None and catalog_price >= MIN_VALID_PRICE_USD:
         depreciated = _depreciate(catalog_price, age_years, category)
-        suggested = _apply_condition(depreciated, condition)
+        suggested = _apply_condition(depreciated, condition) * USD_TO_EUR
         return PricingResult(
             suggested_price_eur=round(suggested, 2),
             confidence_level="L1",
@@ -137,9 +159,10 @@ def suggest_price(
             range_low=round(suggested * 0.85, 2),
             range_high=round(suggested * 1.15, 2),
             explanation=(
-                f"Basé sur prix catalogue {catalog_price:.2f} avec dépréciation "
-                f"{CATEGORY_DEPRECIATION_RATE.get(category, 0.10) * 100:.0f}%/an "
-                f"sur {age_years:.1f} an(s), pénalité état {condition}."
+                f"Basé sur le prix catalogue neuf de {catalog_price:.2f} $ "
+                f"(≈ {catalog_price * USD_TO_EUR:.0f} €) : dépréciation "
+                f"{CATEGORY_DEPRECIATION_RATE.get(category, 0.10) * 100:.0f} %/an "
+                f"sur {age_years:.1f} an(s), ajustement « {cond_label} »."
             ),
             method="catalog_meta",
         )
@@ -150,7 +173,7 @@ def suggest_price(
         if len(valid_prices) >= 3:
             knn_median = float(np.median(valid_prices))
             depreciated = _depreciate(knn_median, age_years, category)
-            suggested = _apply_condition(depreciated, condition)
+            suggested = _apply_condition(depreciated, condition) * USD_TO_EUR
             spread = float(np.std(valid_prices)) / max(knn_median, 1.0)
             confidence_score = max(0.50, min(0.80, 0.80 - spread))
             return PricingResult(
@@ -160,16 +183,16 @@ def suggest_price(
                 range_low=round(suggested * 0.70, 2),
                 range_high=round(suggested * 1.30, 2),
                 explanation=(
-                    f"Basé sur médiane KNN-{len(valid_prices)} voisins "
-                    f"({knn_median:.2f}, σ={spread:.2f}), dépréciation par âge "
-                    f"et pénalité état {condition}."
+                    f"Basé sur le prix médian de {len(valid_prices)} produits similaires "
+                    f"({knn_median:.2f} $ ≈ {knn_median * USD_TO_EUR:.0f} €), "
+                    f"dépréciation par âge et ajustement « {cond_label} »."
                 ),
                 method="knn_median",
             )
 
     # L3 : catégorie seule
     if category_median_price is not None and category_median_price >= MIN_VALID_PRICE_USD:
-        suggested = _apply_condition(category_median_price, condition)
+        suggested = _apply_condition(category_median_price, condition) * USD_TO_EUR
         return PricingResult(
             suggested_price_eur=round(suggested, 2),
             confidence_level="L3",
@@ -177,8 +200,9 @@ def suggest_price(
             range_low=round(suggested * 0.50, 2),
             range_high=round(suggested * 1.50, 2),
             explanation=(
-                f"Basé sur médiane catégorie '{category}' ({category_median_price:.2f}), "
-                f"pénalité état {condition}. Identification produit incertaine."
+                f"Estimation large : prix médian de la catégorie "
+                f"({category_median_price * USD_TO_EUR:.0f} €), ajustement « {cond_label} ». "
+                f"Produit non identifié précisément."
             ),
             method="category_median",
         )

@@ -136,9 +136,10 @@ def test_generate_listing_writer_casse_degrade_proprement():
 def test_templates_contiennent_les_placeholders_canoniques():
     """Si un placeholder est renommé d'un côté (template) sans l'autre
     (PromptInputs.render_*), le .format() lèvera KeyError au runtime — ce test
-    le catch statiquement. NB : {seller_condition} n'est attendu que dans la
-    description (le titre n'affiche pas l'état, choix métier C6)."""
-    common = ("{brand}", "{title}", "{grounding_sentences}")
+    le catch statiquement. 17.4b : {seller_condition} est exigé dans les DEUX
+    prompts (bug jugé par l'humain : le titre inventait « Très bon état »
+    alors que le vendeur avait choisi « bon état »)."""
+    common = ("{brand}", "{title}", "{grounding_sentences}", "{seller_condition}")
     for placeholder in common:
         assert placeholder in _templates.PROMPT_TITLE_GENERATOR, (
             f"PROMPT_TITLE_GENERATOR : {placeholder} manquant"
@@ -146,7 +147,6 @@ def test_templates_contiennent_les_placeholders_canoniques():
         assert placeholder in _templates.PROMPT_DESCRIPTION_GENERATOR, (
             f"PROMPT_DESCRIPTION_GENERATOR : {placeholder} manquant"
         )
-    assert "{seller_condition}" in _templates.PROMPT_DESCRIPTION_GENERATOR
 
 
 def test_prompt_inputs_render_ne_leve_pas():

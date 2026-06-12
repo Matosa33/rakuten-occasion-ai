@@ -11,6 +11,9 @@ suggest_price = _pricing.suggest_price
 PricingResult = _pricing.PricingResult
 CONDITION_MULTIPLIER = _pricing.CONDITION_MULTIPLIER
 CATEGORY_DEPRECIATION_RATE = _pricing.CATEGORY_DEPRECIATION_RATE
+# 17.4b (D-036) : entrées USD, sorties EUR — les assertions de valeur
+# référencent la constante du module (robustes à un changement de taux).
+USD_TO_EUR = _pricing.USD_TO_EUR
 
 
 class TestL1CatalogMeta:
@@ -31,14 +34,14 @@ class TestL1CatalogMeta:
         result_neuf = suggest_price(100.0, None, None, "neuf", 0.0, "Electronics")
         result_correct = suggest_price(100.0, None, None, "correct", 0.0, "Electronics")
         assert result_neuf.suggested_price_eur > result_correct.suggested_price_eur
-        # Avec dépréciation 0 an + Electronics, prix neuf = 100 * 1.0
-        assert abs(result_neuf.suggested_price_eur - 100.0) < 0.01
+        # Avec dépréciation 0 an + Electronics, prix neuf = 100 $ * 1.0 → EUR
+        assert abs(result_neuf.suggested_price_eur - 100.0 * USD_TO_EUR) < 0.01
 
     def test_l1_applies_depreciation(self):
         # Electronics : -15 %/an
         result = suggest_price(100.0, None, None, "neuf", 2.0, "Electronics")
-        # 100 * (1 - 0.15*2) * 1.0 = 70
-        assert abs(result.suggested_price_eur - 70.0) < 0.01
+        # 100 $ * (1 - 0.15*2) * 1.0 = 70 $ → EUR
+        assert abs(result.suggested_price_eur - 70.0 * USD_TO_EUR) < 0.01
 
 
 class TestL2KNNMedian:
@@ -63,8 +66,8 @@ class TestL2KNNMedian:
             condition="bon_etat",
             category="Electronics",
         )
-        # Median(80, 90, 100) = 90, * 0.55 (bon_etat) = 49.5
-        assert abs(result.suggested_price_eur - 49.5) < 0.01
+        # Median(80, 90, 100) = 90 $, * 0.55 (bon_etat) = 49.5 $ → EUR
+        assert abs(result.suggested_price_eur - 49.5 * USD_TO_EUR) < 0.01
 
     def test_l2_requires_min_3_valid_prices(self):
         # Avec seulement 2 prix valides, doit passer en L3
@@ -89,8 +92,8 @@ class TestL3CategoryMedian:
         )
         assert result.confidence_level == "L3"
         assert result.method == "category_median"
-        # 50 * 0.55 (bon_etat) = 27.5
-        assert abs(result.suggested_price_eur - 27.5) < 0.01
+        # 50 $ * 0.55 (bon_etat) = 27.5 $ → EUR
+        assert abs(result.suggested_price_eur - 27.5 * USD_TO_EUR) < 0.01
 
 
 class TestL4Fallback:
