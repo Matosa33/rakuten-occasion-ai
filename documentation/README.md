@@ -15,7 +15,7 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 |---|---|---|
 | 00 | [Vue d'ensemble du système](00_vue_ensemble.md) | ✅ |
 | 01 | [Data engineering (audit, nettoyage, split anti-fuite)](01_data_engineering.md) | ✅ |
-| 02 | Représentations vectorielles (embeddings) | ⏳ |
+| 02 | [Représentations vectorielles (embeddings)](02_embeddings.md) | ✅ |
 | 03 | Classification & benchmark de modèles | ⏳ |
 | 04 | Recherche par similarité (FAISS, RRF, OOD, Akinator) | ⏳ |
 | 05 | VLM / LLM ancrés (RAG grounded) | ⏳ |
