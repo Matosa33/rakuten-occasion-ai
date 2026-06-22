@@ -1,7 +1,7 @@
 # === Commandes standardisées Rakuten AI ===
 # Pour lister : make help
 
-.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean up down logs ps stack-build airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build prod-up prod-down k8s-up k8s-load k8s-deploy k8s-smoke k8s-down
+.PHONY: help install install-data lint lint-fix test test-cov audit audit-load audit-quality audit-dist audit-bias clean up down logs smoke ps stack-build airflow-trigger bento-import bento-serve drift-check promote-gate api-build frontend-build prod-up prod-down k8s-up k8s-load k8s-deploy k8s-smoke k8s-down
 
 KIND := ./.local/bin/kind.exe
 KIND_VERSION := v0.24.0
@@ -71,6 +71,9 @@ down:  ## C13.2 - arrête la stack (préserve les volumes Postgres + data)
 
 logs:  ## C13.2 - suit les logs (ex: make logs SVC=api ou tous par défaut)
 	$(COMPOSE) logs -f $(SVC)
+
+smoke:  ## C18.2 - smoke E2E rejouable contre la stack démarrée (login→upload→identify→price→describe)
+	bash scripts/smoke_e2e.sh
 
 ps:  ## C13.2 - état des services de la stack
 	$(COMPOSE) ps

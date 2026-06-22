@@ -1,0 +1,22 @@
+# Normalisation des fins de ligne (repo cross-OS Windows/Linux).
+# Par défaut Git gère le texte automatiquement.
+* text=auto
+
+# Les scripts shell DOIVENT rester en LF, sinon ils cassent sous Linux/macOS
+# (un shebang suivi de \r est interprété littéralement → "bad interpreter").
+*.sh text eol=lf
+
+# Idem pour les fichiers exécutés dans des conteneurs Linux.
+Dockerfile* text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Fichiers binaires : pas de conversion de fins de ligne.
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.svg text
+*.parquet binary
+*.joblib binary
+*.npy binary
+*.index binary
