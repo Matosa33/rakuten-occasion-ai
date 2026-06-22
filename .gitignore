@@ -147,3 +147,9 @@ catboost_info/
 *.db
 *.sqlite
 *.sqlite3
+
+# === Interne agent / exam (non public, gardé en local) — Cycle 19 ===
+BRAIN/
+docs/soutenance/
+docs/formation/
+tests/test_brain_structure.py

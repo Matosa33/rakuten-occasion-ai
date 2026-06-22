@@ -84,7 +84,7 @@ Tout se rééteint proprement avec `docker compose down` (les volumes de donnée
 
 ---
 
-## Ce que le jury peut tester chez lui (sans la data lourde)
+## Tester sans les données lourdes
 
 Les artefacts lourds (index FAISS ~14 Go, embeddings, modèles, dumps catalogue) sont **volontairement absents du dépôt** (gitignorés — un repo Git n'héberge pas 60 Go de données). Sans eux, on peut néanmoins **tout vérifier sauf l'inférence live** :
 
@@ -146,13 +146,12 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 ## Architecture du dépôt
 
 ```
-rakuten_de_zero/
-├── BRAIN/                  # Mémoire opérationnelle de l'agent IA (9 fichiers, 37 ADR)
+rakuten/
+├── documentation/          # Un rapport par thème : techno, implémentation, résultats, critique
 ├── docs/
 │   ├── PROJECT.md          # Cadrage produit (besoin, hypothèses, hors-scope)
 │   ├── architecture.md     # Pipeline runtime + modèles M1-M8 / E1-E4
-│   ├── exigences_*.md       # Traçabilité exigences F0-F8 + couverture pédagogique
-│   └── soutenance/         # Script, slides, checklist démo, feuille de test
+│   └── exigences_*.md       # Traçabilité exigences F0-F8 + couverture
 ├── src/
 │   ├── data/               # Audit → cleaning → split → validation (Pandera)
 │   ├── encoders/           # Arctic Embed (+ SigLIP gated)
@@ -203,13 +202,13 @@ rakuten_de_zero/
 
 ---
 
-## Méthodologie — BRAIN (mémoire de l'agent IA)
+## Documentation
 
-Le développement suit un protocole strict par sous-tâche : **INIT** (relire la mémoire + vérifier la cohérence) → **LECTURE** (cibler le code concerné) → **RUN** (coder + tester) → **RESTIT** (mettre à jour la mémoire + journaliser les décisions). Les décisions architecturales sont des **ADR append-only** (`BRAIN/decisions.md`, D-001 → D-037) : chaque choix non trivial est tracé, daté, justifié, avec ses alternatives rejetées.
-
-> 🤖 Le dossier `BRAIN/` est maintenu **exclusivement par l'agent IA**. Pour relire le projet sans agent, partir de [docs/PROJECT.md](docs/PROJECT.md) et de ce README.
-
-Pour **valider le projet point par point** (chaque cycle/sous-cycle, avec commande exacte + résultat attendu) : [docs/soutenance/04_feuille_de_test.md](docs/soutenance/04_feuille_de_test.md).
+Le dossier [`documentation/`](documentation/) contient **un rapport par thème technique**
+(data engineering, embeddings, retrieval, MLflow, drift, infra…). Chaque rapport suit la
+même structure : *la techno et son rôle → notre implémentation → résultats mesurés →
+critique et limites → références*. Cadrage produit et architecture détaillée :
+[docs/PROJECT.md](docs/PROJECT.md) et [docs/architecture.md](docs/architecture.md).
 
 ---
 

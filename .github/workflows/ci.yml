@@ -157,24 +157,3 @@ jobs:
           platforms: linux/amd64
           push: false
           cache-from: type=gha,scope=${{ matrix.image }}
-
-  brain-structure:
-    name: BRAIN 9 fichiers présents
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Verify BRAIN structure
-        # Garde-fou : le brain canonique doit toujours avoir ses 9 fichiers.
-        # Catché un drift en C13.99 (state.md > 100 lignes), ici on garantit
-        # juste l'existence (la longueur est testée dans test_brain_structure).
-        run: |
-          test -f BRAIN/bios.md
-          test -f BRAIN/state.md
-          test -f BRAIN/decisions.md
-          test -f BRAIN/golden_rules.md
-          test -f BRAIN/to-do.md
-          test -f BRAIN/learnings.md
-          test -f BRAIN/erreur_a_ne_plus_faire.md
-          test -f BRAIN/glossary.md
-          test -f BRAIN/context.md
-          echo "BRAIN 9 fichiers présents ✓"

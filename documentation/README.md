@@ -1,0 +1,32 @@
+# Documentation technique
+
+Un **rapport par thème**. Chaque rapport suit la même structure :
+
+1. **La technologie** — ce que c'est, son rôle dans un système ML/MLOps
+2. **État de l'art** — comment l'industrie l'utilise, bonnes pratiques (sourcé)
+3. **Notre implémentation** — ce que nous avons fait, où (fichiers, scripts)
+4. **Résultats** — chiffres mesurés, reproductibles
+5. **Critique** — ce qui est solide, les limites, les écarts vs l'état de l'art
+6. **Références** — liens et sources
+
+## Sommaire
+
+| # | Thème | Statut |
+|---|---|---|
+| 00 | [Vue d'ensemble du système](00_vue_ensemble.md) | ✅ |
+| 01 | Data engineering (audit, nettoyage, split anti-fuite) | ⏳ |
+| 02 | Représentations vectorielles (embeddings) | ⏳ |
+| 03 | Classification & benchmark de modèles | ⏳ |
+| 04 | Recherche par similarité (FAISS, RRF, OOD, Akinator) | ⏳ |
+| 05 | VLM / LLM ancrés (RAG grounded) | ⏳ |
+| 06 | Estimation de prix transparente | ⏳ |
+| 07 | Suivi d'entraînement (MLflow) | ⏳ |
+| 08 | Registre de modèles & champion/challenger | ⏳ |
+| 09 | Orchestration & ré-entraînement (Airflow) | ⏳ |
+| 10 | Détection de dérive (Evidently) | ⏳ |
+| 11 | Observabilité (Prometheus, Grafana, logs structurés) | ⏳ |
+| 12 | Infrastructure (Docker, Compose, Kubernetes) | ⏳ |
+| 13 | CI/CD & sécurité | ⏳ |
+
+> Chaque rapport est construit méthodiquement : recherche documentaire → inventaire de
+> notre code → critique état-de-l'art vs réalisé → mise au propre.
