@@ -70,12 +70,12 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 
 Première run : `ProductSchema KO sur length_title (UInt32 vs attendu Int64)`. Cause : Pandera mappe `int` Python sur Int64, mais polars produit `UInt32` pour `pl.len()` et `Int32` pour `dt.year()`. Fix : utiliser les types polars natifs dans les définitions de schema (`pl.UInt32`, `pl.Int32`, `pl.Float64`, `pl.Boolean`).
 
-Cette itération est documentée dans `BRAIN/learnings.md` comme `pandera-polars-types-natifs-vs-int-python`.
+Cette itération est documentée dans les notes d'apprentissage du projet comme `pandera-polars-types-natifs-vs-int-python`.
 
 ## 7. Conditions à respecter aval
 
 - Tout nouveau script qui modifie `data/processed/products/` ou `data/processed/reviews_index/` doit re-lancer `python -m src.data.validate.03_validate_processed` et obtenir 6/6 OK avant commit.
-- Si le schema doit évoluer (nouvelles features par exemple), modifier `src/data/validate/schemas.py` ET ajouter une entrée dans `BRAIN/decisions.md` qui documente le changement et son impact aval.
+- Si le schema doit évoluer (nouvelles features par exemple), modifier `src/data/validate/schemas.py` ET ajouter une entrée dans les ADR du projet qui documente le changement et son impact aval.
 
 ## 8. Annexes
 

@@ -48,7 +48,7 @@ dev = [
 #
 # NB: on n'utilise PAS `datasets.load_dataset` pour Amazon-Reviews-2023 car le repo
 # embarque un loading script rejeté par datasets 3.x/4.x.
-# Voir BRAIN/decisions.md D-004/D-005 + erreur_a_ne_plus_faire.md →
+# Voir ADR D-004/D-005 + erreur_a_ne_plus_faire.md →
 # datasets-4-loading-script-rejected.
 data = [
     "polars>=1.0.0",
@@ -148,7 +148,7 @@ train = [
 ]
 
 # Extra [frontend] géré séparément via npm (cf. frontend/package.json).
-# Voir BRAIN/to-do.md pour le plan d'enrichissement.
+# Voir le plan projet pour le plan d'enrichissement.
 
 [tool.setuptools.packages.find]
 where = ["src"]

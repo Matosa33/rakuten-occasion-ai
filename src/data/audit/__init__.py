@@ -8,7 +8,7 @@
     04_audit_biais_leakage.py    biais et fuites potentielles
 
 Stack lourd : polars (lazy/streaming) + huggingface_hub (download avec resume).
-Voir BRAIN/decisions.md D-006 (polars), D-007 (full vs sample, superseded by D-008),
+Voir ADR D-006 (polars), D-007 (full vs sample, superseded by D-008),
 D-008 (périmètre = 15 cat evergreen-occasion choisies par méta-first).
 
 La constante `CATEGORIES` ci-dessous est la **source unique de vérité** du périmètre,
@@ -20,7 +20,7 @@ Chaque script lit dans `data/raw/full/{reviews,meta}/` et écrit dans
 """
 
 # Périmètre actif D-011 — 4 catégories MVP focused (high-tech + outils).
-# Voir BRAIN/decisions.md D-011 (supersede partiel D-008).
+# Voir ADR D-011 (supersede partiel D-008).
 # Volume mesuré : ~4,5 M items meta + ~96 M reviews (~17 % du périmètre D-008).
 # Justification : focus sur cat où la vision est cruciale et le marché occasion
 # avéré, pour rester tractable sur ressources MVP (vision SigLIP ~3-4h

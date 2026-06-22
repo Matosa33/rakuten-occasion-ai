@@ -1,6 +1,6 @@
 # Airflow — orchestration de la boucle de ré-entraînement (Cycle 12.1)
 
-Orchestrateur du retrain Rakuten via **Docker Compose** (cf. `BRAIN/decisions.md` D-022).
+Orchestrateur du retrain Rakuten via **Docker Compose** (ADR D-022).
 Principe : **l'orchestrateur orchestre, il ne calcule pas le GPU**. Le DAG ré-entraîne
 les têtes CPU (M5/M2/M4) sur les embeddings en cache, logge dans MLflow (D-021) et
 enregistre `rakuten-classifier@Production`. L'encodage GPU est une tâche amont isolée

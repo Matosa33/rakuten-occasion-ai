@@ -50,7 +50,7 @@ def test_ci_triggers_push_pr_main():
 def test_ci_jobs_lint_test_brain_present():
     """Les jobs canoniques sont déclarés (régression si on en supprime un).
     security + docker-build ajoutés en C15.3 (D-034). Le job brain-structure a
-    été retiré en C19 (BRAIN sorti du repo public)."""
+    été retiré en C19 (dossier de mémoire projet sorti du repo public)."""
     jobs = _load(CI)["jobs"]
     assert "lint" in jobs, "job `lint` manquant"
     assert "test" in jobs, "job `test` manquant"

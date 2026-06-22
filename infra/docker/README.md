@@ -2,7 +2,7 @@
 
 Toutes les images sont **multi-stage** (build isolé du runtime) et **CPU-only** :
 la promesse soutenance « `make up` sur VM vierge » cible une machine sans GPU,
-et l'encodage GPU vit dans un worker isolé (cf. `BRAIN/decisions.md` D-022).
+et l'encodage GPU vit dans un worker isolé (ADR D-022).
 
 ## Inventaire
 
@@ -79,7 +79,7 @@ via la traduction NTFS↔ext4 → premier `faiss.read_index` prend **5 à 15 min
 mmap direct, **quasi-instantané**.
 
 Le `start_period` du healthcheck API est calé à 5 min pour tolérer ce cas
-sans marquer le conteneur `unhealthy` à tort. Cf. `BRAIN/learnings.md`
+sans marquer le conteneur `unhealthy` à tort. Cf. les notes d'apprentissage du projet
 (`bind-mount-RO-docker-desktop-windows-tres-lent-sur-gros-fichiers`).
 
 ## Pourquoi pas de variante CUDA ?

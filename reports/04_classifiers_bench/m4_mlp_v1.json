@@ -22,7 +22,7 @@
     "train_sample_size": 500000,
     "seed": 42
   },
-  "duration_train_sec": 376.8,
+  "duration_train_sec": 293.1,
   "n_iter_actual": 7,
   "label_classes": [
     "Cell_Phones_and_Accessories",
@@ -32,34 +32,34 @@
   ],
   "results": {
     "val": {
-      "f1_weighted": 0.9486073328504929,
-      "f1_macro": 0.9382373737432972,
-      "accuracy": 0.9486232971386755,
-      "top_1_accuracy": 0.9486232971386755,
-      "top_3_accuracy": 0.9988868110017962,
-      "ece": 0.0015,
+      "f1_weighted": 0.9486395143870437,
+      "f1_macro": 0.9380135864646735,
+      "accuracy": 0.9486513855728932,
+      "top_1_accuracy": 0.9486513855728932,
+      "top_3_accuracy": 0.9988838543245101,
+      "ece": 0.0013,
       "per_class_f1": {
-        "Cell_Phones_and_Accessories": 0.9454,
+        "Cell_Phones_and_Accessories": 0.9457,
         "Electronics": 0.9347,
         "Tools_and_Home_Improvement": 0.9709,
-        "Video_Games": 0.9019
+        "Video_Games": 0.9008
       },
-      "duration_eval_sec": 10.69
+      "duration_eval_sec": 22.49
     },
     "test": {
-      "f1_weighted": 0.9490909343127822,
-      "f1_macro": 0.9386900891596611,
-      "accuracy": 0.949104208644952,
-      "top_1_accuracy": 0.949104208644952,
-      "top_3_accuracy": 0.9988735159459583,
-      "ece": 0.0011,
+      "f1_weighted": 0.9490513321766487,
+      "f1_macro": 0.9384612190319639,
+      "accuracy": 0.9490613372045751,
+      "top_1_accuracy": 0.9490613372045751,
+      "top_3_accuracy": 0.9988794292480793,
+      "ece": 0.0007,
       "per_class_f1": {
-        "Cell_Phones_and_Accessories": 0.9464,
-        "Electronics": 0.9354,
-        "Tools_and_Home_Improvement": 0.9707,
-        "Video_Games": 0.9022
+        "Cell_Phones_and_Accessories": 0.9468,
+        "Electronics": 0.9352,
+        "Tools_and_Home_Improvement": 0.9706,
+        "Video_Games": 0.9012
       },
-      "duration_eval_sec": 10.57
+      "duration_eval_sec": 20.11
     }
   }
 }

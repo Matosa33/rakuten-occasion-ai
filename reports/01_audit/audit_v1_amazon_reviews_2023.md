@@ -8,7 +8,7 @@
 > **Supersede** la v1 (3 cat Electronics + Toys_and_Games + All_Beauty) qui calibrait
 > sur un périmètre choisi par hypothèse (cf. R18 — biais de supposition explicite).
 > Périmètre actuel défini par méta-first (Range HTTP probes, cf. R17) puis filtre
-> evergreen-occasion (cf. `BRAIN/decisions.md` D-008).
+> evergreen-occasion (ADR D-008).
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 2. Périmètre audité — D-008
 
-- **Stratégie** : 15 catégories COMPLÈTES (full, pas un sample) — voir `BRAIN/decisions.md` D-008
+- **Stratégie** : 15 catégories COMPLÈTES (full, pas un sample) — voir ADR D-008
 - **Filtre evergreen-occasion** : produits qui se revendent en seconde main après plusieurs années (ni numérique, ni consommable, ni abonnement). Exclues : Kindle, Software, Digital_Music, Magazine_Subscriptions, Subscription_Boxes, Gift_Cards, Beauty, Health, Office, Pet_Supplies, Arts, Unknown.
 - **Catégories retenues (15)** : Clothing_Shoes_and_Jewelry, Home_and_Kitchen, Books, Electronics, Tools_and_Home_Improvement, Automotive, Sports_and_Outdoors, Cell_Phones_and_Accessories, Movies_and_TV, Toys_and_Games, CDs_and_Vinyl, Baby_Products, Video_Games, Musical_Instruments, Appliances.
 - **Total reviews** : **348 367 044** (348,4 M, soit 60,9 % du dataset complet)
@@ -247,5 +247,5 @@ Avant 2010 : moins de 1,5 % du total. Reviews sur 3 dernières années (2021-202
 - Graphiques : `reports/figures/*.png` (≥ 11 PNG, gitignored, regénérables via `make audit`)
 - Tests d'invariants : `tests/test_audit_invariants.py`
 - Stack utilisée : `polars 1.40.1` (engine streaming) + `pandas 2.2` + `pyarrow 21` + `huggingface-hub` + `matplotlib 3.10` + `seaborn 0.13`
-- Décisions tracées dans `BRAIN/decisions.md` : D-004 (dataset Amazon Reviews 2023, active), D-006 (polars lazy + streaming, active), D-007 (full vs sample, active), D-008 (périmètre 15 cat evergreen-occasion, active)
-- Règles méthodologiques : R17 (méta-first avant data-first), R18 (biais de supposition explicite) dans `BRAIN/golden_rules.md`
+- Décisions tracées dans les ADR du projet : D-004 (dataset Amazon Reviews 2023, active), D-006 (polars lazy + streaming, active), D-007 (full vs sample, active), D-008 (périmètre 15 cat evergreen-occasion, active)
+- Règles méthodologiques : R17 (méta-first avant data-first), R18 (biais de supposition explicite) dans les règles d'or du projet

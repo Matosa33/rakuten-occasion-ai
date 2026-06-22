@@ -91,7 +91,7 @@ Le différentiateur vs les outils AI existants type VintyLook : **un seul flux e
 - **Soutenance** : à supposer une VM vierge fournie par le jury. La commande `make` doit suffire pour démarrer la stack, pas de manipulation manuelle.
 - **Latence perçue** : streaming SSE obligatoire sur le parcours vendeur, pour que l'utilisateur voie les éléments arriver au lieu d'attendre un spinner. Cible P95 < 5 s pour les premiers tokens.
 - **Pas de marketplace data réelle** : pricing ML impossible (cf. hors-scope).
-- **Délai** : ~3 mois jusqu'à soutenance. Discipline stricte sur l'out-of-scope (R16 dans `BRAIN/golden_rules.md`).
+- **Délai** : ~3 mois jusqu'à soutenance. Discipline stricte sur l'out-of-scope (R16 dans les règles d'or du projet).
 - **Reproductibilité** : DVC pour les données + MLflow Registry pour les modèles + dvc.lock + seeds fixes. Doit pouvoir tourner identique sur 2 machines.
 - **Anti-hallucination par design** : R19 grounded-avant-génératif (`golden_rules.md`) est la règle structurante du pipeline d'identification.
 
@@ -113,7 +113,7 @@ Le différentiateur vs les outils AI existants type VintyLook : **un seul flux e
 - **Diagramme architecture interactif** (HTML) avec les 8 modèles (M1-M8) + 4 modèles externes (E1-E4) du pipeline (cf. `docs/architecture.md` et `docs/modeles.md`).
 - **Modèles** trackés dans MLflow Registry avec alias `@Production`.
 - **Datasets versionnés** dans DVC (avec remote local ou MinIO bonus).
-- **Documentation BRAIN/** complète (9 fichiers canoniques + archive si besoin).
+- **Documentation interne** complète (9 fichiers canoniques + archive si besoin).
 - **Tests pytest** automatisés avec couverture mesurée.
 - **Documentation produit** : `docs/PROJECT.md` (cadrage), `docs/architecture.md` (vue système), `docs/modeles.md` (fiche par modèle), `docs/exigences_coverage.md` (matrice cycles × exigences).
 
@@ -121,7 +121,7 @@ Le différentiateur vs les outils AI existants type VintyLook : **un seul flux e
 
 > **Convention** : ce document tient en 1 page A4 imprimable.
 > Si on ajoute une section, on doit en couper une autre.
-> Toute révision majeure → nouvelle ADR dans `BRAIN/decisions.md` qui supersede.
+> Toute révision majeure → nouvelle ADR dans les ADR du projet qui supersede.
 
 ---
 

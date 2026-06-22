@@ -13,7 +13,7 @@ Un sample (premier N lignes) introduit deux biais qui rendent l'audit non-conclu
 
 On télécharge donc les 2N fichiers complets pour les N catégories du périmètre
 défini par `CATEGORIES` (cf. `src/data/audit/__init__.py`, single source of vérité).
-Inscrit dans `BRAIN/decisions.md` D-007 (full vs sample) + D-008 (périmètre).
+Inscrit dans ADR D-007 (full vs sample) + D-008 (périmètre).
 
 Mécanique
 ---------

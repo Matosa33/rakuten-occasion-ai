@@ -10,8 +10,8 @@
 #   API_BASE=http://127.0.0.1:8010 bash scripts/smoke_e2e.sh
 #
 # Note : on PIPE directement curl → python (pas de fichier /tmp intermédiaire) —
-# le mélange chemins Git-Bash / Python Windows casse les temp files (cf. BRAIN
-# erreur_a_ne_plus_faire). Le parsing JSON est fait par python (stdin).
+# le mélange chemins Git-Bash / Python Windows casse les temp files.
+# Le parsing JSON est fait par python (stdin).
 
 set -u
 

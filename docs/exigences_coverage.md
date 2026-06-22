@@ -16,7 +16,7 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | **P01 Cadrage + env** | C01 | Le projet en une page | 0.1 | ✅ done (PROJECT.md v2 D-010) |
 | | C02 | Le poste de dev prêt | 0.2 | 🟡 à valider humain |
 | | C03 | Le repo bien né | 0.3 | ✅ done |
-| | C04 | BRAIN system (optionnel) | 0.4 | ✅ done (9 fichiers + 32 tests) |
+| | C04 | système de mémoire projet (optionnel) | 0.4 | ✅ done (9 fichiers + 32 tests) |
 | **P02 Données** | C05 | Auditer un dataset brut | **1.1** | ✅ done (D-008 puis D-011 4 cat MVP) |
 | | C06 | Cleaning + features + split | **1.2** | ✅ done (4d2509b puis b338555 sur 4 cat) |
 | | C07 | Anti-leakage 5 patterns | **1.3** | ✅ done (2107cb8) |
@@ -68,7 +68,7 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 **51 cours / 51 répartis sur 16 cycles. Statut global : ~48 / 51 implémentés (~94 %)** au 2026-06-13 (Cycles 0-17 faits, pipeline photo-first complet). **Restent** : C02 poste dev (validation humaine), C10 indexation visuelle SigLIP (gated D-014, test nuit 17.6), C20 fine-tuning QLoRA (conditionnel F8). Différés assumés, pas oubliés.
 
 > ⚠️ Cette table (cours pédagogiques C01-C51) est secondaire. **Sources de vérité du statut** :
-> `BRAIN/to-do.md` (table d'ensemble des 16 cycles) + `docs/exigences_fonctionnelles.md` (état réel F0-F8).
+> le plan projet (table d'ensemble des 16 cycles) + `docs/exigences_fonctionnelles.md` (état réel F0-F8).
 > Statuts cours détaillés ci-dessous re-synchronisés au fil des RESTIT.
 
 ---
@@ -77,7 +77,7 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 
 | Cycle | Phase projet | Cours couverts | Livrables principaux |
 |---|---|---|---|
-| 0 | Bootstrap | C01-C04 | repo + BRAIN + conventions |
+| 0 | Bootstrap | C01-C04 | repo + mémoire projet + conventions |
 | 1 | Données (P02) | C05-C08 | audit + cleaning + anti-leakage + Pandera |
 | 2 | Encoders (P03) | C09-C11 | SigLIP + Arctic + indices |
 | 3 | Classification (P04) | C12-C15 | M1-M6 + métriques |
@@ -168,8 +168,8 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 
 Quand un cycle est complété :
 1. Cocher le statut dans la colonne "Statut implémentation" de la table §1.
-2. Référencer le commit hash dans `BRAIN/state.md` historique.
+2. Référencer le commit hash dans l'état du projet historique.
 3. Si un cours change de cycle (refactoring), mettre à jour les §1 et §2.
-4. Si une exigence MLOps n'est pas couverte, lever une alerte dans `BRAIN/state.md` "Blockers".
+4. Si une exigence MLOps n'est pas couverte, lever une alerte dans l'état du projet "Blockers".
 
-Ce document est **maintenu par l'agent IA** lors des phases RESTIT (cf. `BRAIN/golden_rules.md` règle 9).
+Ce document est **maintenu par l'agent IA** lors des phases RESTIT (cf. les règles d'or du projet règle 9).

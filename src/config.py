@@ -73,7 +73,6 @@ REPORTS_EXPLAIN = REPORTS_DIR / "09_explainability"
 
 NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 DOCS_DIR = REPO_ROOT / "docs"
-BRAIN_DIR = REPO_ROOT / "BRAIN"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Reproductibilité
@@ -113,7 +112,6 @@ __all__ = [
     "REPORTS_EXPLAIN",
     "NOTEBOOKS_DIR",
     "DOCS_DIR",
-    "BRAIN_DIR",
     "SEED",
     "CATEGORIES",
     "COMPLEX_COLS_TO_DROP",

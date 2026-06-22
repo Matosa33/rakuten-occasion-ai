@@ -1,5 +1,5 @@
 # Image Airflow + projet Rakuten — orchestration de la boucle de ré-entraînement.
-# Cf. BRAIN/decisions.md D-022 : l'orchestrateur n'exécute PAS le GPU.
+# Cf. ADR D-022 : l'orchestrateur n'exécute PAS le GPU.
 # Extra [train] = CPU strict (sklearn + polars + mlflow), pas de torch.
 #
 # Build : depuis la racine du repo (contexte = repo root) :

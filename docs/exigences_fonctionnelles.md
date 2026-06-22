@@ -2,7 +2,7 @@
 
 > Version 2.0 — 2026-06-13 (resync photo-first, Cycle 18.4 ; supersede v1.0 text-only)
 > Statut : **matrice de traçabilité exigence → cycle → état RÉEL → gap**.
-> Ce document manquait au BRAIN (cf. ADR D-018) : `exigences_coverage.md` traçait
+> Ce document manquait à la mémoire projet (cf. ADR D-018) : `exigences_coverage.md` traçait
 > les *cours* DataScientest, pas les *exigences produit* F0-F8 de `PROJECT.md`.
 > C'est ICI qu'on vérifie "est-ce qu'on construit le bon MVP ?".
 

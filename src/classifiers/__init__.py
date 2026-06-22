@@ -20,6 +20,6 @@ Scripts numérotés (R1) à exécuter dans l'ordre :
 Stack : scikit-learn 1.5+ + polars + numpy. Tous les modèles sont trackés
 MLflow (Cycle 11) en local pour comparaison.
 
-Voir BRAIN/decisions.md D-009 (architecture cible RAG-grounded) et
+Voir ADR D-009 (architecture cible RAG-grounded) et
 docs/modeles.md pour les fiches détaillées M1-M6.
 """

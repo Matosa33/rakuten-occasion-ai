@@ -32,7 +32,7 @@
         length_title, length_description, has_description.
         Sortie : data/processed/intermediate/05_meta_features.parquet
 
-Voir BRAIN/decisions.md D-008 (périmètre) + D-009 (archi RAG-grounded).
+Voir ADR D-008 (périmètre) + D-009 (archi RAG-grounded).
 
 Stack : polars lazy + streaming engine (cf. ADR D-006). Tous les scripts
 utilisent `engine="streaming"` au .collect() pour tenir les volumes
