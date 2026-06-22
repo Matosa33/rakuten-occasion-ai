@@ -84,8 +84,9 @@ et sûre du pattern.
 - **Alias `@Production` fragile** : il a « disparu » plusieurs fois (re-runs, bascule de
   backend) → il faut un **test de garde** qui échoue si l'alias manque (sinon le serving casse
   en silence). Identifié, dans le backlog.
-- **Registry du serveur conteneur non peuplé** (cf. thème MLflow : écart de version + artefact
-  modèle non loggé par le DAG) — la source complète est le store local.
+- **Registry du serveur conteneur** : était vide (écart de version) → **corrigé en C32.1**
+  (serveur aligné en 3.x, modèle `rakuten-classifier` enregistré + `@Production` posé dans le
+  conteneur). Reste à durcir : test de garde sur l'alias.
 
 ---
 

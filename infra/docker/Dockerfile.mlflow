@@ -11,10 +11,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Versions pinnées : MLflow 2.16+ pour la nouvelle API LoggedModel (cohérent C11),
+# Versions pinnées : MLflow 3.x pour aligner le serveur sur le client (3.x) — sinon
+# la nouvelle API « logged-models » du client renvoie 404 sur un serveur 2.x (C32.1).
 # psycopg2 pour Postgres backend, boto3 pour S3 (MinIO via MLFLOW_S3_ENDPOINT_URL).
 RUN pip install --no-cache-dir \
-    "mlflow>=2.16.0,<3.0" \
+    "mlflow>=3.1,<4.0" \
     "psycopg2-binary>=2.9.0" \
     "boto3>=1.28.0"
 

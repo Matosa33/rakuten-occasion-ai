@@ -71,23 +71,21 @@ Dans le store de référence (`mlflow.db`), via le client MLflow :
 - ✅ **Registry avec alias `@Production`** → traçabilité run ↔ modèle.
 - ✅ URI paramétrable (local SQLite ou serveur Postgres+MinIO).
 
-**Trouvailles d'audit (honnêteté) :**
-1. **Deux backends qui divergent.** Les 13 vrais runs sont dans le **SQLite local**
-   (`mlflow.db`) ; le **serveur conteneur** (Postgres+MinIO, exposé sur `:5000`) ne contenait
-   que des runs de smoke. En relançant le DAG de ré-entraînement, le conteneur s'est rempli de
-   runs de métriques — mais **sans l'artefact modèle** (le DAG logge les métriques, pas le
-   `.joblib` dans MinIO) → registry conteneur vide.
-2. **Mismatch de version MLflow** : client local **3.12** vs serveur conteneur **2.22.5**. La
-   nouvelle API « logged-models » du client 3.x n'existe pas côté serveur 2.x → l'enregistrement
-   d'un modèle vers le conteneur échoue (404).
-   
-   **Conséquence + position assumée** : le **store local `mlflow.db` est la source de vérité
-   complète** (runs + registry + `@Production`) ; c'est lui qu'on montre en démo. La
-   convergence vers le serveur conteneur (aligner les versions MLflow + faire logger l'artefact
-   modèle par le DAG) est une **tâche d'infra identifiée** (backlog), pas un acquis.
-3. **Alias `@Production` qui « disparaît »** : observé plusieurs fois (re-runs, bascule de
-   backend). Reposé manuellement sur v2. **À durcir** : un test de garde qui échoue si l'alias
-   manque (sinon le serving casse en silence).
+**Trouvailles d'audit (et leur correction) :**
+1. **Deux backends qui divergeaient.** Les 13 runs de référence sont dans le **SQLite local**
+   (`mlflow.db`) ; le **serveur conteneur** (Postgres+MinIO, `:5000`) ne contenait au départ
+   que des runs de smoke. **Corrigé (C32.1)** : le serveur conteneur contient désormais des
+   runs réels **+ le modèle `rakuten-classifier` enregistré + l'alias `@Production`** (artefact
+   dans MinIO). Le `:5000` est maintenant une source cohérente.
+2. **Mismatch de version MLflow** (cause racine) : client local **3.12** vs serveur conteneur
+   **2.22.5** → la nouvelle API « logged-models » du client renvoyait 404 sur le serveur 2.x.
+   **Corrigé (C32.1)** : image `Dockerfile.mlflow` bumpée en **3.x** ; serveur redémarré sans
+   perte de données (les runs ont survécu) ; l'enregistrement de modèle fonctionne désormais.
+3. **Alias `@Production` qui « disparaissait »** : observé plusieurs fois (re-runs, bascule de
+   backend). Reposé (local v2 + conteneur v1). **Reste à durcir** : un test de garde qui échoue
+   si l'alias manque (sinon le serving casse en silence) — backlog.
+4. **Reste mineur** : faire logger l'artefact modèle directement par le DAG `train_classifiers`
+   (aujourd'hui la consolidation enregistre le modèle depuis le `.joblib` local) — backlog.
 
 **Autres limites :**
 - On ne logge pas encore systématiquement le **commit git** + la **version des données** à

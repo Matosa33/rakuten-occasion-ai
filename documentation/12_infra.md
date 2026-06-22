@@ -72,9 +72,9 @@ autoscaling) déployables sur un cluster local **kind** pour la démonstration.
 - ✅ **Tests de contrat** sur l'infra → non-régression.
 
 **Limites assumées (dont un fix transverse) :**
-- ⚠️ **Image MLflow figée en 2.22.5** alors que le client est en 3.12 → incompatibilité qui
-  bloque l'enregistrement de modèles vers le serveur conteneur (cf. thèmes MLflow/Registry).
-  **Fix infra à faire** : bumper `Dockerfile.mlflow` vers une 3.x alignée. *(Backlog, repasse.)*
+- ✅ **Image MLflow alignée en 3.x** (C32.1) : `Dockerfile.mlflow` bumpé de 2.22.5 → 3.x pour
+  matcher le client → l'enregistrement de modèles vers le serveur conteneur fonctionne
+  (registry + `@Production` peuplés). Redémarrage sans perte de données.
 - **Conteneurs en root** : durcissement `USER` non-root prévu (post-MVP).
 - **k8s en local (kind)** : prouve l'architecture, mais ce n'est pas un vrai cluster cloud.
 - **Secrets = gabarits dev** (`secrets.example`, `minioadmin`) : à remplacer par de vrais
