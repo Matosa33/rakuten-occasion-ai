@@ -17,7 +17,7 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 01 | [Data engineering (audit, nettoyage, split anti-fuite)](01_data_engineering.md) | ✅ |
 | 02 | [Représentations vectorielles (embeddings)](02_embeddings.md) | ✅ |
 | 03 | [Classification & benchmark de modèles](03_classification_benchmark.md) | ✅ |
-| 04 | Recherche par similarité (FAISS, RRF, OOD, Akinator) | ⏳ |
+| 04 | [Recherche par similarité (FAISS, RRF, OOD, Akinator)](04_retrieval.md) | ✅ |
 | 05 | VLM / LLM ancrés (RAG grounded) | ⏳ |
 | 06 | Estimation de prix transparente | ⏳ |
 | 07 | Suivi d'entraînement (MLflow) | ⏳ |
