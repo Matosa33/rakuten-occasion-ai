@@ -19,7 +19,7 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 03 | [Classification & benchmark de modèles](03_classification_benchmark.md) | ✅ |
 | 04 | [Recherche par similarité (FAISS, RRF, OOD, Akinator)](04_retrieval.md) | ✅ |
 | 05 | [VLM / LLM ancrés (RAG grounded)](05_vlm_llm_grounded.md) | ✅ |
-| 06 | Estimation de prix transparente | ⏳ |
+| 06 | [Estimation de prix transparente](06_pricing.md) | ✅ |
 | 07 | Suivi d'entraînement (MLflow) | ⏳ |
 | 08 | Registre de modèles & champion/challenger | ⏳ |
 | 09 | Orchestration & ré-entraînement (Airflow) | ⏳ |
