@@ -21,7 +21,7 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 05 | [VLM / LLM ancrés (RAG grounded)](05_vlm_llm_grounded.md) | ✅ |
 | 06 | [Estimation de prix transparente](06_pricing.md) | ✅ |
 | 07 | [Suivi d'entraînement (MLflow)](07_mlflow_suivi.md) | ✅ |
-| 08 | Registre de modèles & champion/challenger | ⏳ |
+| 08 | [Registre de modèles & champion/challenger](08_registry_champion_challenger.md) | ✅ |
 | 09 | Orchestration & ré-entraînement (Airflow) | ⏳ |
 | 10 | Détection de dérive (Evidently) | ⏳ |
 | 11 | Observabilité (Prometheus, Grafana, logs structurés) | ⏳ |
