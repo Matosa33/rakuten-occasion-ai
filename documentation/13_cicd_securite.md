@@ -77,13 +77,14 @@
 - ✅ Contrôles **testés** (auth, upload, workflows).
 
 **Limites assumées (vs état de l'art le plus strict) :**
-- **Actions non épinglées à un SHA** (on utilise `@v4`) → à durcir (risque chaîne
-  d'approvisionnement, cf. incident *tj-actions* 2025).
+- **Actions non épinglées à un SHA** (on utilise des tags majeurs à jour, ex. `@v5`) → le
+  durcissement ultime est l'épinglage au SHA (risque chaîne d'approvisionnement, cf. incident
+  *tj-actions* 2025) — non fait, c'est un cran de sécurité supplémentaire.
 - **Pas de signature d'images** (Cosign) ni de **scan de vulnérabilités d'images** (Trivy/Grype)
   → ajout naturel.
 - **Pas d'OIDC** (pas de déploiement cloud ici) ; **JWT = stub démo** (1 utilisateur, pas de
   signup), documenté.
-- **Avertissement Node 20** sur `actions/checkout` (déprécation) → à bumper.
+- ~~Avertissement Node 20~~ **résolu** : `actions/checkout` bumpé en `@v5` (Cycle 32.3).
 
 ---
 
