@@ -65,10 +65,11 @@ jobs:
       - name: Install project + extras
         # `[api]` pour FastAPI + JWT, `[ml]` pour torch CPU + transformers,
         # `[data]` pour polars + pandas, `[dev]` pour pytest + cov + ruff,
-        # `[monitoring]` pour Evidently + prometheus-client (push_metrics).
+        # `[monitoring]` pour Evidently + prometheus-client (push_metrics),
+        # `[mlops]` pour mlflow + dvc (tests test_mlflow_utils / test_promote_gate).
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,data,ml,api,monitoring]" \
+          pip install -e ".[dev,data,ml,api,monitoring,mlops]" \
             --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Run pytest + coverage
@@ -110,7 +111,7 @@ jobs:
       - name: Install project + extras
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,data,ml,api,monitoring]" \
+          pip install -e ".[dev,data,ml,api,monitoring,mlops]" \
             --extra-index-url https://download.pytorch.org/whl/cpu
           pip install pip-audit
 
