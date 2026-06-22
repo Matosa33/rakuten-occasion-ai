@@ -23,7 +23,7 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 07 | [Suivi d'entraînement (MLflow)](07_mlflow_suivi.md) | ✅ |
 | 08 | [Registre de modèles & champion/challenger](08_registry_champion_challenger.md) | ✅ |
 | 09 | [Orchestration & ré-entraînement (Airflow)](09_airflow_retrain.md) | ✅ |
-| 10 | Détection de dérive (Evidently) | ⏳ |
+| 10 | [Détection de dérive (Evidently)](10_drift_evidently.md) | ✅ |
 | 11 | Observabilité (Prometheus, Grafana, logs structurés) | ⏳ |
 | 12 | Infrastructure (Docker, Compose, Kubernetes) | ⏳ |
 | 13 | CI/CD & sécurité | ⏳ |
