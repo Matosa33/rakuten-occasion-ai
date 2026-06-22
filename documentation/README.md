@@ -24,7 +24,7 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 08 | [Registre de modèles & champion/challenger](08_registry_champion_challenger.md) | ✅ |
 | 09 | [Orchestration & ré-entraînement (Airflow)](09_airflow_retrain.md) | ✅ |
 | 10 | [Détection de dérive (Evidently)](10_drift_evidently.md) | ✅ |
-| 11 | Observabilité (Prometheus, Grafana, logs structurés) | ⏳ |
+| 11 | [Observabilité (Prometheus, Grafana, logs structurés)](11_observabilite.md) | ✅ |
 | 12 | Infrastructure (Docker, Compose, Kubernetes) | ⏳ |
 | 13 | CI/CD & sécurité | ⏳ |
 
