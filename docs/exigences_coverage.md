@@ -1,6 +1,6 @@
 # Couverture des exigences — Rakuten AI
 
-> Version 1.0 — 2026-04-30
+> Version 2.0 — 2026-06-13 (resync photo-first + cycles 11-17, Cycle 18.4)
 > Statut : matrice de référence pour la soutenance et la planification.
 > Croise les **exigences pédagogiques** (51 cours répartis en 16 phases du
 > cursus DataScientest) et les **cycles d'implémentation** du projet.
@@ -29,9 +29,9 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | | C14 | Métriques évaluation | **3.3** | ✅ done (metrics.py) |
 | | C15 | Fusion adaptive multimodale | **3.4** | ✅ done (M6) |
 | **P05 Retrieval** | C16 | FAISS vector search | **4.1** | ✅ done (M7 HNSW recall@1=0.948) |
-| | C17 | Multi-view + RRF | **4.2** | ✅ done (text-only mono-view) |
+| | C17 | Multi-view + RRF | **4.2** | ✅ done (RRF, top-1 cat 94.2%) |
 | | C18 | OOD guardrails | **4.3** | ✅ done (3-niveaux D-017 + Akinator) |
-| **P06 VLM** | C19 | VLM zero-shot | **5.1** | 🟡 mock (réel gated vision D-014) |
+| **P06 VLM** | C19 | VLM zero-shot | **5.1** | ✅ done (validateur réel `validator.py` + extraction photo, D-035) |
 | | C20 | Fine-tuning VLM QLoRA | **5.2** (OPTIONNEL F8) | ⏸️ conditional (non déclenché) |
 | **P07 LLM/RAG** | C21 | LLMs prompt engineering | **6.1** | ✅ done (prompt templates) |
 | | C22 | RAG grounding | **6.2** | ✅ done (E4 Gemma, grounding description) |
@@ -44,28 +44,28 @@ Ce document permet de répondre en une page à : *"Quel cycle du projet livre te
 | | C29 | SQLAlchemy sessions | **9.5** | ✅ done (persistence + /history) |
 | **P11 Frontend** | C30 | React Vite Tailwind | **10.1** | ✅ done |
 | | C31 | UX progressive neuro-marketing | **10.2** | ✅ done (Zeigarnik/Hick/Anchoring/IKEA) |
-| | C32 | Mode batch queue localStorage | **10.3** | ⏸️ différé D-016 (dépend vision) |
+| | C32 | Mode batch queue localStorage | **10.3** | ✅ done (mode « mitrailler », D-037, lève D-016) |
 | **P12 MLOps tracking** | C33 | MLflow tracking | **11.1** | ✅ done (7 runs M1-M8) |
 | | C34 | MLflow Registry + hot reload | **11.2** | ✅ done (@Production=M5, D-020) |
 | | C35 | DVC pipelines | **11.3** | ✅ done (dvc.yaml DAG 4 stages) |
-| **P13 MLOps orchestration** | C36 | Airflow DAGs | **12.1** | not_started |
-| | C37 | BentoML serving | **12.2** | not_started |
-| | C38 | Boucle MLOps fermée | **12.3** | not_started |
-| **P14 Infra** | C39 | Docker multi-stage CUDA | **13.1** | not_started |
-| | C40 | Docker Compose profiles | **13.2** | not_started |
-| | C41 | Traefik gateway | **13.3** | not_started |
-| | C42 | MinIO S3 | **13.4** | not_started |
-| | C43 | Kubernetes core | **13.5** | not_started |
-| **P15 Observabilité** | C44 | structlog logging | **14.1** | not_started |
-| | C45 | Prometheus + PromQL | **14.2** | not_started |
-| | C46 | Grafana dashboards | **14.3** | not_started |
-| | C47 | Evidently drift | **14.4** | not_started (D1-D4) |
-| **P16 Production-grade** | C48 | JWT auth + rate limit | **15.1** | not_started |
-| | C49 | GitHub Actions + GHCR | **15.2** | not_started |
-| | C50 | Tests intégration + sécurité | **15.3** | not_started |
-| | C51 | Soutenance défense | **15.4** | not_started |
+| **P13 MLOps orchestration** | C36 | Airflow DAGs | **12.1** | ✅ done (DAG rakuten_retrain) |
+| | C37 | BentoML serving | **12.2** | ✅ done (import Registry @Production) |
+| | C38 | Boucle MLOps fermée | **12.3** | ✅ done (champion/challenger, retrains réels v4/v5) |
+| **P14 Infra** | C39 | Docker multi-stage CUDA | **13.1** | ✅ done (API + Frontend multi-stage) |
+| | C40 | Docker Compose profiles | **13.2** | ✅ done (stack unifiée 14 services, D-025) |
+| | C41 | Traefik gateway | **13.3** | ✅ done (D-026, entrée *.localhost) |
+| | C42 | MinIO S3 | **13.4** | ✅ done (D-027, artefacts MLflow) |
+| | C43 | Kubernetes core | **13.5** | ✅ done (kind + ingress-nginx, D-028) |
+| **P15 Observabilité** | C44 | structlog logging | **14.1** | ✅ done (JSON + request_id, D-029) |
+| | C45 | Prometheus + PromQL | **14.2** | ✅ done (4 golden signals, D-030) |
+| | C46 | Grafana dashboards | **14.3** | ✅ done (3 dashboards, D-031) |
+| | C47 | Evidently drift | **14.4** | ✅ done (drift D1-D4) |
+| **P16 Production-grade** | C48 | JWT auth + rate limit | **15.1** | ✅ done (JWT HS256, D-032) |
+| | C49 | GitHub Actions + GHCR | **15.2** | ✅ done (2 workflows, D-033) |
+| | C50 | Tests intégration + sécurité | **15.3** | ✅ done (326 tests, pip-audit) |
+| | C51 | Soutenance défense | **15.4** | ✅ done (script + slides + checklist + feuille de test) |
 
-**51 cours / 51 répartis sur 16 cycles. Statut global : ~33 / 51 implémentés (~65 %)** au 2026-05-21 (Cycles 0-10 faits, hors différés D-014/D-015/D-016 ; Cycles 11-15 à venir).
+**51 cours / 51 répartis sur 16 cycles. Statut global : ~48 / 51 implémentés (~94 %)** au 2026-06-13 (Cycles 0-17 faits, pipeline photo-first complet). **Restent** : C02 poste dev (validation humaine), C10 indexation visuelle SigLIP (gated D-014, test nuit 17.6), C20 fine-tuning QLoRA (conditionnel F8). Différés assumés, pas oubliés.
 
 > ⚠️ Cette table (cours pédagogiques C01-C51) est secondaire. **Sources de vérité du statut** :
 > `BRAIN/to-do.md` (table d'ensemble des 16 cycles) + `docs/exigences_fonctionnelles.md` (état réel F0-F8).

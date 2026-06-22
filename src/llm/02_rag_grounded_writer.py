@@ -237,8 +237,8 @@ def main() -> None:
         if "text" not in reviews_index.columns:
             log.warning(
                 "reviews_index val n'a pas de colonne 'text' (granularité Option C+ : "
-                "index split-aware uniquement). Pour grounding réel : joindre lazy avec "
-                "data/raw/full/reviews/*.jsonl.gz dans Cycle 6.2 prep — TODO."
+                "index split-aware uniquement). Grounding reviews = enhancement futur "
+                "hors périmètre MVP (join lazy data/raw/full/reviews/*.jsonl.gz)."
             )
     else:
         log.warning("reviews_index val absent → grounding vide (mock seulement)")

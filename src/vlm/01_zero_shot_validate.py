@@ -145,9 +145,13 @@ class OpenRouterVLMValidator(VLMValidator):
     def validate(
         self, query_img_url: str, candidate_img_url: str, candidate_meta: dict
     ) -> VLMResponse:
-        # TODO Cycle 9 : implémenter le POST OpenRouter avec multi-image
+        # Voie de PRODUCTION : src/vlm/validator.py (Cycle 17.2, D-035) — l'appel
+        # OpenRouter multi-image (photo user × image catalogue) y est implémenté et
+        # branché dans /identify. Cette classe reste le scaffold zero-shot du Cycle 5
+        # (contrat + parse + mock, couverts par tests/test_vlm_validator.py).
         raise NotImplementedError(
-            "OpenRouter VLM call à implémenter en Cycle 9 quand l'API serving sera codée."
+            "Voie live = src/vlm/validator.py:validate_top1 (D-035). "
+            "OpenRouterVLMValidator est le scaffold zero-shot Cycle 5 (parse + mock)."
         )
 
 

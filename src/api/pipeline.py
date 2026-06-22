@@ -379,9 +379,10 @@ class DescribeService:
     """Service de rédaction grounded RAG (E4).
 
     Charge les métadonnées produit (train), récupère les phrases grounding
-    (TODO Cycle 6.2 prep : reviews_index n'a pas la colonne `text`, lazy
-    join raw à faire), puis génère titre + description via OpenRouter si
-    `OPENROUTER_API_KEY` présent, sinon MockLLMWriter (D-013).
+    sur la DESCRIPTION catalogue réelle, puis génère titre + description via
+    OpenRouter si `OPENROUTER_API_KEY` présent, sinon MockLLMWriter (D-013).
+    Note : le grounding sur les *reviews* (vs description) est un enhancement
+    futur hors périmètre MVP (reviews_index sans colonne `text`, join lazy à faire).
     """
 
     def __init__(self) -> None:

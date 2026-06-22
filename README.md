@@ -8,7 +8,7 @@
 
 **À partir de quelques photos d'un objet, l'application produit une fiche de vente d'occasion complète : catégorie exacte, attributs structurés, titre, description et prix conseillé.** Cas d'usage fondateur : le vendeur particulier qui « mitraille » son grenier un jour de déménagement et veut des annonces propres en quelques secondes — sans rien saisir à la main.
 
-Le cœur ML est un **pipeline d'identification *grounded*** (ADR D-009, règle d'or R19) : on **récupère** le produit réel dans un catalogue indexé de ~4,5 M références **avant** de laisser un modèle génératif rédiger. Les modèles génératifs **valident et rédigent — ils n'identifient jamais sans ancre catalogue**. Anti-hallucination par construction.
+Le cœur ML est un **pipeline d'identification *grounded*** (ADR D-009, règle d'or R19) : on **récupère** le produit réel dans un catalogue de ~4,5 M références (index FAISS de **3,16 M vecteurs**, le split train) **avant** de laisser un modèle génératif rédiger. Les modèles génératifs **valident et rédigent — ils n'identifient jamais sans ancre catalogue**. Anti-hallucination par construction.
 
 > **État au 2026-06-13** : pipeline **photo-first complet et fonctionnel** (D-035). Cycles 0 → 17 livrés (data, retrieval, classifieurs, pricing, explainability, API, frontend, MLOps de bout en bout, sécurité, CI/CD). 326 tests verts. Différés assumés et documentés : indexation vision SigLIP du catalogue (test gated, D-014) et fine-tuning VLM QLoRA (conditionnel à un gain mesuré, F8). Détail honnête en bas de page.
 
@@ -108,7 +108,7 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 | Couche | Composant | Statut |
 |---|---|---|
 | Encodeur texte (frozen) | Snowflake **Arctic Embed L v2** | ✅ |
-| Retrieval (cœur identification) | **FAISS HNSW** ~4,5 M vecteurs + RRF + OOD 3 niveaux | ✅ |
+| Retrieval (cœur identification) | **FAISS HNSW** 3,16 M vecteurs + RRF + OOD 3 niveaux | ✅ |
 | Désambiguation | **Akinator** multi-facette par entropie (Python pur) | ✅ |
 | Extraction photo + validateur | **VLM Gemma** via OpenRouter (extraction attributs + match visuel F0.4) | ✅ |
 | Classifieurs benchmark | k-NN, SVM, MLP, TF-IDF+LinSVC, Fusion (M1-M6) — garde-fou L1 | ✅ |
@@ -121,7 +121,7 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 | Données versionnées | **DVC** (DAG `dvc.yaml`) | ✅ |
 | Orchestration retrain | **Airflow** (boucle fermée champion/challenger) | ✅ |
 | Serving modèle | **BentoML** (import depuis Registry) | ✅ |
-| Infra | **Docker Compose** (13 services) + Traefik + MinIO + manifests **k8s** (kind) | ✅ |
+| Infra | **Docker Compose** (14 services) + Traefik + MinIO + manifests **k8s** (kind) | ✅ |
 | Observabilité | **structlog** JSON + **Prometheus** + **Grafana** + Evidently (drift) | ✅ |
 | CI/CD | **GitHub Actions** (lint, tests, pip-audit, docker-build) + **GHCR** semver | ✅ |
 | Indexation vision catalogue | SigLIP multi-vues — **gated** (test 1 nuit, D-014) | ⏸️ |
