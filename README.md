@@ -90,7 +90,7 @@ Les artefacts lourds (index FAISS ~14 Go, embeddings, modèles, dumps catalogue)
 
 ```bash
 python3.11 -m venv .venv && .venv\Scripts\activate    # (Linux : source .venv/bin/activate)
-pip install -e ".[dev,data,ml,api]"
+pip install -e ".[dev,data,ml,api,monitoring,mlops]"   # mêmes extras que la CI
 
 pytest tests/                  # 326 tests — contrats, parsing, sécurité, cascade prix, compose…
 ruff check src/ tests/         # lint 0 erreur
