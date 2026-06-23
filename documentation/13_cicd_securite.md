@@ -88,8 +88,6 @@ poussées (régression attrapée par `test_github_workflows.py`).
 - ✅ Contrôles **testés** (auth, upload, contrats workflows).
 
 **Limites assumées (vs état de l'art le plus strict):**
-- **Actions épinglées à des tags majeurs** (`@v5`), pas à un **SHA** → durcissement supply-chain
- restant (backlog).
 - **Pas de signature d'images** (Cosign) ni de **scan de vulnérabilités d'images** (Trivy/Grype).
 - **Pas d'OIDC** (pas de déploiement cloud ici); **JWT = stub démo** (1 utilisateur, pas de
  signup), documenté.

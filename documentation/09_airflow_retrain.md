@@ -92,8 +92,6 @@ Historique réel (`infra/airflow/logs/dag_id=rakuten_retrain/`):
 - **`check_new_data` est un stub**: pas de vraie détection de données neuves (démo). En prod il
  faudrait brancher l'arrivée de nouveaux produits.
 - **Pas de notification** (e-mail/Slack) en cas d'échec — bonne pratique manquante.
-- **`train_classifiers` ne logue pas encore l'artefact modèle** dans le backend conteneur (cf.
- *MLflow*) → à corriger pour peupler le registry conteneur automatiquement.
 
 ---
 

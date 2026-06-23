@@ -24,9 +24,9 @@ def test_imports_basic():
 
 
 def test_project_md_exists():
-    """docs/PROJECT.md doit exister (livrable de la phase de cadrage)."""
+    """documentation/PROJECT.md doit exister (livrable de la phase de cadrage)."""
     from pathlib import Path
 
     root = Path(__file__).parent.parent
-    project_md = root / "docs" / "PROJECT.md"
-    assert project_md.exists(), "docs/PROJECT.md manquant"
+    project_md = root / "documentation" / "PROJECT.md"
+    assert project_md.exists(), "documentation/PROJECT.md manquant"

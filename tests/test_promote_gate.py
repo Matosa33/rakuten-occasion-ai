@@ -80,3 +80,22 @@ def test_skipped_si_aucun_challenger(tmp_tracking):
     assert result["decision"] == "skipped_no_challenger"
     assert result["promoted"] is False
     assert client.get_model_version_by_alias(REG, "Production").version == v1
+
+
+def test_bootstrap_promeut_si_alias_absent(tmp_tracking):
+    """Garde-fou : des versions existent mais AUCUN alias @Production → la 1re est promue.
+
+    C'est le filet anti-régression du cas « l'alias @Production a disparu / n'a jamais
+    été posé » : le gate doit alors auto-réparer en promouvant le candidat, pas laisser
+    le serving sans champion résoluble.
+    """
+    client = tmp_tracking
+    v1 = _log_version(0.90)  # aucun alias posé volontairement
+
+    result = promote_gate.decide_and_promote()
+
+    assert result["decision"] == "promoted"
+    assert result["promoted"] is True
+    assert result["version"] == v1
+    # l'alias résout désormais bien vers une version valide
+    assert client.get_model_version_by_alias(REG, "Production").version == v1

@@ -85,9 +85,10 @@ trois mois plus tard (« c'était quels réglages déjà ? »).
 - ✅ Trouvailles d'audit **corrigées** (alignement version 3.x, registry conteneur peuplé).
 
 **Limites assumées:**
-- **Alias `@Production` fragile** historiquement (a « disparu » lors de re-runs / bascule de
- backend): reposé, mais il manque un **test de garde** qui échoue si l'alias est absent
- (backlog — sinon le serving casse en silence).
+- **Alias `@Production`** historiquement fragile (a « disparu » lors de re-runs / bascule de
+ backend) : reposé **et désormais protégé par un test de garde** — il vérifie qu'en l'absence
+ d'alias, le promote gate promeut bien un champion (auto-réparation), donc le serving ne se
+ retrouve jamais sans champion résoluble.
 - **Version des données pas systématiquement loguée** comme tag (le commit git oui; le hash du
  dataset serait un plus pour la repro totale).
 - **`log_model` pas encore dans le DAG** de retrain (la consolidation a registré depuis le
