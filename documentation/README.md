@@ -27,6 +27,12 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 11 | [Observabilité (Prometheus, Grafana, logs structurés)](11_observabilite.md) | ✅ |
 | 12 | [Infrastructure (Docker, Compose, Kubernetes)](12_infra.md) | ✅ |
 | 13 | [CI/CD & sécurité](13_cicd_securite.md) | ✅ |
+| 14 | [API & orchestration runtime](14_api_orchestration.md) | ✅ |
+| 15 | Frontend & UX vendeur | ⏳ |
+| 16 | Explainability & interprétabilité | ⏳ |
+
+> **Couches applicatives** (14-16) ajoutées après audit de couverture : l'API qui câble le
+> pipeline, le frontend vendeur, et l'explainability n'avaient pas de rapport dédié.
 
 > Chaque rapport est construit méthodiquement : recherche documentaire → inventaire de
 > notre code → critique état-de-l'art vs réalisé → mise au propre.
