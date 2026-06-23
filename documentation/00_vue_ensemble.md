@@ -22,22 +22,35 @@ liste » (vérifiable). C'est le principe directeur de l'architecture.
 ## 3. Le pipeline, étape par étape
 
 ```
- [1] PHOTO(S) du vendeur
+ [1] ENTRÉE du vendeur
+     • PHOTO(S)  ............ OBLIGATOIRE (preuve d'achat + entrée du pipeline)
+     • précision texte ...... optionnel (ex. "iPhone 13 128 Go")
+     • état général ......... optionnel (neuf / très bon / bon / correct)
+     • checklist par type ... optionnel (fonctionne ? boîte ? accessoires ? facture ? + questions selon le type d'objet)
       |
- [2] Lecture par un VLM (IA qui "voit")  -> titre probable + attributs (marque, couleur...)
+ [2] Lecture par un VLM (IA qui "voit") -> titre probable + attributs (marque, couleur...)
+     (+ la précision texte vient COMPLÉTER ce titre pour la recherche)
       |
  [3] Transformation en vecteur (embedding) -> 1024 nombres qui capturent le "sens"
       |
  [4] Recherche dans le catalogue (FAISS)   -> les produits les plus proches parmi 3,16 M
       |
  [5] Levée de doute (Akinator)             -> la question qui sépare le mieux les candidats
+     (les attributs LUS sur la photo pré-remplissent déjà certaines réponses)
       |
  [6] Vérification visuelle (VLM validateur)-> la photo ressemble-t-elle au catalogue ?
       |
- [7a] PRIX (calcul transparent)   [7b] DESCRIPTION (LLM ancré sur la vraie fiche)
+ [7a] PRIX (état -> décote)        [7b] DESCRIPTION (LLM ancré sur la vraie fiche
+      |                                  + la checklist d'état intégrée à l'annonce)
       |                                |
  [8] ANNONCE FINALE (catégorie + photos + prix + caractéristiques + description)
 ```
+
+> **À retenir** : la **photo est la seule entrée obligatoire** (c'est la preuve pour
+> l'acheteur et le point de départ). Les **métadonnées sont optionnelles** mais améliorent le
+> résultat : la *précision texte* affine la recherche, l'*état* ajuste le prix et le titre, la
+> *checklist* enrichit la description. Le système marche avec une photo seule, et devient
+> meilleur avec ces compléments.
 
 Chaque étape fait l'objet d'un rapport thématique dédié.
 

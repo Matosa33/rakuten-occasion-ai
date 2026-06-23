@@ -54,6 +54,11 @@ Le cœur ML est un **pipeline d'identification *grounded*** (ADR D-009, règle d
    caractéristiques structurées · description éditable
 ```
 
+> **Entrée** : la **photo est la seule donnée obligatoire** (preuve pour l'acheteur + point de
+> départ). Les **métadonnées sont optionnelles** et améliorent le résultat : une *précision
+> texte* (ex. « iPhone 13 128 Go ») affine la recherche, l'*état général* ajuste le prix et le
+> titre, la *checklist guidée par type* enrichit la description.
+
 Deux modes d'usage côté frontend : **🎯 Un objet** (flow guidé pas à pas) et **📦 Déménagement** (« mitrailler » N objets à la chaîne, analyses en arrière-plan, tableau de bord des annonces prêtes).
 
 ---
