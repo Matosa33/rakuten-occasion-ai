@@ -153,3 +153,6 @@ BRAIN/
 docs/soutenance/
 docs/formation/
 tests/test_brain_structure.py
+
+# === docs internes (exercices/exam, non public) — Cycle 33 ===
+docs/decouverte/
