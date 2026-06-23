@@ -114,7 +114,7 @@ class ObservationToRequest(BaseModel):
 
 
 class IdentifyResponse(BaseModel):
-    status: str = Field(..., description="identified | ambiguous | ood")
+    status: str = Field(..., description="identified | to_confirm | uncertain")
     top_candidates: list[CandidateMeta]
     vlm_validation: dict | None = None  # {match, confidence, reason}
     next_observation: ObservationToRequest | None = None

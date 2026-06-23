@@ -6,11 +6,10 @@ chat/completions). Utilisé par :
 - le VLM validateur (E3) : validation matching (Cycle 5 vraie impl, post-MVP)
 
 Active uniquement si `OPENROUTER_API_KEY` présent dans l'env (sinon raise
-RuntimeError clair → l'endpoint renvoie 503/501). Cf. D-013 (mock-first).
+RuntimeError clair → l'endpoint bascule sur un mock). Mock-first par défaut.
 
-Modèles par défaut :
-- LLM rédacteur : google/gemini-2.0-flash-exp:free (gratuit, rapide)
-- VLM validateur : google/gemini-2.0-flash-exp:free (multimodal)
+Modèle par défaut : google/gemma-4-31b-it (vision-capable) — sert le rédacteur
+LLM, l'extraction photo et le validateur VLM. Surchargeable par variable d'env.
 """
 
 from __future__ import annotations

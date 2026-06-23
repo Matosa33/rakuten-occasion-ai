@@ -1,20 +1,27 @@
-"""Cycle 9.1 — FastAPI app : pipeline RAG-grounded en endpoint.
+"""FastAPI app : pipeline d'identification RAG-grounded exposé en API.
 
 Endpoints
 ---------
-- `GET /health` — version, services chargés
-- `POST /identify` — texte vendeur → top-K candidats + OOD + Akinator si ambig
-- `POST /price` — produit identifié + condition → suggestion prix L1-L4
-- `POST /describe` — produit identifié + condition → titre + description grounded RAG (Cycle 9.3b)
+- `POST /auth/login` — authentification (OAuth2 password) → Bearer JWT
+- `POST /upload` — stocke une photo vendeur (entrée du flow photo-first)
+- `GET  /uploads/{image_id}` — sert une photo (capability-URL publique)
+- `GET  /health` — version, services chargés
+- `POST /identify` — photos (+ texte optionnel) → top-K candidats + validation VLM + Akinator
+- `POST /price` — produit identifié + état → suggestion prix (cascade L1-L4)
+- `POST /describe` — produit identifié + état → titre + description grounded
+- `GET  /history` — N dernières identifications (traçabilité)
+- `POST /identify/stream` — SSE : étapes du pipeline en temps réel
 
 Lifespan
 --------
 Au démarrage : instancie + charge `IdentificationService` (FAISS HNSW +
-métadonnées train, encodeur Arctic lazy) et `PricingService` (M8). Au
-shutdown : libère.
+métadonnées train, encodeur Arctic en lazy), `PricingService` et
+`DescribeService` (fail-soft : un service indisponible → 503 actionnable,
+le serveur démarre quand même).
 
-Text-only MVP (cf. D-014) : `/identify` exploite `text_hint` encodé par
-Arctic. La branche vision (image_url + SigLIP) est différée post-MVP.
+Flow photo-first : `/identify` lit les photos (extraction VLM → titre +
+attributs), complétées par un texte optionnel, avant le retrieval. La
+recherche visuelle directe du catalogue (SigLIP) est différée (test gated).
 
 Lance :
 
