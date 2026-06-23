@@ -28,8 +28,8 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 12 | [Infrastructure (Docker, Compose, Kubernetes)](12_infra.md) | ✅ |
 | 13 | [CI/CD & sécurité](13_cicd_securite.md) | ✅ |
 | 14 | [API & orchestration runtime](14_api_orchestration.md) | ✅ |
-| 15 | Frontend & UX vendeur | ⏳ |
-| 16 | Explainability & interprétabilité | ⏳ |
+| 15 | [Frontend & UX vendeur](15_frontend_ux.md) | ✅ |
+| 16 | [Explainability & interprétabilité](16_explainability.md) | ✅ |
 
 > **Couches applicatives** (14-16) ajoutées après audit de couverture : l'API qui câble le
 > pipeline, le frontend vendeur, et l'explainability n'avaient pas de rapport dédié.
