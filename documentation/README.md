@@ -9,6 +9,8 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 5. **Critique** — ce qui est solide, les limites, les écarts vs l'état de l'art
 6. **Références** — liens et sources
 
+> 📖 Bloqué sur un terme ? Le **[GLOSSAIRE](GLOSSAIRE.md)** définit tout le jargon en une ligne.
+
 ## Sommaire
 
 | # | Thème | Statut |
