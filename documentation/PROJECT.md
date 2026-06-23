@@ -102,7 +102,7 @@ Le différentiateur vs les outils AI existants type VintyLook: **un seul flux en
 | Lead ML moderne | Mathieu Klopp | Pipeline ML SOTA grounded + UX progressive démontrable |
 | Lead MLOps + classification baseline | Jean-Baptiste Quéméneur | Infra Bento + Prometheus + Grafana + classifieur classique exploité |
 | Mentor externe | Sébastien (Liora) | Architecture défendable, pattern API découplée du modèle, gateway, closed-loop DAG |
-| Jury final | DataScientest | Couverture sprints (MLOps complet), démo `make` sur VM, soutenance 20 min + Q&A |
+| Évaluation finale | Revue technique externe | Couverture MLOps complète, démo reproductible en CLI (`make`), architecture défendable |
 | Utilisateur cible (imaginé) | Vendeur particulier occasionnel | UX < 5 min de création annonce, pas de saisie manuelle inutile, prix transparent, **sentiment de fiabilité** (pas d'invention) |
 
 ## 9. Livrables attendus
@@ -121,7 +121,7 @@ Le différentiateur vs les outils AI existants type VintyLook: **un seul flux en
 
 > **Convention**: ce document tient en 1 page A4 imprimable.
 > Si on ajoute une section, on doit en couper une autre.
-> Toute révision majeure → nouvelle ADR dans les ADR du projet qui supersede.
+> Toute révision majeure de cadrage donne lieu à une nouvelle version datée de ce document.
 
 ---
 
