@@ -63,22 +63,59 @@ absent), l'app démarre quand même et l'endpoint correspondant renverra **503**
 actionnable (au lieu de crasher tout le serveur).
 
 ### L'orchestrateur (`src/api/pipeline.py`) — 3 services
-**`IdentificationService`** (le plus riche) :
-- charge l'index **FAISS HNSW** (`efSearch=64`), les métadonnées train, et **6 lookups**
-  produit (vignette, toutes les vues, catégorie fine, breadcrumb complet, marque, facettes) ;
-- **encodeur Arctic chargé en lazy** (à la 1ʳᵉ requête, pas au boot) ;
-- `encode_query` : prompt `"query"` + normalisation L2 + **garde-fou de dimension R7 par `raise`
-  et non `assert`** (les `assert` sont supprimés sous `python -O` → le garde-fou survivrait pas
-  en prod) ;
-- `_maybe_translate` : **FR→EN** via OpenRouter (le catalogue est anglais ; décalage mesuré
-  ~0,08), avec **fallback gracieux** sur la requête brute si pas de clé/échec ;
-- `identify` : `(traduire) → encoder → FAISS top-30 → construire candidats → OOD 3 niveaux
-  (≥0,60 identifié / ≥0,45 à confirmer / sinon incertain) → Akinator si écart top1-top2 < 0,05`.
 
-**`PricingService`** : charge `m8_pricing_v1.joblib`, délègue à la cascade transparente.
-**`DescribeService`** : charge les métadonnées + **grounding sur la description réelle** ; writer
-**OpenRouter si clé, sinon Mock** (D-013) ; convertit les états snake_case en libellés FR
-**avant** le prompt (sinon « bon_etat » fuyait dans le titre, 17.4b).
+#### `IdentificationService` — le plus riche (il transforme une requête en candidats)
+
+**Ce qu'il charge au démarrage** (une fois, pour ne pas relire le disque à chaque requête) :
+- **l'index FAISS HNSW** = le moteur de recherche vectorielle. Son réglage `efSearch=64` dit
+  *« combien de voisins explorer pendant la recherche »* : plus c'est haut, plus c'est précis
+  mais lent. 64 est notre compromis (déjà recall 0,948 à 0,29 ms).
+- **les métadonnées du train** (titre, marque, prix… de chaque produit) → pour pouvoir
+  **afficher** les candidats trouvés.
+- **6 tables de correspondance** (« lookups ») `parent_asin → info`, préchargées en mémoire : la
+  vignette, **toutes** les vues photo, la catégorie fine, le breadcrumb complet (« A > B > C »),
+  la marque, les facettes (couleur, capacité…). On les a en RAM pour enrichir instantanément
+  chaque candidat.
+
+**L'encodeur Arctic est chargé en *lazy*** = pas au démarrage, mais à la **première requête**.
+Pourquoi ? Le modèle est lourd à charger ; si personne n'identifie, autant ne pas le charger
+(démarrage du serveur plus rapide).
+
+**`encode_query` — transformer le texte en vecteur**, avec 3 subtilités :
+- **prompt `"query"`** : Arctic encode légèrement différemment une *requête* et un *document*.
+  On lui précise explicitement qu'ici c'est une requête (sinon scores faussés).
+- **normalisation L2** : pour que la comparaison se fasse sur le *sens* (cosinus), cf. rapport
+  *Embeddings*.
+- **garde-fou de dimension (R7)** : on vérifie que le vecteur fait bien **1024 nombres**. Détail
+  qui compte : on lève une vraie erreur (`raise`) et **pas** un `assert` — parce que Python
+  **supprime les `assert`** quand on lance en mode optimisé (`python -O`). Un `assert` aurait
+  donc disparu silencieusement en production ; le `raise`, lui, survit.
+
+**`_maybe_translate` — traduire avant de chercher** : le catalogue est en **anglais**, le vendeur
+écrit en **français**. On traduit donc la requête FR→EN avant la recherche (on a **mesuré** que
+ça améliore la pertinence, +0,085). Et si la traduction échoue (pas de clé API, service down),
+on **continue avec la requête brute** : Arctic est multilingue, juste un peu moins précis — on ne
+bloque jamais le vendeur pour une traduction ratée.
+
+**`identify` — l'enchaînement complet** :
+`traduire → encoder → chercher les 30 plus proches (FAISS) → construire la liste de candidats →
+appliquer les garde-fous OOD → désambiguïser si besoin`. Les **garde-fous OOD** donnent 3 niveaux
+de confiance selon le score du meilleur candidat : **≥ 0,60** = « identifié », **entre 0,45 et
+0,60** = « à confirmer », **en dessous** = « incertain » (mais on montre **toujours** les
+candidats — c'est l'humain qui tranche). Enfin, si les **deux premiers candidats sont trop
+proches** (écart < 0,05, typiquement deux variantes du même produit), on déclenche l'**Akinator**
+pour poser la question qui les sépare.
+
+#### `PricingService` — le prix
+Charge le fichier de configuration du modèle de prix (`m8_pricing_v1.joblib`) et **délègue à la
+cascade transparente** L1-L4 (cf. rapport *Pricing*).
+
+#### `DescribeService` — la rédaction de l'annonce
+Charge les métadonnées produit + **les phrases de grounding** (la vraie description catalogue).
+Le rédacteur est **OpenRouter si une clé est présente, sinon un Mock** (D-013) → la démo ne plante
+jamais. Subtilité corrigée en 17.4b : on **convertit les codes d'état** (`bon_etat`) **en libellés
+français** (« Bon état ») **avant** de construire le prompt — sinon le code technique « fuyait »
+dans le titre généré.
 
 ### Le flow d'une requête `/identify` (la plomberie, étape par étape)
 ```
