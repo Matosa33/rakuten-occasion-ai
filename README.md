@@ -152,11 +152,12 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 
 ```
 rakuten/
-├── documentation/          # Un rapport par thème : techno, implémentation, résultats, critique
-├── docs/
+├── documentation/          # TOUTE la doc : cadrage + 1 rapport par thème + glossaire
 │   ├── PROJECT.md          # Cadrage produit (besoin, hypothèses, hors-scope)
-│   ├── architecture.md     # Pipeline runtime + modèles M1-M8 / E1-E4
-│   └── exigences_*.md       # Traçabilité exigences F0-F8 + couverture
+│   ├── 00_vue_ensemble.md  # Le système en un coup d'œil (pipeline)
+│   ├── 01..16_*.md         # Un rapport par thème (data, modèles, retrieval, MLOps, infra…)
+│   ├── exigences_*.md       # Traçabilité exigences F0-F8 + couverture
+│   └── GLOSSAIRE.md        # Tout le jargon en une ligne
 ├── src/
 │   ├── data/               # Audit → cleaning → split → validation (Pandera)
 │   ├── encoders/           # Arctic Embed (+ SigLIP gated)
@@ -209,11 +210,15 @@ rakuten/
 
 ## Documentation
 
-Le dossier [`documentation/`](documentation/) contient **un rapport par thème technique**
-(data engineering, embeddings, retrieval, MLflow, drift, infra…). Chaque rapport suit la
-même structure : *la techno et son rôle → notre implémentation → résultats mesurés →
-critique et limites → références*. Cadrage produit et architecture détaillée :
-[docs/PROJECT.md](docs/PROJECT.md) et [docs/architecture.md](docs/architecture.md).
+Toute la documentation est dans **[`documentation/`](documentation/)** (un seul dossier) :
+le **cadrage produit** ([PROJECT.md](documentation/PROJECT.md)), la **vue d'ensemble**
+([00_vue_ensemble.md](documentation/00_vue_ensemble.md)), puis **un rapport par thème technique**
+(data engineering, embeddings, retrieval, MLflow, drift, infra…). Chaque rapport suit la même
+structure : *la techno et son rôle → notre implémentation → résultats mesurés → critique et
+limites → références*. Un [GLOSSAIRE](documentation/GLOSSAIRE.md) décode tout le jargon.
+
+> Pour découvrir : commencer par [PROJECT.md](documentation/PROJECT.md) puis
+> [00_vue_ensemble.md](documentation/00_vue_ensemble.md).
 
 ---
 

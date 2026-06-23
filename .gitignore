@@ -156,3 +156,6 @@ tests/test_brain_structure.py
 
 # === docs internes (exercices/exam, non public) — Cycle 33 ===
 docs/decouverte/
+docs/architecture.md
+docs/modeles.md
+docs/README.md

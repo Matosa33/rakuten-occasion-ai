@@ -1,17 +1,19 @@
-# Documentation technique
+# Documentation
 
-Un **rapport par thème**. Chaque rapport suit la même structure :
+**Toute la documentation du projet est ici, dans ce seul dossier.**
 
-1. **La technologie** — ce que c'est, son rôle dans un système ML/MLOps
-2. **État de l'art** — comment l'industrie l'utilise, bonnes pratiques (sourcé)
-3. **Notre implémentation** — ce que nous avons fait, où (fichiers, scripts)
-4. **Résultats** — chiffres mesurés, reproductibles
-5. **Critique** — ce qui est solide, les limites, les écarts vs l'état de l'art
-6. **Références** — liens et sources
+## Par où commencer
+1. **[PROJECT.md](PROJECT.md)** — le **cadrage produit** : besoin, hypothèses, exigences F0-F8, hors-scope.
+2. **[00_vue_ensemble.md](00_vue_ensemble.md)** — le **système en un coup d'œil** (le pipeline).
+3. Puis les **rapports par thème** ci-dessous (lisibles indépendamment).
 
 > 📖 Bloqué sur un terme ? Le **[GLOSSAIRE](GLOSSAIRE.md)** définit tout le jargon en une ligne.
 
-## Sommaire
+Chaque rapport thématique suit la même structure : **la techno et son rôle → état de l'art →
+notre implémentation (fichiers, paramètres réels) → résultats mesurés → critique et limites →
+références**.
+
+## Sommaire — rapports par thème
 
 | # | Thème | Statut |
 |---|---|---|
@@ -33,8 +35,13 @@ Un **rapport par thème**. Chaque rapport suit la même structure :
 | 15 | [Frontend & UX vendeur](15_frontend_ux.md) | ✅ |
 | 16 | [Explainability & interprétabilité](16_explainability.md) | ✅ |
 
-> **Couches applicatives** (14-16) ajoutées après audit de couverture : l'API qui câble le
-> pipeline, le frontend vendeur, et l'explainability n'avaient pas de rapport dédié.
+> **Couches applicatives** (14-16) : l'API qui câble le pipeline, le frontend vendeur et
+> l'explainability — chacune avec son rapport dédié.
 
-> Chaque rapport est construit méthodiquement : recherche documentaire → inventaire de
-> notre code → critique état-de-l'art vs réalisé → mise au propre.
+## Cadrage & traçabilité
+| Document | Rôle |
+|---|---|
+| [PROJECT.md](PROJECT.md) | Cadrage produit : besoin, hypothèses, exigences F0-F8, hors-scope |
+| [exigences_fonctionnelles.md](exigences_fonctionnelles.md) | Traçabilité exigence F0-F8 → état réel → gap |
+| [exigences_coverage.md](exigences_coverage.md) | Traçabilité compétences/cours → implémentation |
+| [GLOSSAIRE.md](GLOSSAIRE.md) | Tout le jargon en une ligne |

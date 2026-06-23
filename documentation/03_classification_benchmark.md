@@ -6,7 +6,7 @@
 
 ---
 
-## 1. La technologie : qu'est-ce que c'est ?
+## 1. La technologie: qu'est-ce que c'est ?
 
 ### Pour comprendre (à partir de zéro)
 **Classer**, c'est apprendre à ranger un produit dans la bonne **catégorie** (Téléphones, Jeux
@@ -18,56 +18,56 @@ sur le **même** protocole. Pourquoi ? Parce qu'on ne sait pas à l'avance leque
 sur NOS données, et qu'un seul modèle « qui marche » ne prouve rien sans point de comparaison.
 
 ### Les métriques (et pourquoi plusieurs)
-- **F1-score** (0 à 1) : équilibre entre précision (quand je dis « Téléphone », ai-je raison ?)
-  et rappel (est-ce que j'attrape tous les téléphones ?).
-  - **F1 pondéré** : moyenne pondérée par la taille des catégories.
-  - **F1 macro** : moyenne **simple** → traite les catégories rares **à égalité** (sévère).
-- **Top-k accuracy** : la bonne réponse est-elle dans les *k* premières propositions ? (utile car
-  l'UI montre plusieurs candidats).
-- **ECE** (*Expected Calibration Error*) : le modèle est-il **honnête sur sa confiance** ? Un
-  modèle calibré qui dit « 80 % sûr » a raison ~80 % du temps. On le calcule en **10 bins** de
-  confiance.
+- **F1-score** (0 à 1): équilibre entre précision (quand je dis « Téléphone », ai-je raison ?)
+ et rappel (est-ce que j'attrape tous les téléphones ?).
+ - **F1 pondéré**: moyenne pondérée par la taille des catégories.
+ - **F1 macro**: moyenne **simple** → traite les catégories rares **à égalité** (sévère).
+- **Top-k accuracy**: la bonne réponse est-elle dans les *k* premières propositions ? (utile car
+ l'UI montre plusieurs candidats).
+- **ECE** (*Expected Calibration Error*): le modèle est-il **honnête sur sa confiance** ? Un
+ modèle calibré qui dit « 80 % sûr » a raison ~80 % du temps. On le calcule en **10 bins** de
+ confiance.
 
 ### Pour l'expert
-- **Écart F1 macro vs pondéré** : s'ils divergent fortement, le modèle gère mal la **longue
-  traîne** (catégories rares). Chez nous ils sont **proches** → bonne couverture des rares.
+- **Écart F1 macro vs pondéré**: s'ils divergent fortement, le modèle gère mal la **longue
+ traîne** (catégories rares). Chez nous ils sont **proches** → bonne couverture des rares.
 - **Calibration par Platt** (régression sigmoïde sur les scores) appliquée aux SVM linéaires
-  (qui sortent des marges, pas des probabilités) → des probabilités exploitables pour l'ECE et
-  pour décider quand demander une confirmation humaine.
+ (qui sortent des marges, pas des probabilités) → des probabilités exploitables pour l'ECE et
+ pour décider quand demander une confirmation humaine.
 
 ---
 
 ## 2. État de l'art
 
 - **Comparer F1 macro ET pondéré** + reporter idéalement le détail **par classe** (transparence).
-- **Calibration** : un bon modèle ne doit pas seulement avoir raison, il doit **connaître son
-  incertitude** (ECE, voire MacroCE).
+- **Calibration**: un bon modèle ne doit pas seulement avoir raison, il doit **connaître son
+ incertitude** (ECE, voire MacroCE).
 - **Protocole identique** pour tous les modèles, **sans fuite** (entraînement sur train, mesure
-  sur test intouché).
-- k-NN « comps », SVM, MLP, ensembles : pas de modèle universellement meilleur → le benchmark
-  tranche empiriquement.
+ sur test intouché).
+- k-NN « comps », SVM, MLP, ensembles: pas de modèle universellement meilleur → le benchmark
+ tranche empiriquement.
 
 ---
 
 ## 3. Notre implémentation (précisément ce qu'on a fait)
 
-### Les 6 modèles comparés (R4 = ≥ 3 exigé, on en fait 6)
+### Les 6 modèles comparés (= ≥ 3 exigé, on en fait 6)
 | Code | Fichier | Modèle | Note |
 |---|---|---|---|
 | **M1** | `02_knn.py` | k-NN cosinus pondéré **via l'index FAISS** | vote des k voisins, pondéré par similarité |
 | **M2** | `03_svm.py` | LinearSVC + **calibration Platt** | entraîné sur **sample 500k** (coût) |
-| M3 | `04_rf.py` | Random Forest | **écarté (D-015)** : inefficace en 1024 dim |
+| M3 | `04_rf.py` | Random Forest | **écarté **: inefficace en 1024 dim |
 | **M4** | `05_mlp.py` | perceptron multicouche | sample 500k |
 | **M5** | `01_tfidf_linsvc.py` | TF-IDF + LinearSVC + **Platt** | n'utilise PAS les embeddings (features lexicales) |
 | **M6** | `06_fusion_adaptive.py` | **fusion** (combinaison adaptative de modèles) | — |
 | — | `07_bench_report.py` + `metrics.py` | génère le tableau + calcule F1 w/macro, accuracy, top-1/3/5, **ECE 10 bins** | — |
 
 ### Règles respectées
-- **R3 anti-fuite** : `fit` sur train, `predict` sur val/test ; rien n'est ajusté sur le test.
-  Sur les modèles coûteux (M2/M4), on entraîne sur un **sample 500k du train** (la marge entre
-  500k et 3,16 M est < 0,01 F1 — loi de Heaps, apprentissage au plateau).
-- **R4** : 6 modèles comparés (largement au-delà du minimum).
-- **R5** : chaque run tracé dans MLflow (cf. rapport *MLflow*).
+- **anti-fuite**: `fit` sur train, `predict` sur val/test; rien n'est ajusté sur le test.
+ Sur les modèles coûteux (M2/M4), on entraîne sur un **sample 500k du train** (la marge entre
+ 500k et 3,16 M est < 0,01 F1 — loi de Heaps, apprentissage au plateau).
+- ****: 6 modèles comparés (largement au-delà du minimum).
+- ****: chaque run tracé dans MLflow (cf. rapport *MLflow*).
 
 ### Le choix « M1 le meilleur, mais M5 en production »
 M1 (k-NN FAISS) est le **plus précis**, mais il **dépend de l'index FAISS** pour fonctionner. M5
@@ -79,7 +79,7 @@ Registry — un choix d'**ingénierie de déploiement**, pas un hasard.
 
 ## 4. Résultats (mesurés, `reports/04_classifiers_bench/bench_v1.md`)
 
-Trié par F1 pondéré sur le test :
+Trié par F1 pondéré sur le test:
 
 | Rang | Modèle | F1 pondéré | F1 macro | ECE | Train |
 |---|---|---|---|---|---|
@@ -89,36 +89,36 @@ Trié par F1 pondéré sur le test :
 | 4 | M4 MLP | 0,9489 | 0,9382 | **0,0013** (meilleure calibration) | ~514 s |
 | 5 | M2 SVM | 0,9311 | 0,9193 | 0,0145 | ~924 s |
 
-**Lecture clé** : F1 pondéré ≈ F1 macro partout → le modèle gère **bien les catégories rares**.
-Objectif interne « F1 > 0,90 » : **largement atteint**. M4 a la **meilleure calibration**
+**Lecture clé**: F1 pondéré ≈ F1 macro partout → le modèle gère **bien les catégories rares**.
+Objectif interne « F1 > 0,90 »: **largement atteint**. M4 a la **meilleure calibration**
 (ECE 0,0013) — utile si on voulait un modèle dont la confiance est très fiable.
 
-> 📊 **Chiffres slide** : « 6 modèles comparés », « F1 pondéré 0,954 (M1) », « F1 macro ≈ pondéré
-> → catégories rares bien gérées », « ECE 0,0013 (M4) », « >0,90 atteint ». 📸 **Capture** : le
+> 📊 **Chiffres slide**: « 6 modèles comparés », « F1 pondéré 0,954 (M1) », « F1 macro ≈ pondéré
+> → catégories rares bien gérées », « ECE 0,0013 (M4) », « >0,90 atteint ». 📸 **Capture**: le
 > tableau de benchmark + la liste des runs dans MLflow (triables par F1).
 
 ---
 
 ## 5. Critique (état de l'art vs nous)
 
-**Solide :**
-- ✅ **6 modèles** sur protocole identique, anti-fuite → dépasse l'exigence (R4).
-- ✅ **Métriques riches** : F1 pondéré + macro + ECE + top-1/3/5 + temps → conforme aux
-  recommandations.
+**Solide:**
+- ✅ **6 modèles** sur protocole identique, anti-fuite → dépasse l'exigence.
+- ✅ **Métriques riches**: F1 pondéré + macro + ECE + top-1/3/5 + temps → conforme aux
+ recommandations.
 - ✅ **Calibration** explicite (Platt) → probabilités exploitables, ECE mesuré.
 - ✅ Macro ≈ pondéré → preuve de bonne couverture des classes rares.
 - ✅ Tout tracé (MLflow) → reproductible et comparable.
 
-**Limites assumées :**
-- **ML classique, pas de réseau profond from scratch** : choix adapté (le retrieval ancré fait
-  l'essentiel), mais à **dire clairement** — la valeur est « comparer rigoureusement », pas
-  « entraîner un gros réseau ».
-- **Random Forest écarté** (D-015) : inefficace en 1024 dim — décision documentée, pas un oubli.
-- **Sample 500k** sur M2/M4 : justifié (loi de Heaps), mais ce n'est pas le full train.
+**Limites assumées:**
+- **ML classique, pas de réseau profond from scratch**: choix adapté (le retrieval ancré fait
+ l'essentiel), mais à **dire clairement** — la valeur est « comparer rigoureusement », pas
+ « entraîner un gros réseau ».
+- **Random Forest écarté**: inefficace en 1024 dim — décision documentée, pas un oubli.
+- **Sample 500k** sur M2/M4: justifié (loi de Heaps), mais ce n'est pas le full train.
 - **Pas de détail par classe** publié dans le rapport courant (le macro le résume) → axe de
-  transparence.
-- **Tâche « facile »** (4 catégories macro bien séparées, cf. t-SNE rapport *Explainability*) :
-  les F1 élevés reflètent aussi la séparabilité du problème, à contextualiser honnêtement.
+ transparence.
+- **Tâche « facile »** (4 catégories macro bien séparées, cf. t-SNE rapport *Explainability*):
+ les F1 élevés reflètent aussi la séparabilité du problème, à contextualiser honnêtement.
 
 ---
 
@@ -131,7 +131,7 @@ Objectif interne « F1 > 0,90 » : **largement atteint**. M4 a la **meilleure ca
 ---
 
 ### En une phrase (pour la défense)
-*« On n'a pas parié sur un seul modèle : six entraînés et comparés sur le même protocole
+*« On n'a pas parié sur un seul modèle: six entraînés et comparés sur le même protocole
 anti-fuite, en mesurant F1 pondéré, F1 macro, calibration (ECE) et temps. Le meilleur atteint
 0,954 de F1, le macro est proche du pondéré (catégories rares bien gérées), et le modèle servi
 est choisi par un critère d'ingénierie (portabilité, M5) — pas par hasard. »*
