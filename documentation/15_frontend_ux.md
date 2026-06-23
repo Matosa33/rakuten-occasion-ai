@@ -70,7 +70,9 @@ affichés.)
 ### Les 2 modes (`App.tsx` + `batch.ts` + `BatchMode.tsx`)
 - **🎯 Un objet**: parcours guidé pas à pas.
 - **📦 Déménagement**: « mitrailler » N objets à la chaîne — file en **localStorage**,
- analyses **séquentielles en arrière-plan**, tableau de bord des annonces prêtes (. rapport *Batch*/). L'humain n'attend jamais l'analyse.
+ analyses **séquentielles en arrière-plan**, tableau de bord des annonces prêtes au fur et à
+ mesure. L'humain n'attend jamais l'analyse : il continue de photographier pendant que la file
+ se traite en tâche de fond.
 
 ### Neuro-marketing appliqué (choix design assumés)
 - **Zeigarnik** → `StepBar` (la tâche inachevée pousse à finir).

@@ -55,6 +55,22 @@ les embeddings sont déjà L2-normalisés ⇒ IP = cosinus):
 | **HNSW** | `M=32`, `efConstruction=200`, `efSearch=64` | **servi en production** |
 | **IVF_PQ** | `nlist=1024` (~√n), `m=32` sous-quantizers, `nprobe=16` | écarté (recall trop bas à notre échelle) |
 
+**Ce que veulent dire les paramètres HNSW (le détail qui compte) :**
+- **`M=32`** = le nombre de voisins (arêtes) que chaque vecteur garde dans le graphe. Plus M est
+ grand, plus le graphe est richement connecté → meilleur recall, mais **plus de RAM** (chaque
+ arête se stocke). 32 est le palier où le recall plafonne pour nos données : monter à 64
+ doublerait presque la mémoire pour un gain de recall négligeable.
+- **`efConstruction=200`** = combien de candidats l'algorithme explore **au moment de construire**
+ le graphe. Plus haut = graphe de meilleure qualité (voisins mieux choisis) mais construction
+ plus lente. C'est un coût payé **une seule fois**, donc on peut être généreux (200).
+- **`efSearch=64`** = combien de candidats on explore **à chaque requête**. C'est le **bouton de
+ réglage en direct** du compromis vitesse/précision : on peut le baisser pour répondre plus vite
+ ou le monter pour gagner du recall, sans reconstruire l'index. 64 donne 0,948 de recall en
+ 0,29 ms — notre point d'équilibre mesuré.
+- **`nlist`/`nprobe` (IVF_PQ)** : `nlist=1024` ≈ √n découpe l'espace en ~1024 cellules ;
+ `nprobe=16` n'en visite que 16 par requête (rapide, mais on rate les voisins tombés dans les
+ cellules non visitées → c'est *la* raison du recall faible 0,415 à notre échelle).
+
 ### b) Multi-vue + RRF (`src/retrieval/02_multiview_rrf.py`)
 `_rrf_fusion` applique `score(d) = Σ 1/(60 + rangᵢ(d))` sur N classements (par vue) → un
 classement fusionné. **k = 60** (convention Cormack, insensible aux scores).
