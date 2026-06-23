@@ -63,7 +63,7 @@ trois mois plus tard (« c'était quels réglages déjà ? »).
  ses métriques réelles (F1 pondéré/macro, accuracy, ECE, temps) **+ tag commit git**.
 - **Registry** `rakuten-classifier` (versions v1→v5), alias **`@Production`** (résolution
  `models:/rakuten-classifier@Production` vérifiée).
-- **Double backend réconcilié **: le serveur conteneur (`:5000`, Postgres+MinIO) a été
+- **Double backend réconcilié** : le serveur conteneur (`:5000`, Postgres+MinIO) a été
  aligné en **MLflow 3.x** (il était bloqué en 2. vs client 3.x); il contient désormais
  des runs réels + le modèle registré + `@Production` (artefact dans MinIO). Le store local
  `mlflow.db` reste la référence complète.

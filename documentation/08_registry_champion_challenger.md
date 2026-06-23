@@ -70,8 +70,8 @@ automatiquement la dernière promotion.
  **moins bons** que le champion v2 = M5 (F1 ≈ 0,950). Le gate a donc **refusé** de les promouvoir
  → `@Production` est resté sur v2. **Un gate qui ne promeut pas un challenger plus faible, c'est
  exactement ce qu'on veut.**
-- ****: le registry est désormais aussi peuplé dans le serveur conteneur (`:5000`) après
- alignement MLflow 3.x.
+- **Backend conteneur peuplé** : le registry est désormais aussi rempli dans le serveur
+ conteneur (`:5000`) après alignement en MLflow 3.x.
 
 > 📊 **Chiffres slide**: « registre v1→v5 », « `@Production` = M5 », « les retrains ont créé
 > v3-v5, le gate a **refusé** les moins bons (0,93/0,949 < 0,950) → prod protégée ». 📸 **Capture**:

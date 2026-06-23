@@ -86,7 +86,7 @@ Pourquoi ? Le modèle est lourd à charger; si personne n'identifie, autant ne p
  On lui précise explicitement qu'ici c'est une requête (sinon scores faussés).
 - **normalisation L2**: pour que la comparaison se fasse sur le *sens* (cosinus), cf. rapport
  *Embeddings*.
-- **garde-fou de dimension **: on vérifie que le vecteur fait bien **1024 nombres**. Détail
+- **garde-fou de dimension** : on vérifie que le vecteur fait bien **1024 nombres**. Détail
  qui compte: on lève une vraie erreur (`raise`) et **pas** un `assert` — parce que Python
  **supprime les `assert`** quand on lance en mode optimisé (`python -O`). Un `assert` aurait
  donc disparu silencieusement en production; le `raise`, lui, survit.

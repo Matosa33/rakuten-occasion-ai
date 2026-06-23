@@ -33,8 +33,8 @@ brillant en test, puis s'effondre en vrai. Taxonomie des fuites qu'on a traquée
 - On résout L1 par un **découpage par groupe** (`GroupKFold`) sur la clé produit `parent_asin`:
  tout le produit reste dans un seul split.
 - On évite le déséquilibre de classes (B1) par une **stratification** par catégorie.
-- On évite la fuite par feature avec la règle ****: *toute statistique (médiane, TF-IDF,
- index FAISS) est calculée sur le train uniquement*.
+- On évite la fuite par feature avec une **règle stricte** : *toute statistique (médiane,
+ TF-IDF, index FAISS) est calculée sur le train uniquement*, jamais sur la validation ni le test.
 
 ---
 
@@ -58,15 +58,15 @@ brillant en test, puis s'effondre en vrai. Taxonomie des fuites qu'on a traquée
 - **Audit en 4 portes** (4 scripts): qualité (`02_audit_qualite`), distributions
  (`03_audit_distributions`), biais & fuites (`04_audit_biais_leakage`) — chacun produit un
  rapport + un JSON de métriques.
-- **Méthode « méta-first » **: on interroge d'abord les métadonnées du dataset (tailles,
+- **Méthode « méta-first »** : on interroge d'abord les métadonnées du dataset (tailles,
  comptes par catégorie) **avant** de télécharger des dizaines de Go, pour ne pas calibrer le
  périmètre à l'aveugle.
 
-### b) Périmètre maîtrisé 
+### b) Périmètre maîtrisé
 - Audit large (jusqu'à 15 catégories evergreen-occasion) → **MVP focalisé sur 4
- catégories**: Electronics, Cell_Phones, Video_Games, Tools (~4,5 M produits). Le périmètre
- est une **décision tracée**, pas un hasard (anti scope-creep). Pandera vérifie d'ailleurs
- que `_source_category` ∈ **{4 valeurs }**.
+ catégories** : Electronics, Cell_Phones, Video_Games, Tools (~4,5 M produits). Le périmètre
+ est une **décision tracée**, pas un hasard (on évite le *scope-creep*). Pandera vérifie
+ d'ailleurs que la colonne `_source_category` ne contient **que ces 4 catégories**.
 
 ### c) Nettoyage (`src/data/clean/`, 6 étapes numérotées)
 `01_join_meta_with_review_aggregates` (jointure méta + agrégats d'avis) → `02_drop_sparse_columns`

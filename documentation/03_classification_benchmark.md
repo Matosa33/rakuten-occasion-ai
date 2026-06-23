@@ -56,18 +56,23 @@ sur NOS données, et qu'un seul modèle « qui marche » ne prouve rien sans poi
 |---|---|---|---|
 | **M1** | `02_knn.py` | k-NN cosinus pondéré **via l'index FAISS** | vote des k voisins, pondéré par similarité |
 | **M2** | `03_svm.py` | LinearSVC + **calibration Platt** | entraîné sur **sample 500k** (coût) |
-| M3 | `04_rf.py` | Random Forest | **écarté **: inefficace en 1024 dim |
+| M3 | `04_rf.py` | Random Forest | **écarté** — peu efficace en haute dimension (1024) |
 | **M4** | `05_mlp.py` | perceptron multicouche | sample 500k |
 | **M5** | `01_tfidf_linsvc.py` | TF-IDF + LinearSVC + **Platt** | n'utilise PAS les embeddings (features lexicales) |
 | **M6** | `06_fusion_adaptive.py` | **fusion** (combinaison adaptative de modèles) | — |
 | — | `07_bench_report.py` + `metrics.py` | génère le tableau + calcule F1 w/macro, accuracy, top-1/3/5, **ECE 10 bins** | — |
 
-### Règles respectées
-- **anti-fuite**: `fit` sur train, `predict` sur val/test; rien n'est ajusté sur le test.
- Sur les modèles coûteux (M2/M4), on entraîne sur un **sample 500k du train** (la marge entre
- 500k et 3,16 M est < 0,01 F1 — loi de Heaps, apprentissage au plateau).
-- ****: 6 modèles comparés (largement au-delà du minimum).
-- ****: chaque run tracé dans MLflow (cf. rapport *MLflow*).
+### Règles d'évaluation respectées
+- **Anti-fuite** : on entraîne (`fit`) uniquement sur le train et on mesure (`predict`) sur la
+ validation puis le test ; rien n'est jamais ajusté en regardant le test. Pour les deux modèles
+ les plus coûteux à entraîner (M2 SVM et M4 MLP), on apprend sur un **échantillon de 500 000
+ lignes du train** plutôt que sur les 3,16 M : on a vérifié que l'écart de F1 entre 500k et le
+ train complet est inférieur à 0,01 (l'apprentissage est déjà sur son plateau — phénomène décrit
+ par la *loi de Heaps* sur la croissance du vocabulaire). C'est un gain de temps sans perte de
+ qualité, pas un raccourci subi.
+- **Comparaison large** : 6 modèles évalués, là où l'exigence en demandait au moins 3.
+- **Traçabilité** : chaque entraînement est enregistré comme un *run* MLflow (réglages, scores,
+ artefacts) → tout est reproductible et comparable a posteriori (cf. rapport *MLflow*).
 
 ### Le choix « M1 le meilleur, mais M5 en production »
 M1 (k-NN FAISS) est le **plus précis**, mais il **dépend de l'index FAISS** pour fonctionner. M5

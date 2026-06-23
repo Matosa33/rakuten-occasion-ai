@@ -98,7 +98,7 @@ produit doivent être jugés similaires. La longueur ne doit pas compter, seulem
 ### La boîte à outils mathématique (`src/encoders/similarity_utils.py`)
 Un module **unique** (source de vérité) avec 5 fonctions *sans état* qui **ne mutent jamais**
 les entrées:
-- `l2_normalize` — avec le **garde-fou **: si une norme est < `eps` (1e-12), on renvoie un
+- `l2_normalize` — avec un **garde-fou** : si une norme est < `eps` (1e-12), on renvoie un
  **vecteur nul** plutôt qu'un `NaN` qui se propagerait en silence (un vecteur nul signale un bug
  amont — padding, embedding non initialisé — à logguer en prod).
 - `cosine_similarity`, `inner_product`, `l2_distance` (avec l'identité `‖a−b‖² = 2 − 2·a·b`
@@ -173,6 +173,6 @@ améliore la pertinence de +0,085. »*
 
 ---
 
-> *Approfondissement (-bis): ce rapport sert de modèle de profondeur pour les 12 autres
-> — un débutant suit le raisonnement de bout en bout, un expert y trouve les paramètres exacts,
-> les justifications chiffrées et les identités mathématiques.*
+> *Ce rapport sert de modèle de profondeur pour les autres : un débutant suit le raisonnement
+> de bout en bout, un expert y trouve les paramètres exacts, les justifications chiffrées et les
+> identités mathématiques.*
