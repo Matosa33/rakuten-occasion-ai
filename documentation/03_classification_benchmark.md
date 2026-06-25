@@ -1,170 +1,287 @@
-# 03 — Classification & benchmark de modèles
+# 03. Classification et comparaison de modèles
 
-> Entraîner **plusieurs** modèles, les comparer **équitablement** sur les mêmes données et les
-> mêmes métriques, et choisir le meilleur — en mesurant tout, sans tricher. C'est le cœur de la
-> rigueur ML.
-
----
-
-## 1. La technologie: qu'est-ce que c'est ?
-
-### Pour comprendre (à partir de zéro)
-**Classer**, c'est apprendre à ranger un produit dans la bonne **catégorie** (Téléphones, Jeux
-vidéo…). On montre au modèle beaucoup d'exemples étiquetés (train), puis on mesure s'il range
-bien des exemples **jamais vus** (test).
-
-**Benchmark** = ne pas se contenter d'UN modèle. On en entraîne **plusieurs** et on les compare
-sur le **même** protocole. Pourquoi ? Parce qu'on ne sait pas à l'avance lequel sera le meilleur
-sur NOS données, et qu'un seul modèle « qui marche » ne prouve rien sans point de comparaison.
-
-### Les métriques (et pourquoi plusieurs)
-- **F1-score** (0 à 1): équilibre entre précision (quand je dis « Téléphone », ai-je raison ?)
- et rappel (est-ce que j'attrape tous les téléphones ?).
- - **F1 pondéré**: moyenne pondérée par la taille des catégories.
- - **F1 macro**: moyenne **simple** → traite les catégories rares **à égalité** (sévère).
-- **Top-k accuracy**: la bonne réponse est-elle dans les *k* premières propositions ? (utile car
- l'UI montre plusieurs candidats).
-- **ECE** (*Expected Calibration Error*): le modèle est-il **honnête sur sa confiance** ? Un
- modèle calibré qui dit « 80 % sûr » a raison ~80 % du temps. On le calcule en **10 bins** de
- confiance.
-
-### Pour l'expert
-- **Écart F1 macro vs pondéré**: s'ils divergent fortement, le modèle gère mal la **longue
- traîne** (catégories rares). Chez nous ils sont **proches** → bonne couverture des rares.
-- **Calibration par Platt** (régression sigmoïde sur les scores) appliquée aux SVM linéaires
- (qui sortent des marges, pas des probabilités) → des probabilités exploitables pour l'ECE et
- pour décider quand demander une confirmation humaine.
+> L'idée tient en une phrase : au lieu de parier sur un seul modèle, on en entraîne plusieurs,
+> on les compare sur exactement les mêmes données et les mêmes mesures, puis on choisit le
+> meilleur. Tout est mesuré, rien n'est arrangé. C'est le cœur de la rigueur en apprentissage
+> automatique.
 
 ---
 
-## 2. État de l'art
+## 1. De quoi parle-t-on ?
 
-- **Comparer F1 macro ET pondéré** + reporter idéalement le détail **par classe** (transparence).
-- **Calibration**: un bon modèle ne doit pas seulement avoir raison, il doit **connaître son
- incertitude** (ECE, voire MacroCE).
-- **Protocole identique** pour tous les modèles, **sans fuite** (entraînement sur train, mesure
- sur test intouché).
-- k-NN « comps », SVM, MLP, ensembles: pas de modèle universellement meilleur → le benchmark
- tranche empiriquement.
+### Le problème, expliqué à partir de zéro
+
+**Classer un produit**, c'est apprendre à le ranger dans la bonne **catégorie**. Dans ce projet,
+il y a quatre grandes catégories : l'électronique (Electronics), les téléphones et accessoires
+(Cell_Phones_and_Accessories), les jeux vidéo (Video_Games) et l'outillage et la maison
+(Tools_and_Home_Improvement).
+
+La méthode est toujours la même. On montre à un programme un grand nombre d'exemples déjà
+étiquetés (cet ensemble d'apprentissage s'appelle le « train »). Le programme cherche tout seul
+des régularités. Ensuite, on lui présente des exemples qu'il n'a **jamais vus** (l'ensemble de
+« test ») et on vérifie s'il les range correctement. Mesurer sur des exemples jamais vus est
+essentiel : un élève qui récite les corrigés par cœur n'a rien appris ; on veut savoir s'il sait
+répondre à des questions nouvelles.
+
+**Comparer (benchmark)** veut dire : ne pas se contenter d'un seul modèle. On en entraîne
+plusieurs et on les met en concurrence sur le même protocole. Pourquoi ? Parce qu'on ne sait pas
+à l'avance lequel sera le meilleur sur nos données précises, et qu'un modèle isolé « qui a l'air
+de marcher » ne prouve rien tant qu'il n'a pas de point de comparaison.
+
+### Les mesures de qualité (et pourquoi il en faut plusieurs)
+
+Une seule mesure peut masquer un défaut. On en utilise donc quatre familles complémentaires.
+
+- **Le F1-score** (un nombre entre 0 et 1, plus c'est haut mieux c'est). Il combine deux qualités
+  opposées. La **précision** répond à : « quand je dis Téléphone, ai-je raison ? ». Le **rappel**
+  répond à : « est-ce que j'attrape bien tous les téléphones ? ». Le F1 est leur équilibre.
+  On le calcule de deux façons :
+  - **F1 pondéré** : moyenne qui donne plus de poids aux grandes catégories (celles qui ont
+    beaucoup de produits).
+  - **F1 macro** : moyenne **simple**, qui traite toutes les catégories **à égalité**, y compris
+    les rares. C'est une mesure plus sévère, car une catégorie peu fréquente compte autant qu'une
+    catégorie immense.
+- **La précision top-k** (top-1, top-3). On regarde si la bonne réponse figure parmi les *k*
+  premières propositions du modèle. C'est utile parce que l'interface du produit propose souvent
+  plusieurs candidats à l'utilisateur, pas un seul.
+- **L'ECE** (de l'anglais *Expected Calibration Error*, « erreur de calibration attendue »). Cette
+  mesure répond à une question d'honnêteté : quand le modèle dit « je suis sûr à 80 % », a-t-il
+  vraiment raison environ 80 % du temps ? Un modèle bien **calibré** ne se vante pas et ne se
+  sous-estime pas. On le calcule en rangeant les prédictions dans **10 tranches** de niveau de
+  confiance et en comparant, dans chaque tranche, la confiance annoncée et la réussite réelle.
+  Un ECE proche de 0 signifie une confiance fiable.
+
+### Pour le lecteur plus technique
+
+- **Écart entre F1 macro et F1 pondéré** : s'ils s'éloignent fortement, c'est que le modèle gère
+  mal la **longue traîne**, c'est-à-dire les catégories rares. Dans nos résultats ils restent
+  **proches**, ce qui est le signe d'une bonne couverture, y compris des catégories peu peuplées.
+- **Calibration de Platt** : certains modèles (les machines à vecteurs de support linéaires)
+  ne sortent pas naturellement des probabilités, mais des scores de marge. La calibration de Platt
+  est une petite régression en forme de S (sigmoïde) appliquée par-dessus ces scores pour les
+  transformer en vraies probabilités. On obtient ainsi des chiffres exploitables, à la fois pour
+  mesurer l'ECE et pour décider quand demander une confirmation humaine.
 
 ---
 
-## 3. Notre implémentation (précisément ce qu'on a fait)
+## 2. Ce que recommandent les bonnes pratiques
 
-### Les 6 modèles comparés (= ≥ 3 exigé, on en fait 6)
-| Code | Fichier | Modèle | Note |
+- **Rapporter le F1 macro ET le F1 pondéré**, et idéalement le détail catégorie par catégorie,
+  pour rester transparent.
+- **Calibrer** : un bon modèle ne doit pas seulement avoir souvent raison, il doit aussi
+  **connaître son incertitude**. D'où la mesure de l'ECE.
+- **Protocole identique pour tous les modèles**, sans **fuite de données** (en anglais *data
+  leakage* : laisser involontairement le modèle apprendre sur les exemples de test, ce qui gonfle
+  artificiellement les scores). On apprend sur le train et on mesure sur un test resté intouché.
+- **Aucun modèle n'est universellement supérieur** : k plus proches voisins, machines à vecteurs
+  de support, réseau de neurones simple, combinaisons de modèles, chacun a ses forces. Seule la
+  comparaison empirique permet de trancher.
+
+---
+
+## 3. Notre mise en œuvre, en détail
+
+### Les six modèles comparés (l'exigence demandait au moins trois)
+
+| Code | Fichier | Modèle | En clair |
 |---|---|---|---|
-| **M1** | `02_knn.py` | k-NN cosinus pondéré **via l'index FAISS** | vote des k voisins, pondéré par similarité |
-| **M2** | `03_svm.py` | LinearSVC + **calibration Platt** | entraîné sur **sample 500k** (coût) |
-| M3 | `04_rf.py` | Random Forest | **écarté** — peu efficace en haute dimension (1024) |
-| **M4** | `05_mlp.py` | perceptron multicouche | sample 500k |
-| **M5** | `01_tfidf_linsvc.py` | TF-IDF + LinearSVC + **Platt** | n'utilise PAS les embeddings (features lexicales) |
-| **M6** | `06_fusion_adaptive.py` | **fusion** (combinaison adaptative de modèles) | — |
-| — | `07_bench_report.py` + `metrics.py` | génère le tableau + calcule F1 w/macro, accuracy, top-1/3/5, **ECE 10 bins** | — |
+| **M1** | `02_knn.py` | k plus proches voisins, par similarité, via l'index FAISS | on retrouve les 5 produits du train les plus ressemblants et on vote leur catégorie |
+| **M2** | `03_svm.py` | Machine à vecteurs de support linéaire (LinearSVC) + calibration de Platt | tracée sur un échantillon de 500 000 lignes pour limiter le coût |
+| M3 | `04_rf.py` | Forêt aléatoire (Random Forest) | **écartée**, peu efficace en grande dimension (1024) |
+| **M4** | `05_mlp.py` | Petit réseau de neurones (perceptron multicouche) | échantillon de 500 000 lignes |
+| **M5** | `01_tfidf_linsvc.py` | TF-IDF + machine à vecteurs de support + Platt | n'utilise PAS les vecteurs ; travaille directement sur les mots du texte |
+| **M6** | `06_fusion_adaptive.py` | Fusion, combinaison adaptative des modèles | mélange pondéré des probabilités de plusieurs modèles |
+| (outil) | `07_bench_report.py` et `metrics.py` | génère le tableau comparatif et calcule toutes les mesures | F1 pondéré et macro, exactitude, top-1 et top-3, ECE en 10 tranches |
 
-### Règles d'évaluation respectées
-- **Anti-fuite** : on entraîne (`fit`) uniquement sur le train et on mesure (`predict`) sur la
- validation puis le test ; rien n'est jamais ajusté en regardant le test. Pour les deux modèles
- les plus coûteux à entraîner (M2 SVM et M4 MLP), on apprend sur un **échantillon de 500 000
- lignes du train** plutôt que sur les 3,16 M : on a vérifié que l'écart de F1 entre 500k et le
- train complet est inférieur à 0,01 (l'apprentissage est déjà sur son plateau — phénomène décrit
- par la *loi de Heaps* sur la croissance du vocabulaire). C'est un gain de temps sans perte de
- qualité, pas un raccourci subi.
-- **Comparaison large** : 6 modèles évalués, là où l'exigence en demandait au moins 3.
-- **Traçabilité** : chaque entraînement est enregistré comme un *run* MLflow (réglages, scores,
- artefacts) → tout est reproductible et comparable a posteriori (cf. rapport *MLflow*).
+Quelques mots pour comprendre les noms techniques utilisés ci-dessus.
 
-### Le choix « M1 le meilleur, mais M5 en production »
-M1 (k-NN FAISS) est le **plus précis**, mais il **dépend de l'index FAISS** pour fonctionner. M5
-(TF-IDF + LinearSVC) est un modèle **autonome et portable** (un seul fichier `.joblib`). On garde
-donc **M1 comme moteur du retrieval** (cœur produit) et **M5 comme classifieur servi** au
-Registry — un choix d'**ingénierie de déploiement**, pas un hasard.
+- **Un vecteur (ou embedding)** est une longue liste de nombres (ici 1024 nombres) qui résume le
+  sens d'un produit. Deux produits proches dans cette représentation ont un sens proche. Ces
+  vecteurs sont produits en amont par un modèle de langue, à partir du titre et de la description.
+- **FAISS** est une bibliothèque qui retrouve très vite, parmi des millions de vecteurs, ceux qui
+  ressemblent le plus à un vecteur donné. M1 s'appuie dessus pour trouver les voisins en une
+  fraction de milliseconde.
+- **TF-IDF** (de l'anglais *Term Frequency, Inverse Document Frequency*) est une technique
+  ancienne et robuste qui transforme un texte en chiffres en pesant chaque mot selon son
+  importance : un mot fréquent dans une fiche mais rare dans le catalogue est jugé révélateur.
+  Contrairement aux autres modèles, M5 ne lit pas les vecteurs de sens, il lit directement les
+  mots.
 
-### Où ce classifieur sert réellement (et comment on attribue la catégorie fine)
-Distinction à dire clairement : ces classifieurs entraînés ne sont **pas** le moteur
-d'identification en ligne. Ils servent à **deux choses** :
-1. **prouver la rigueur** (entraîner / comparer / calibrer plusieurs modèles — ce benchmark) ;
-2. **faire vivre la chaîne MLOps** : il faut un *vrai* modèle à versionner, promouvoir,
- ré-entraîner et servir — c'est le **classifieur texte portable** qui est déployé pour cette
- démonstration MLOps.
+### Réglages exacts de chaque modèle
 
-En production, l'identification passe par la **recherche de similarité**, pas par le classifieur
-servi. Et la **catégorie la plus fine** affichée sur la fiche n'est pas la sortie d'un modèle à
-2 956 classes (impossible à entraîner proprement vu la rareté) : c'est un **vote pondéré des
-catégories des produits voisins** retrouvés — autrement dit, **l'index *est* le classifieur fin**.
+- **M1 (k plus proches voisins)** : pour chaque produit à classer, on cherche ses **5** voisins
+  les plus proches dans le train (k = 5), avec une mesure de proximité par cosinus (l'angle entre
+  deux vecteurs ; les vecteurs étant normalisés, c'est équivalent au produit scalaire). Chaque
+  voisin vote pour sa catégorie, et son vote pèse selon sa ressemblance. La recherche passe par un
+  index FAISS de type HNSW (un graphe de navigation qui accélère énormément la recherche, réglé
+  ici avec M = 32 connexions et un paramètre d'exploration efSearch = 64).
+- **M2 (machine à vecteurs de support sur les vecteurs de sens)** : LinearSVC avec un paramètre de
+  régularisation C = 1.0, des poids de classe équilibrés (pour ne pas négliger les catégories
+  rares), une calibration de Platt validée en 3 plis. Apprentissage sur un échantillon de
+  500 000 lignes.
+- **M4 (petit réseau de neurones)** : une architecture 1024 puis 512 puis 256 puis 4 sorties (une
+  par catégorie), fonction d'activation ReLU, optimiseur Adam, lots (batches) de 256 exemples,
+  au plus 30 passages sur les données avec arrêt anticipé (on stoppe dès que la qualité cesse de
+  progresser sur une part de validation interne). Apprentissage sur un échantillon de 500 000
+  lignes.
+- **M5 (TF-IDF + machine à vecteurs de support)** : on retient jusqu'à 50 000 mots et expressions,
+  en comptant les mots seuls et les paires de mots consécutifs (ngram_range de 1 à 2), en ignorant
+  les termes apparaissant moins de deux fois, avec une pondération adoucie (sublinear_tf). Le
+  classifieur derrière est de nouveau un LinearSVC (C = 1.0, poids équilibrés) suivi d'une
+  calibration de Platt en 3 plis. Ce modèle apprend sur la totalité du train.
+- **M3 (forêt aléatoire), écartée mais documentée** : elle avait été préparée avec 300 arbres, une
+  profondeur maximale de 20 et la racine carrée du nombre de dimensions testée à chaque coupe. Elle
+  reste peu adaptée à des vecteurs de 1024 dimensions et n'a pas été retenue dans le classement.
+- **M6 (fusion)** : on ne réentraîne rien. On prend les probabilités déjà produites par plusieurs
+  modèles, on en fait une moyenne pondérée, et on cherche les poids qui donnent le meilleur
+  résultat sur l'ensemble de validation (recherche sur une grille de poids). Toutes les
+  probabilités sont calibrées par Platt, donc comparables entre elles.
 
-On a comparé **quatre façons** d'attribuer cette catégorie fine, sur le même protocole (échantillon
-test, anti-fuite) :
+### Les règles d'évaluation que l'on s'est imposées
 
-| Méthode | Idée | Exactitude catégorie fine |
+- **Pas de fuite de données.** On entraîne (on « ajuste ») uniquement sur le train, puis on mesure
+  (on « prédit ») sur la validation puis sur le test. Jamais rien n'est réglé en regardant le test.
+  Pour les deux modèles les plus longs à entraîner (M2 et M4), on apprend sur un **échantillon de
+  500 000 lignes** prélevé dans le train (qui en compte plus de 3 millions) au lieu de la totalité.
+  Cet échantillon est tiré uniquement côté train, et la validation comme le test sont évalués en
+  entier. On a vérifié que l'écart de F1 entre 500 000 lignes et le train complet est inférieur à
+  0,01 : l'apprentissage a déjà atteint son plateau. C'est un gain de temps sans perte de qualité,
+  pas un raccourci subi. Ce plateau est cohérent avec un fait connu en traitement du texte (la loi
+  de Heaps) : passé un certain volume, voir plus d'exemples n'apporte presque plus de vocabulaire
+  nouveau, donc presque plus d'information.
+- **Comparaison large** : six modèles évalués, là où la consigne en demandait au moins trois.
+- **Traçabilité.** Chaque entraînement est enregistré comme une « exécution » dans MLflow, un
+  outil de suivi qui conserve automatiquement les réglages, les scores et les fichiers produits.
+  Tout est ainsi reproductible et comparable après coup.
+
+### Pourquoi M1 est le meilleur, mais M5 est celui mis en service
+
+M1 (les k plus proches voisins via FAISS) obtient le **meilleur score**, mais il ne fonctionne que
+si l'index FAISS est présent et chargé : il ne sait rien faire tout seul. M5 (TF-IDF avec machine à
+vecteurs de support), lui, est **autonome et facile à déplacer** : c'est un seul fichier qui
+contient tout. On garde donc **M1 comme moteur de la recherche par ressemblance** (le cœur du
+produit) et **M5 comme classifieur effectivement déployé et versionné**. C'est un choix
+d'ingénierie de mise en production (portabilité), pas un hasard.
+
+### À quoi sert vraiment ce classifieur, et comment on attribue la catégorie fine
+
+Une distinction importante à énoncer clairement : ces classifieurs entraînés ne sont **pas** le
+moteur d'identification des produits en ligne. Ils servent à deux choses.
+
+1. **Prouver la rigueur** : entraîner, comparer et calibrer plusieurs modèles, ce qui est tout
+   l'objet de ce document.
+2. **Faire vivre la chaîne de mise en production** : pour démontrer un cycle de vie complet
+   (versionner un modèle, le promouvoir, le réentraîner, le servir), il faut un vrai modèle
+   déployé. C'est le classifieur texte portable (M5) qui joue ce rôle.
+
+En usage réel, l'identification d'un produit passe par la **recherche de ressemblance** (on
+retrouve les produits voisins), pas par le classifieur servi. Et la **catégorie la plus fine**
+affichée sur la fiche n'est pas la sortie d'un modèle qui choisirait parmi 2 956 catégories (ce
+serait impossible à entraîner proprement, car beaucoup de ces catégories ont trop peu d'exemples).
+Cette catégorie fine résulte d'un **vote pondéré des catégories des produits voisins** retrouvés.
+Autrement dit, c'est l'index de recherche lui-même qui joue le rôle de classifieur fin.
+
+On a comparé **quatre façons** d'attribuer cette catégorie fine, toujours sur le même protocole
+(échantillon de test, sans fuite de données : 15 000 requêtes, 200 voisins examinés par requête).
+La colonne donne le pourcentage de fois où la catégorie fine attribuée est exactement la bonne.
+
+| Méthode | Idée | Exactitude de la catégorie fine |
 |---|---|---|
-| catégorie du 1ᵉʳ résultat | on recopie le tout premier candidat | 0,710 |
-| filtre par famille puis 1ᵉʳ | on restreint à la macro-catégorie prédite | 0,709 |
-| **vote des voisins** *(retenue)* | vote pondéré des catégories du top-k | **0,733** |
-| approche « du large au fin » | filtre par famille + vote | 0,731 |
+| Catégorie du premier résultat | on recopie le tout premier voisin retrouvé | 0,710 |
+| Filtrage par famille puis premier | on restreint d'abord à la grande catégorie prédite | 0,709 |
+| **Vote des voisins** *(retenue)* | vote pondéré des catégories du groupe de voisins | **0,733** |
+| Du large au fin | on filtre par famille puis on vote | 0,731 |
 
-→ Le **vote des voisins l'emporte** (**+2,4 points** vs recopier le premier), à coût quasi nul, et
-fournit en prime une **confiance** (part du vote). Résultat **honnête** : le filtre par famille
-**n'aide pas** — les 4 familles sont déjà bien séparées dans l'espace, donc filtrer ne fait que
-jeter de bons voisins. Détail chiffré : `reports/05_retrieval/taxonomy_bench.md`.
+Le **vote des voisins l'emporte** (gain de 2,3 points par rapport à recopier le premier voisin),
+pour un coût quasi nul, et il fournit en prime une mesure de **confiance** (la part du vote
+remportée par la catégorie gagnante). Résultat honnête à signaler : le filtrage par famille
+**n'aide pas**. Les quatre familles sont déjà bien séparées dans l'espace des vecteurs ; filtrer
+ne fait donc que jeter de bons voisins. À titre indicatif, la recherche retrouve la bonne
+catégorie fine parmi les 200 voisins examinés dans 96,8 % des cas, ce qui est le plafond
+qu'un meilleur vote pourrait viser.
 
 ---
 
-## 4. Résultats (mesurés, `reports/04_classifiers_bench/bench_v1.md`)
+## 4. Résultats mesurés
 
-Trié par F1 pondéré sur le test:
+Modèles triés par F1 pondéré sur le test (du meilleur au moins bon).
 
-| Rang | Modèle | F1 pondéré | F1 macro | ECE | Train |
+| Rang | Modèle | F1 pondéré | F1 macro | ECE | Temps d'entraînement |
 |---|---|---|---|---|---|
-| 🥇 | **M1 k-NN (FAISS)** | **0,9537** | 0,9415 | 0,0069 | ~0 s (index) |
-| 🥈 | M6 fusion | 0,9522 | 0,9418 | 0,0230 | ~0 s |
-| 🥉 | **M5 TF-IDF + LinSVC** | **0,9503** | 0,9375 | 0,0092 | 956 s |
-| 4 | M4 MLP | 0,9489 | 0,9382 | **0,0013** (meilleure calibration) | ~514 s |
-| 5 | M2 SVM | 0,9311 | 0,9193 | 0,0145 | ~924 s |
+| 1 | **M1 k plus proches voisins (FAISS)** | **0,9537** | 0,9415 | 0,0069 | environ 0 s (réutilise l'index) |
+| 2 | M6 fusion | 0,9522 | 0,9418 | 0,0230 | environ 0 s |
+| 3 | **M5 TF-IDF + machine à vecteurs de support** | **0,9503** | 0,9375 | 0,0092 | 956 s |
+| 4 | M4 petit réseau de neurones | 0,9489 | 0,9382 | **0,0013** (meilleure calibration) | 514 s |
+| 5 | M2 machine à vecteurs de support sur vecteurs | 0,9311 | 0,9193 | 0,0145 | 924 s |
 
-**Lecture clé**: F1 pondéré ≈ F1 macro partout → le modèle gère **bien les catégories rares**.
-Objectif interne « F1 > 0,90 »: **largement atteint**. M4 a la **meilleure calibration**
-(ECE 0,0013) — utile si on voulait un modèle dont la confiance est très fiable.
+Lecture des chiffres. Partout, le F1 pondéré et le F1 macro sont très proches : le modèle gère
+donc **bien les catégories rares**, et pas seulement les grandes. L'objectif que l'on s'était fixé
+(« un F1 supérieur à 0,90 ») est **largement atteint**. M4 affiche la **meilleure calibration**
+(ECE de 0,0013) : sa confiance est la plus fiable, ce qui serait précieux si l'on cherchait
+avant tout un modèle dont les pourcentages de certitude sont dignes de foi.
 
-> 📊 **Chiffres slide**: « 6 modèles comparés », « F1 pondéré 0,954 (M1) », « F1 macro ≈ pondéré
-> → catégories rares bien gérées », « ECE 0,0013 (M4) », « >0,90 atteint ». 📸 **Capture**: le
-> tableau de benchmark + la liste des runs dans MLflow (triables par F1).
+Un point d'honnêteté sur la fusion (M6) : elle ne dépasse pas le meilleur modèle individuel. Son
+F1 pondéré au test (0,9522) est même très légèrement inférieur à celui de M1 (0,9537), soit un
+écart de 0,0015 dans le mauvais sens. Combiner plusieurs modèles a donc ici un coût (il faut faire
+tourner plusieurs modèles) sans bénéfice de qualité : c'est un résultat utile à connaître, et
+exactement le genre de constat qu'un benchmark sert à révéler.
+
+> Chiffres pour une diapositive : « 6 modèles comparés », « F1 pondéré 0,954 pour M1 », « F1 macro
+> proche du F1 pondéré, donc catégories rares bien gérées », « ECE 0,0013 pour M4 », « objectif
+> de 0,90 atteint ». Capture d'écran suggérée : le tableau de comparaison plus la liste des
+> exécutions dans MLflow, triables par F1.
 
 ---
 
-## 5. Critique (état de l'art vs nous)
+## 5. Regard critique : nos forces et nos limites
 
-**Solide:**
-- ✅ **6 modèles** sur protocole identique, anti-fuite → dépasse l'exigence.
-- ✅ **Métriques riches**: F1 pondéré + macro + ECE + top-1/3/5 + temps → conforme aux
- recommandations.
-- ✅ **Calibration** explicite (Platt) → probabilités exploitables, ECE mesuré.
-- ✅ Macro ≈ pondéré → preuve de bonne couverture des classes rares.
-- ✅ Tout tracé (MLflow) → reproductible et comparable.
+**Ce qui est solide.**
 
-**Limites assumées:**
-- **ML classique, pas de réseau profond from scratch**: choix adapté (le retrieval ancré fait
- l'essentiel), mais à **dire clairement** — la valeur est « comparer rigoureusement », pas
- « entraîner un gros réseau ».
-- **Random Forest écarté**: inefficace en 1024 dim — décision documentée, pas un oubli.
-- **Sample 500k** sur M2/M4: justifié (loi de Heaps), mais ce n'est pas le full train.
-- **Pas de détail par classe** publié dans le rapport courant (le macro le résume) → axe de
- transparence.
-- **Tâche « facile »** (4 catégories macro bien séparées, cf. t-SNE rapport *Explainability*):
- les F1 élevés reflètent aussi la séparabilité du problème, à contextualiser honnêtement.
+- Six modèles évalués sur un protocole identique et sans fuite de données, ce qui dépasse
+  l'exigence minimale.
+- Des mesures riches et complémentaires : F1 pondéré, F1 macro, ECE, top-1 et top-3, temps
+  d'entraînement.
+- Une calibration explicite (Platt), donc des probabilités exploitables et un ECE réellement
+  mesuré.
+- Un F1 macro proche du F1 pondéré, preuve d'une bonne couverture des catégories rares.
+- Tout est tracé dans MLflow, donc reproductible et comparable.
+
+**Les limites, assumées.**
+
+- Ce sont des modèles d'apprentissage classique, pas un grand réseau de neurones profond entraîné
+  de zéro. C'est un choix adapté (la recherche par ressemblance fait l'essentiel du travail), mais
+  il faut le dire clairement : la valeur démontrée ici est « comparer rigoureusement plusieurs
+  modèles », pas « entraîner un énorme réseau ».
+- La forêt aléatoire (M3) a été écartée car inefficace en 1024 dimensions. C'est une décision
+  documentée, pas un oubli.
+- L'échantillon de 500 000 lignes pour M2 et M4 est justifié (plateau d'apprentissage vérifié),
+  mais ce n'est pas le train complet.
+- Le détail catégorie par catégorie est calculé par le code mais n'est pas mis en avant dans le
+  tableau de synthèse (le F1 macro le résume). C'est un axe d'amélioration en matière de
+  transparence.
+- La tâche est relativement « facile » : les quatre grandes catégories sont bien séparées dans
+  l'espace des vecteurs. Les F1 élevés reflètent donc aussi cette facilité du problème, ce qu'il
+  faut contextualiser honnêtement. La difficulté réelle apparaît au niveau de la catégorie la plus
+  fine, où l'on plafonne autour de 0,73 d'exactitude.
 
 ---
 
 ## 6. Références
-- EmergentMind — *Macro-F1 score overview* — https://www.emergentmind.com/topics/macro-f1-score
-- scikit-learn — *Probability calibration (Platt scaling)* — https://scikit-learn.org/stable/modules/calibration.html
-- NCBI Bookshelf — *Evaluating ML models and their diagnostic value* — https://www.ncbi.nlm.nih.gov/books/NBK597473/
-- arXiv 2310.10655 — *Uncertainty quantification & calibration (ECE)* — https://arxiv.org/pdf/2310.10655
+
+- EmergentMind, *Macro-F1 score overview* : https://www.emergentmind.com/topics/macro-f1-score
+- scikit-learn, *Probability calibration (Platt scaling)* :
+  https://scikit-learn.org/stable/modules/calibration.html
+- NCBI Bookshelf, *Evaluating machine learning models and their diagnostic value* :
+  https://www.ncbi.nlm.nih.gov/books/NBK597473/
+- arXiv 2310.10655, *Uncertainty quantification and calibration (ECE)* :
+  https://arxiv.org/pdf/2310.10655
 
 ---
 
-### En une phrase (pour la défense)
-*« On n'a pas parié sur un seul modèle: six entraînés et comparés sur le même protocole
-anti-fuite, en mesurant F1 pondéré, F1 macro, calibration (ECE) et temps. Le meilleur atteint
-0,954 de F1, le macro est proche du pondéré (catégories rares bien gérées), et le modèle servi
-est choisi par un critère d'ingénierie (portabilité, M5) — pas par hasard. »*
+### En une phrase, pour la soutenance
+
+*On n'a pas parié sur un seul modèle : six modèles ont été entraînés et comparés sur le même
+protocole, sans fuite de données, en mesurant le F1 pondéré, le F1 macro, la calibration (ECE) et
+le temps. Le meilleur atteint 0,954 de F1, le F1 macro reste proche du pondéré (les catégories
+rares sont donc bien gérées), et le modèle réellement mis en service est choisi pour une raison
+d'ingénierie (sa portabilité, M5), pas par hasard.*

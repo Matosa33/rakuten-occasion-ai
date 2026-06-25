@@ -1,138 +1,136 @@
-# 05 — VLM & LLM ancrés (RAG grounded)
+# 05. Les IA génératives ancrées dans les faits (VLM et LLM "grounded")
 
-> Les IA génératives du projet: l'une **voit** (la photo), l'autre **rédige** (l'annonce).
-> Toutes deux sont **bridées par des faits réels** pour ne pas inventer. C'est le garde-fou
-> anti-hallucination de bout en bout.
+> Le projet utilise deux intelligences artificielles génératives. L'une "voit" (elle lit la photo d'un objet), l'autre "rédige" (elle écrit l'annonce de vente). Les deux sont volontairement bridées par des faits réels pour les empêcher d'inventer. C'est le garde-fou anti-invention du projet, du début à la fin.
 
 ---
 
-## 1. La technologie: qu'est-ce que c'est ?
+## 1. La technologie : de quoi parle-t-on ?
 
-### Pour comprendre (à partir de zéro)
-- **VLM** (*Vision-Language Model*): une IA qui **comprend les images**. Chez nous elle (a) lit
- la photo du vendeur → **titre probable + attributs** (marque, couleur, capacité…), et (b)
- **vérifie**: « la photo du vendeur correspond-elle à l'image catalogue du candidat ? ».
-- **LLM** (*Large Language Model*): une IA qui **écrit du texte** → titre + description d'annonce.
-- **RAG** (*Retrieval-Augmented Generation*): au lieu de laisser l'IA écrire « de mémoire » (où
- elle invente), on lui **fournit les faits** (la vraie fiche du produit retrouvé) et on lui
- demande de **ne rédiger qu'à partir de ça**. C'est l'« ancrage » (grounding).
+### Pour comprendre, en partant de zéro
+
+Le projet aide une personne à revendre un objet d'occasion (un téléphone, une console, un outil, etc.). Pour cela, il faut deux compétences que des IA génératives savent fournir.
+
+- **VLM** veut dire "Vision-Language Model", c'est-à-dire un modèle qui comprend les images en plus du texte. Concrètement, c'est une IA à qui on montre une photo et qui répond en mots. Dans le projet, elle sert à deux choses. D'abord elle lit la photo prise par le vendeur et propose un titre probable (par exemple "iPhone 13 noir 128 Go") plus une liste d'attributs observés (marque, couleur, capacité de stockage). Ensuite elle vérifie : "la photo du vendeur montre-t-elle bien le même produit que l'image officielle du catalogue ?".
+
+- **LLM** veut dire "Large Language Model", c'est-à-dire un modèle de langage entraîné sur d'énormes quantités de texte. C'est une IA qui écrit du texte fluide. Dans le projet, elle rédige le titre et la description de l'annonce de vente.
+
+- **RAG** veut dire "Retrieval-Augmented Generation", soit "génération assistée par récupération de faits". L'idée est simple : au lieu de laisser l'IA écrire de mémoire (ce qui la pousse à inventer), on lui fournit d'abord les vrais faits (la vraie fiche du produit qu'on a retrouvé dans le catalogue) et on lui demande de ne rédiger qu'à partir de ces faits. On appelle cela "ancrer" l'IA dans les faits (en anglais "grounding").
 
 ### Pourquoi c'est crucial
-Un LLM **hallucine par construction**: il complète du texte plausible, vrai ou faux. Si on lui
-dit « écris une annonce pour un iPhone 13 », il **inventera** des specs. Le RAG transforme
-« générer » (libre, hallucinable) en « reformuler ces faits-ci » (contraint, vérifiable).
 
-### Pour l'expert
-- On **sépare les rôles**: le **retrieval identifie** (cf. *Retrieval*), le **VLM vérifie**, le
- **LLM rédige**. Aucun génératif ne décide de l'identité → on supprime la principale source
- d'hallucination.
-- On peut **tester l'ancrage**: un token présent dans la description générée doit appartenir à
- {tokens du prompt} ∪ {tokens du grounding} — sinon c'est une invention.
+Un modèle de langage invente par nature. Il complète une phrase avec ce qui est statistiquement plausible, que ce soit vrai ou faux. Si on lui dit simplement "écris une annonce pour un iPhone 13", il fabriquera des caractéristiques techniques qui ont l'air crédibles mais qui peuvent être fausses. Le RAG change la nature de la tâche : on ne lui demande plus de "générer" (action libre, propice à l'invention) mais de "reformuler ces faits précis" (action contrainte, vérifiable).
+
+### Pour aller plus loin (lecteur technique)
+
+- Le projet sépare strictement les rôles. Une première étape, appelée "retrieval", retrouve le produit dans le catalogue : c'est elle qui décide de l'identité de l'objet. Le VLM ne fait que vérifier visuellement, et le LLM ne fait que rédiger. Aucune des deux IA génératives ne décide de l'identité du produit, ce qui supprime la principale source d'invention.
+
+- L'ancrage est testable. Un mot présent dans la description générée doit appartenir soit aux mots du prompt, soit aux mots des faits fournis. Si un mot apparaît sans venir de l'une de ces deux sources, c'est une invention détectable automatiquement.
 
 ---
 
 ## 2. État de l'art
 
-- Le **RAG** est l'un des moyens les plus efficaces d'ancrer un LLM dans des faits (contexte
- fourni au moment de générer).
-- Bonnes pratiques anti-hallucination: **récupération de qualité**, **règles d'ancrage
- explicites** dans le prompt (« n'utilise que le contexte fourni »), **sortie structurée (JSON)**
- qui contraint et facilite la validation.
-- Les **VLM hallucinent aussi**; le RAG les contraint à s'appuyer sur la connaissance fournie.
-- Limite connue: un modèle peut mal interpréter une source ou ne pas reconnaître qu'elle ne
- contient pas la réponse.
+- Le RAG est aujourd'hui l'un des moyens les plus efficaces pour ancrer un modèle de langage dans des faits : on lui fournit le contexte au moment précis où il génère.
+- Les bonnes pratiques reconnues contre l'invention sont au nombre de trois : récupérer un contexte de bonne qualité, écrire des règles d'ancrage explicites dans le prompt (par exemple "n'utilise que le contexte fourni"), et exiger une sortie structurée au format JSON (un format texte standard où chaque information porte un nom, ce qui contraint le modèle et facilite la vérification automatique).
+- Les VLM inventent eux aussi. Le RAG les contraint à s'appuyer sur la connaissance qu'on leur fournit plutôt que sur leur mémoire interne.
+- Une limite connue subsiste : un modèle peut mal interpréter une source, ou ne pas se rendre compte que la source ne contient pas la réponse cherchée.
 
 ---
 
-## 3. Notre implémentation (précisément ce qu'on a fait)
+## 3. Notre implémentation (exactement ce qui a été fait)
 
-### Le client (`src/llm/openrouter_client.py`)
-- Modèle par défaut **`google/gemma-4-31b-it`** (vision-capable), via **OpenRouter**.
-- `chat_completion`: **température 0,4** (peu créatif, factuel), **max_tokens 1024**.
-- `is_available`: présence de la clé → sinon **dégradation propre** (mock).
-- `translate_to_english`: traduit la requête FR→EN avant la recherche (catalogue anglais).
+Tous les appels d'IA passent par OpenRouter, un service en ligne qui donne accès à de nombreux modèles via une seule interface. Le modèle utilisé par défaut est **`google/gemma-4-31b-it`**, un modèle capable de traiter à la fois le texte et les images. Il sert les trois usages décrits ci-dessous.
 
-### Extraction photo (`src/vlm/photo_extraction.py`)
-- `extract(photo_paths)` → `PhotoExtraction{title_guess, attributes}`.
-- **`MAX_PHOTOS_PER_CALL = 4`**: toutes les vues passent dans **UN seul appel** (moins cher,
- contexte commun); photos encodées en **data-URL base64**.
-- Prompt → **JSON** `{title, attributes{brand, color, capacity, model, visible_text}}`; parsing
- **tolérant** (fences ```…```, prose autour). `PhotoExtractionUnavailable` si pas de clé.
+### Le client d'accès au modèle (`src/llm/openrouter_client.py`)
 
-### Vérificateur visuel F0.4 (`src/vlm/validator.py`)
-- `validate_top1(user_photos, catalog_image_url, title)` → `VLMValidation{match, confidence,
- reason}`, **JSON strict**. **`MAX_USER_PHOTOS = 2`** (le match se joue sur la vue principale).
-- **Best-effort, jamais bloquant**: `None` si pas de photo, pas d'image catalogue, ou VLM
- down → l'identification continue.
+C'est la brique technique qui parle à OpenRouter.
 
-### Rédacteur RAG (`src/llm/01_prompt_templates.py` + `02_rag_grounded_writer.py`)
-- Prompt structuré: **`RÔLE → INSTRUCTION → CONTEXTE (faits) → SORTIE JSON`**, avec l'instruction
- « n'utilise que le contexte fourni » + l'état vendeur exact (`{seller_condition}`).
-- `extract_useful_sentences(reviews, top_n)`: sélectionne les phrases de grounding (triées par
- longueur décroissante) issues de la **description catalogue réelle**.
-- **Abstraction `LLMWriter`**: `OpenRouterWriter` (réel) **ou** `MockLLMWriter` — bascule
- automatique selon la clé. La sortie `GeneratedListing` garde la **liste des phrases de
- grounding utilisées** (traçabilité de l'ancrage).
+- La fonction `chat_completion` envoie un texte au modèle et récupère sa réponse. Elle utilise une **température de 0,4**. La température règle la créativité du modèle entre 0 (toujours la réponse la plus probable, donc très factuel) et 1 (réponses variées et créatives) : à 0,4 le modèle reste donc plutôt factuel. La longueur de réponse est limitée à **1024 jetons** (un "jeton", ou "token", est un petit morceau de mot ; 1024 jetons valent à peu près 700 à 800 mots).
+- Si un appel échoue à cause d'une saturation du service (erreur 429) ou d'un souci côté serveur (erreurs 500, 502, 503), la fonction réessaie jusqu'à **3 fois**, avec un délai d'attente qui double à chaque tentative (2 secondes, puis 4, puis 8). C'est une attente "exponentielle" classique pour laisser le service se rétablir.
+- La fonction `is_available` indique simplement si une clé d'accès OpenRouter est configurée. Si la clé est absente, le projet ne plante pas : il bascule sur un mode de remplacement (un "mock", c'est-à-dire une fausse réponse de démonstration). On appelle cela la dégradation propre : l'absence d'un service externe n'arrête pas l'application.
+- La fonction `translate_to_english` traduit la requête du français vers l'anglais avant la recherche, car le catalogue de produits est en anglais. Cette traduction se fait à température 0 (résultat le plus stable possible) et limite la réponse à 128 jetons.
 
----
+### L'extraction depuis la photo (`src/vlm/photo_extraction.py`)
 
-## 4. Résultats (mesurés / observés)
+C'est l'étape où le VLM regarde les photos du vendeur et en tire une description exploitable.
 
-- **Preuve d'ancrage**: sur un produit testé, « **Snapdragon 732G** » apparaît dans l'annonce
- **parce que ça vient de la fiche réelle** (grounding) — pas du titre, pas de la mémoire du LLM.
-- **Vérificateur visuel** branché: photo iPhone → `{match: true, confidence: 1.0, reason:
- "diagonal dual-camera layout"}` (raison **factuelle, observable**).
-- **Dégradation propre vérifiée**: sans clé OpenRouter, `/describe` bascule en mock (titre
- générique détectable), l'identification + le prix (locaux) continuent.
-- Éval RAG tracée (`reports/07_rag_eval/rag_grounded_eval.json`); tests `test_llm_rag`,
- `test_llm_writer`, `test_describe_openrouter`, `test_vlm_validator`.
-- **Mesure « richesse d'entrée » sur 92 vraies annonces** (`reports/05_retrieval/photo_richness_bench.md`):
- **une seule photo < plusieurs photos** (catégorie correcte 0,82 → 0,89) — la lecture multi-vues
- par le VLM extrait mieux marque + modèle. En revanche la **métadonnée vendeur ajoute peu** (le VLM
- capte déjà l'essentiel sur les photos), et **traduire la requête entière la dégrade** (la
- traduction réécrit le bon titre produit par le VLM). Décision pilotée par la mesure : **on ne
- traduit pas la requête combinée**. Résultat honnête, y compris là où il infirme une intuition.
+- La fonction `extract(photo_paths)` reçoit une ou plusieurs photos et renvoie un objet contenant un titre probable (`title_guess`) et un dictionnaire d'attributs observés (`attributes`).
+- Le réglage **`MAX_PHOTOS_PER_CALL = 4`** signifie que jusqu'à 4 vues du même objet passent dans **un seul appel** au modèle. Cela coûte moins cher (un appel au lieu de quatre) et donne au modèle un contexte commun pour mieux raisonner. Chaque photo est convertie en "data-URL base64", c'est-à-dire encodée directement en texte pour être envoyée dans la requête, sans hébergement de fichier.
+- Pour garantir des résultats reproductibles d'un essai à l'autre, l'extraction tourne à **température 0** (réponse la plus déterministe possible) avec une graine aléatoire fixe (`seed = 42`). La longueur de réponse est limitée à **250 jetons** et le délai d'attente maximal est de **90 secondes**. Un fournisseur de calcul précis peut être épinglé via une variable d'environnement pour fixer la précision numérique du modèle, sinon OpenRouter choisit automatiquement.
+- Le prompt demande explicitement une réponse au format **JSON** de la forme `{title, attributes{brand, color, capacity, model, visible_text}}`. La lecture de la réponse est volontairement tolérante : elle sait extraire le JSON même s'il est entouré de balises de code (les trois accents graves) ou noyé dans du texte. Si le modèle répond malgré tout en texte libre, ce texte est repris tel quel comme requête de secours.
+- Si la clé OpenRouter est absente, la fonction lève une erreur claire (`PhotoExtractionUnavailable`). L'application répond alors par un message explicite invitant le vendeur à décrire l'objet par écrit, et le parcours sans photo continue de fonctionner.
 
-> 📊 **Chiffres/faits slide**: « extraction + validation par Gemma 4 31B (4 vues en 1 appel,
-> JSON, température 0,4) », « preuve d'ancrage: Snapdragon 732G vient du grounding », « validateur
-> visuel: match + raison factuelle », « dégradation propre (mock) ». 📸 **Capture**: l'annonce
-> générée à côté de la fiche catalogue (specs qui correspondent) + le badge de correspondance
-> visuelle dans l'app.
+### Le vérificateur visuel (`src/vlm/validator.py`)
+
+C'est l'étape où le VLM confirme que la photo du vendeur correspond bien au produit retrouvé.
+
+- La fonction `validate_top1(user_photos, catalog_image_url, title)` compare les photos du vendeur à l'image officielle du meilleur candidat retrouvé dans le catalogue. Elle renvoie un verdict au format JSON strict : `match` (vrai ou faux), `confidence` (un score de confiance entre 0 et 1) et `reason` (une phrase courte expliquant le verdict).
+- Le réglage **`MAX_USER_PHOTOS = 2`** limite la comparaison aux deux premières photos du vendeur, car la correspondance se joue surtout sur la vue principale. La réponse est limitée à 120 jetons et le délai d'attente à 60 secondes.
+- Le prompt précise au modèle d'ignorer l'état, l'arrière-plan et les accessoires, et de ne juger que le modèle du produit.
+- Cette vérification est un bonus, jamais un bloqueur. Si une condition manque (pas de photo, pas d'image catalogue, ou modèle indisponible), la fonction renvoie simplement `None` et l'identification du produit continue sans elle. Le verdict, quand il existe, sert à afficher un badge de confiance visuelle dans l'application ; c'est toujours l'humain qui valide, jamais une décision automatique.
+
+### Le rédacteur ancré (`src/llm/01_prompt_templates.py` et `src/llm/02_rag_grounded_writer.py`)
+
+C'est l'étape où le LLM écrit l'annonce finale à partir des faits.
+
+- Le prompt suit une structure imposée : **rôle, puis instruction, puis contexte de faits, puis format de sortie JSON**. L'instruction contient des consignes explicites contre l'invention : "n'utilise que le contexte fourni", "pas d'invention de caractéristiques absentes du contexte". Elle impose aussi de reprendre exactement l'état déclaré par le vendeur (le champ `seller_condition`), pour éviter que le modèle ne transforme par exemple un "bon état" choisi par le vendeur en "très bon état" inventé.
+- La fonction `extract_useful_sentences(reviews, top_n)` sélectionne les phrases qui serviront d'ancrage. Elle découpe les textes en phrases, garde celles d'au moins **50 caractères** (`MIN_SENTENCE_CHARS`), supprime les doublons, puis trie par longueur décroissante pour ne conserver que les **5 meilleures** (`TOP_N_GROUNDING_SENTENCES`). Ces phrases proviennent de textes réels et non d'une invention du modèle.
+- Le code repose sur une abstraction `LLMWriter`, c'est-à-dire une interface commune avec deux implémentations interchangeables : `OpenRouterWriter` qui appelle le vrai modèle, et `MockLLMWriter` qui produit une fausse annonce de démonstration. Le projet bascule automatiquement de l'une à l'autre selon que la clé d'accès est présente ou non. C'est ce qui rend la démonstration robuste et le code facile à tester sans dépendre du réseau.
+- Le résultat (`GeneratedListing`) conserve la liste exacte des phrases d'ancrage utilisées (`grounding_sentences_used`). On garde donc une trace de ce qui a servi à écrire l'annonce : c'est la traçabilité de l'ancrage.
 
 ---
 
-## 5. Critique (état de l'art vs nous)
+## 4. Résultats (mesurés et observés)
 
-**Solide:**
-- ✅ **RAG avec règles d'ancrage explicites + sortie JSON** → bonnes pratiques exactes.
-- ✅ **Rôles séparés** (retrieval identifie / VLM vérifie / LLM rédige) → supprime la principale
- source d'hallucination.
-- ✅ **Best-effort partout**: le validateur et l'extraction ne cassent jamais le flux.
-- ✅ **Dégradation propre** (mock) + **abstraction Writer** → robustesse de démo et testabilité.
-- ✅ Optimisation coût: 4 vues en **un** appel, température basse (factuel).
+- **Preuve concrète d'ancrage.** Sur un produit testé, la mention "Snapdragon 732G" (le nom d'un processeur) apparaît dans l'annonce générée uniquement parce qu'elle figure dans la vraie fiche du produit. Elle ne vient ni du titre saisi, ni de la mémoire du modèle. C'est la démonstration que l'annonce s'appuie bien sur les faits fournis.
+- **Vérificateur visuel en fonctionnement.** Sur une photo d'iPhone, le modèle renvoie `{match: true, confidence: 1.0, reason: "diagonal dual-camera layout"}`, c'est-à-dire une correspondance confirmée avec une raison factuelle et observable (la disposition en diagonale du double appareil photo).
+- **Dégradation propre vérifiée.** Sans clé OpenRouter, la fonctionnalité de description bascule sur le mode de remplacement (un titre générique reconnaissable), pendant que l'identification du produit et l'estimation du prix, qui tournent en local, continuent normalement.
+- **Mesure de l'effet de la richesse des photos.** Une expérience a été menée sur **92 produits réels**, en faisant lire les photos par le VLM Gemma 4 31B puis en mesurant si la catégorie prédite était correcte. Quatre conditions ont été comparées :
 
-**Limites assumées:**
-- **Dépendance API externe** (Gemma via OpenRouter): coût + latence + disponibilité. Atténuée
- par le mock, mais c'est une dépendance.
-- **Grounding sur la description, pas encore sur les avis**: enrichir avec les *reviews* réelles
- est un gain futur (jointure lazy à faire).
-- **Le VLM confond des générations proches** (iPhone 13/14): mesuré et **assumé**; la facette
- Akinator + l'humain tranchent. Pas de prétention à 100 %.
-- **Pas de citation passage-par-passage** dans l'annonce (bonne pratique avancée) → amélioration.
+  | Condition | Catégorie correcte | Détail catégorie | Confiance |
+  |---|---|---|---|
+  | Une seule photo | 0,815 | 0,315 | 0,628 |
+  | Plusieurs photos | 0,891 | 0,361 | 0,667 |
+  | Plusieurs photos + description vendeur brute (français) | 0,902 | 0,371 | 0,648 |
+  | Plusieurs photos + description vendeur traduite en anglais | 0,848 | 0,340 | 0,651 |
+
+  La colonne "Catégorie correcte" mesure la proportion de produits rangés dans la bonne grande catégorie. La colonne "Détail catégorie" mesure à quel point la sous-catégorie fine prédite recouvre la vraie sous-catégorie.
+
+  Trois enseignements ressortent. D'abord, **plusieurs photos valent mieux qu'une seule** (la catégorie correcte passe de 0,815 à 0,891) : en lisant plusieurs vues, le VLM identifie mieux la marque et le modèle. Ensuite, **ajouter la description écrite du vendeur n'apporte presque rien** quand elle reste en français (0,902, soit un gain marginal), car le VLM capte déjà l'essentiel sur les photos. Enfin, **traduire cette description en anglais la dégrade** (0,848, donc en dessous des photos seules) : la traduction réécrit et abîme le bon titre que le VLM avait produit. Conséquence directe, pilotée par la mesure : le projet ne traduit pas la requête une fois qu'elle est combinée aux photos. C'est un résultat honnête, y compris là où il contredit l'intuition de départ.
+
+> 📊 **Chiffres et faits pour la slide** : extraction et vérification assurées par Gemma 4 31B (jusqu'à 4 vues en un seul appel, sortie JSON, déterminisme à température 0 avec graine fixe pour l'extraction, température 0,4 pour la rédaction) ; preuve d'ancrage avec "Snapdragon 732G" qui vient des faits et non de la mémoire ; vérificateur visuel qui rend un verdict avec une raison factuelle ; dégradation propre par mode de remplacement quand le service externe est absent.
+> 📸 **Capture suggérée** : l'annonce générée affichée à côté de la fiche catalogue (les caractéristiques correspondent) et le badge de correspondance visuelle dans l'application.
+
+---
+
+## 5. Analyse critique (état de l'art comparé à notre travail)
+
+**Points solides :**
+
+- ✅ RAG avec règles d'ancrage explicites et sortie JSON : ce sont exactement les bonnes pratiques recommandées.
+- ✅ Rôles séparés (la récupération identifie, le VLM vérifie, le LLM rédige), ce qui supprime la principale source d'invention.
+- ✅ Comportement non bloquant partout : le vérificateur et l'extraction ne cassent jamais le parcours du vendeur.
+- ✅ Dégradation propre (mode de remplacement) et abstraction du rédacteur, ce qui rend la démonstration robuste et le code testable.
+- ✅ Optimisation des coûts : 4 vues en un seul appel et température basse pour rester factuel.
+
+**Limites assumées :**
+
+- **Dépendance à un service externe.** Le modèle Gemma passe par OpenRouter, ce qui implique un coût, une latence et une disponibilité non garantie. Le mode de remplacement atténue le problème mais ne supprime pas la dépendance.
+- **Ancrage sur la fiche, pas encore sur les avis acheteurs.** Aujourd'hui l'annonce est ancrée dans la description du produit. L'enrichir avec les avis acheteurs réels apporterait du naturel et des arguments de vente : c'est une amélioration prévue, qui demande de rapprocher les avis du produit au moment voulu.
+- **Confusion entre générations proches.** Le VLM peut hésiter entre deux modèles très similaires (par exemple un iPhone 13 et un iPhone 14). C'est mesuré et assumé : le questionnaire interactif et l'humain tranchent. Le projet ne prétend pas à une précision de 100 %.
+- **Pas de citation phrase par phrase dans l'annonce.** Une bonne pratique avancée consisterait à indiquer dans l'annonce de quel passage source vient chaque affirmation. Ce n'est pas encore fait : c'est une piste d'amélioration.
 
 ---
 
 ## 6. Références
-- Prompting Guide — *Retrieval Augmented Generation (RAG) for LLMs* — https://www.promptingguide.ai/research/rag
-- Lewis et al. — *Retrieval-Augmented Generation (RAG, papier fondateur)* — https://arxiv.org/abs/2005.11401
-- arXiv 2407.12858 — *Grounding and evaluation for LLMs (survey)* — https://arxiv.org/pdf/2407.12858
-- arXiv 2501.03995 — *RAG-Check: evaluating multimodal RAG* — https://arxiv.org/pdf/2501.03995
+
+- Prompting Guide, "Retrieval Augmented Generation (RAG) for LLMs" : https://www.promptingguide.ai/research/rag
+- Lewis et al., "Retrieval-Augmented Generation" (article fondateur du RAG) : https://arxiv.org/abs/2005.11401
+- arXiv 2407.12858, "Grounding and evaluation for LLMs" (synthèse) : https://arxiv.org/pdf/2407.12858
+- arXiv 2501.03995, "RAG-Check : evaluating multimodal RAG" : https://arxiv.org/pdf/2501.03995
 
 ---
 
 ### En une phrase (pour la défense)
-*« Nos IA génératives ne devinent jamais: le produit est d'abord retrouvé dans le catalogue,
-puis un VLM (Gemma 4 31B) vérifie visuellement et un LLM rédige uniquement à partir de la fiche
-réelle (grounding explicite + sortie JSON, température 0,4). On le prouve: une spec comme
-"Snapdragon 732G" vient du contexte fourni, pas de la mémoire du modèle. Et tout dégrade
-proprement (mock) si l'API tombe. »*
+
+*« Nos IA génératives ne devinent jamais. Le produit est d'abord retrouvé dans le catalogue, puis un modèle qui lit les images (Gemma 4 31B) vérifie visuellement la correspondance, et un modèle de langage rédige l'annonce uniquement à partir de la vraie fiche du produit, avec des règles d'ancrage explicites et une sortie JSON. On le prouve : une caractéristique comme "Snapdragon 732G" vient des faits fournis, pas de la mémoire du modèle. Et si le service externe tombe, tout continue de fonctionner grâce à un mode de remplacement local. »*
