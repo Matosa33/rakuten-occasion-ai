@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -76,6 +77,37 @@ class IdentificationResult:
     candidates: list[Candidate]
     next_observation: object | None  # ObservationRequest | None
     explanation: str
+    # Catégorie fine par vote k-NN pondéré (bras A2, champion du benchmark Cycle 33 :
+    # +2,4 pts leaf-acc vs la catégorie du seul top-1). Confiance = part du vote.
+    predicted_category_fine: str = ""
+    predicted_category_confidence: float = 0.0
+    predicted_category_path: str = ""
+
+
+def weighted_fine_vote(candidates: list[Candidate]) -> tuple[str, float, str]:
+    """Vote k-NN pondéré par similarité sur la catégorie fine des candidats (bras A2).
+
+    Plus robuste que la catégorie du seul top-1 (mesuré : +2,4 pts de leaf-accuracy sur
+    15 000 requêtes, cf. `reports/05_retrieval/taxonomy_bench.md`). Retourne
+    (catégorie_fine, confiance = part du vote ∈ [0,1], breadcrumb du meilleur candidat
+    portant cette catégorie). ("", 0.0, "") si aucun candidat n'a de catégorie fine.
+    """
+    acc: dict[str, float] = defaultdict(float)
+    total = 0.0
+    for c in candidates:
+        if c.category_fine:
+            w = max(0.0, c.score)
+            acc[c.category_fine] += w
+            total += w
+    if not acc:
+        return "", 0.0, ""
+    best = max(acc, key=acc.get)
+    confidence = acc[best] / total if total > 0 else 0.0
+    path, best_s = "", -1.0
+    for c in candidates:
+        if c.category_fine == best and c.score > best_s:
+            path, best_s = c.category_path, c.score
+    return best, round(confidence, 4), path
 
 
 class IdentificationService:
@@ -317,11 +349,16 @@ class IdentificationService:
                 " — une observation peut préciser."
             )
 
+        pred_fine, pred_conf, pred_path = weighted_fine_vote(candidates)
+
         return IdentificationResult(
             status=status,
             candidates=candidates,
             next_observation=next_observation,
             explanation=explanation,
+            predicted_category_fine=pred_fine,
+            predicted_category_confidence=pred_conf,
+            predicted_category_path=pred_path,
         )
 
 
