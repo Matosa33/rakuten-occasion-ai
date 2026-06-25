@@ -35,6 +35,10 @@ from src.serving.listing_fill import _label
 REPORT_DIR = REPO_ROOT / "reports" / "05_retrieval"
 RAW_IN = REPORT_DIR / "listing_quality_raw.jsonl"
 BASE_LABELS = ["Type de produit", "État", "Marque"]
+# Attributs DISCRIMINANTS qu'une bonne fiche devrait porter mais que le catalogue (facettes
+# génériques) ne contient quasi jamais — ajoutés au schéma pour créditer ce qui compte vraiment
+# (extrait par le VLM depuis les photos) et rendre `completeness` plus discriminante entre conditions.
+DISCRIMINATING_FACETS = ["model", "capacity", "size"]
 # stopwords taxonomie : mots de structure trop génériques (gonflent le Jaccard sans info)
 TAXO_STOPWORDS = {
     "and",
@@ -116,7 +120,10 @@ def induce_expected_facets(min_share: float = 0.5) -> dict[str, list[str]]:
         for k in json.loads(r["facets_json"]):
             per[r["_source_category"]][k] += 1
     return {
-        mac: [k for k, n in c.items() if tot[mac] and n / tot[mac] >= min_share]
+        mac: sorted(
+            {k for k, n in c.items() if tot[mac] and n / tot[mac] >= min_share}
+            | set(DISCRIMINATING_FACETS)  # crédite les specs qui font une vraie fiche
+        )
         for mac, c in per.items()
     }
 
