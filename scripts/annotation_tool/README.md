@@ -1,9 +1,27 @@
 # Interface d'annotation — photos d'éval (Phase 2)
 
 Outil pour constituer **vite** le jeu de produits réels qui prouvera la chaîne de valeur
-photo-first (**1 photo < N photos < N photos + métadonnée**). Flux en **2 temps** :
+photo-first (**1 photo < N photos < N photos + métadonnée**).
 
-## 1) Saisie rapide (humain) — `app.py`
+## 0) Le plus rapide — ingestion de PDF scrappés — `ingest_pdf.py`
+
+Avec l'extension **Lebonscrap** (Chrome), exporte chaque annonce leboncoin en PDF dans
+`~/Downloads` (nom `LBC-*.pdf`). Puis :
+
+```bash
+.venv/Scripts/python.exe scripts/annotation_tool/ingest_pdf.py            # depuis ~/Downloads
+.venv/Scripts/python.exe scripts/annotation_tool/ingest_pdf.py --src <dossier> --limit 5
+```
+
+Le PDF est *image-only* (pas de texte) : le script **rend + recadre** chaque page-photo
+(retire la légende/filigrane) → `01.jpg…0N.jpg`, et fait **lire la carte** (page 0) par le VLM
+(Gemma) → `meta.json` complet (titre, catégorie→macro, taxo fine, prix, état, seller_metadata,
+`annotated:true`). Idempotent (skip les `source_pdf` déjà ingérés), tolérant. **C'est la voie
+recommandée** : tu scrapes, je n'ai qu'à lancer l'ingestion.
+
+> Besoin des extras `[annotation]` (pymupdf, pillow) + `[api]` (requests) + clé OpenRouter.
+
+## 1) Alternative manuelle — saisie rapide (humain) — `app.py`
 
 ```bash
 .venv/Scripts/python.exe scripts/annotation_tool/app.py     # http://127.0.0.1:8200

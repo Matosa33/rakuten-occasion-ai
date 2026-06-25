@@ -35,6 +35,13 @@ dev = [
     "pre-commit>=3.5.0",
 ]
 
+# Phase 2 — outil d'annotation/ingestion des photos d'eval (data prep, dev-time).
+# Lit les PDF leboncoin scrappes (image-only) : rend les pages + recadre les photos.
+annotation = [
+    "pymupdf>=1.24.0",  # ouverture/rendu des PDF scrappes
+    "pillow>=10.0.0",  # recadrage des photos extraites
+]
+
 # Phase P02 - audit & cleaning
 #
 # Choix de stack pour le FULL audit (35 GB de JSONL sur 3 catégories Amazon Reviews 2023) :
