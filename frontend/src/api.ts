@@ -6,6 +6,15 @@
 import { clearToken, getToken } from "./auth";
 
 const BASE = "/api";
+// Timeout réseau : /identify fait de l'extraction VLM (peut être lent), mais au-delà l'utilisateur
+// ne doit pas rester sur une appli figée → message actionnable.
+const REQUEST_TIMEOUT_MS = 60_000;
+
+function _netError(e: unknown): Error {
+  if (e instanceof DOMException && e.name === "TimeoutError")
+    return new Error("Le serveur met trop de temps à répondre — réessayez ou saisissez le produit en texte.");
+  return new Error("Réseau indisponible — vérifiez votre connexion puis réessayez.");
+}
 
 export type Condition = "neuf" | "tres_bon_etat" | "bon_etat" | "correct";
 export type Category =
@@ -97,11 +106,17 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   const token = getToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const res = await fetch(`${BASE}${path}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (e) {
+    throw _netError(e);
+  }
   if (res.status === 401) {
     // Token absent/expiré/invalide → purge → App re-render vers LoginPage.
     clearToken();
@@ -123,7 +138,17 @@ export async function uploadPhoto(file: File): Promise<UploadResponse> {
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${BASE}/upload`, { method: "POST", headers, body: form });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}/upload`, {
+      method: "POST",
+      headers,
+      body: form,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (e) {
+    throw _netError(e);
+  }
   if (res.status === 401) {
     clearToken();
     throw new Error("Session expirée — reconnectez-vous.");

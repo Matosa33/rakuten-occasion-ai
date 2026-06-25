@@ -19,6 +19,11 @@ export const FACET_LABELS: Record<string, string> = {
   compatible_with: "Compatible avec",
 };
 
+/** Libellé FR d'une facette ; repli humanisé (`form_factor` → « Form factor ») au lieu de la clé brute. */
+export function facetLabel(key: string): string {
+  return FACET_LABELS[key] ?? key.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
+
 // Priorité sémantique : le TYPE de produit (téléphone vs coque) est la
 // désambiguation la plus utile pour le vendeur — bien plus que la marque.
 // On pondère le score d'entropie pour que `category` passe en premier quand

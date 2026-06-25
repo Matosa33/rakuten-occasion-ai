@@ -11,7 +11,7 @@ import type {
   DescribeResponse,
   PriceResponse,
 } from "../api";
-import { FACET_LABELS } from "../facets";
+import { facetLabel } from "../facets";
 
 // Couleur du tag de provenance d'un champ (transparence du rangement).
 const SOURCE_STYLE: Record<string, string> = {
@@ -90,7 +90,7 @@ export function MarketplaceListing({
     if (chosen?.brand) rows.push({ name: "Marque", value: chosen.brand, source: "" });
     for (const [k, v] of Object.entries(chosen?.attributes ?? {})) {
       if (k === "brand" || k === "category") continue;
-      rows.push({ name: FACET_LABELS[k] ?? k, value: v, source: "" });
+      rows.push({ name: facetLabel(k), value: v, source: "" });
     }
     return rows;
   }, [chosen, productType, conditionLabel, informationsCles]);
