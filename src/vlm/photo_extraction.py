@@ -25,7 +25,7 @@ from src.observability.logging import get_logger
 _log = get_logger(__name__)
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-VLM_MODEL = os.environ.get("PHOTO_VLM_MODEL", "google/gemma-4-31b-it")
+VLM_MODEL = os.environ.get("PHOTO_VLM_MODEL", "qwen/qwen3.5-flash-02-23")
 # Déterminisme (repro protocole D-042) : température 0 + seed fixe. Provider épinglable
 # (fixe la quantization) via env `PHOTO_VLM_PROVIDER` — sinon routing OpenRouter par défaut.
 VLM_TEMPERATURE = float(os.environ.get("PHOTO_VLM_TEMPERATURE", "0"))

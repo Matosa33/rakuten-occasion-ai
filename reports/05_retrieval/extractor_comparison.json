@@ -1,0 +1,54 @@
+{
+  "by_model": {
+    "google/gemma-4-31b-it": {
+      "price_usd_per_mtok_in": 0.12,
+      "n": 93,
+      "mean_latency_s": 6.71,
+      "macro_acc": 0.8817,
+      "leaf_exact": 0.2151,
+      "leaf_overlap": 0.2837,
+      "entity_match": 0.8065,
+      "brand_correct": 0.8602,
+      "completeness": 0.7015,
+      "usable": 1.0
+    },
+    "xiaomi/mimo-v2.5": {
+      "price_usd_per_mtok_in": 0.105,
+      "n": 93,
+      "mean_latency_s": 2.25,
+      "macro_acc": 0.8602,
+      "leaf_exact": 0.2151,
+      "leaf_overlap": 0.2597,
+      "entity_match": 0.8065,
+      "brand_correct": 0.8817,
+      "completeness": 0.7236,
+      "usable": 1.0
+    },
+    "google/gemini-2.5-flash-lite": {
+      "price_usd_per_mtok_in": 0.1,
+      "n": 93,
+      "mean_latency_s": 2.13,
+      "macro_acc": 0.8495,
+      "leaf_exact": 0.2043,
+      "leaf_overlap": 0.276,
+      "entity_match": 0.8387,
+      "brand_correct": 0.8925,
+      "completeness": 0.6729,
+      "usable": 1.0
+    },
+    "qwen/qwen3.5-flash-02-23": {
+      "price_usd_per_mtok_in": 0.065,
+      "n": 93,
+      "mean_latency_s": 4.1,
+      "macro_acc": 0.871,
+      "leaf_exact": 0.2043,
+      "leaf_overlap": 0.268,
+      "entity_match": 0.8172,
+      "brand_correct": 0.8817,
+      "completeness": 0.7452,
+      "usable": 1.0
+    }
+  },
+  "condition": "C2 (N photos)",
+  "n_products": 93
+}
