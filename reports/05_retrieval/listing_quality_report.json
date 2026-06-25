@@ -1,0 +1,254 @@
+{
+  "headline_metric": "completeness",
+  "n_records": 558,
+  "by_condition": {
+    "C0": {
+      "macro_acc": 0.871,
+      "leaf_exact": 0.1505,
+      "leaf_overlap": 0.2245,
+      "entity_match": 0.7204,
+      "brand_correct": 0.6237,
+      "completeness": 0.5046,
+      "typical_field_rate": 0.3442,
+      "usable": 1.0,
+      "n": 93
+    },
+    "C0t": {
+      "macro_acc": 0.8495,
+      "leaf_exact": 0.1613,
+      "leaf_overlap": 0.2416,
+      "entity_match": 0.7419,
+      "brand_correct": 0.5806,
+      "completeness": 0.5087,
+      "typical_field_rate": 0.2256,
+      "usable": 1.0,
+      "n": 93
+    },
+    "C1": {
+      "macro_acc": 0.8172,
+      "leaf_exact": 0.1935,
+      "leaf_overlap": 0.2456,
+      "entity_match": 0.6559,
+      "brand_correct": 0.7312,
+      "completeness": 0.6411,
+      "typical_field_rate": 0.1172,
+      "usable": 1.0,
+      "n": 93
+    },
+    "C2": {
+      "macro_acc": 0.9032,
+      "leaf_exact": 0.1935,
+      "leaf_overlap": 0.2686,
+      "entity_match": 0.7849,
+      "brand_correct": 0.8602,
+      "completeness": 0.699,
+      "typical_field_rate": 0.0451,
+      "usable": 1.0,
+      "n": 93
+    },
+    "C3": {
+      "macro_acc": 0.8925,
+      "leaf_exact": 0.2151,
+      "leaf_overlap": 0.2711,
+      "entity_match": 0.8495,
+      "brand_correct": 0.8817,
+      "completeness": 0.6937,
+      "typical_field_rate": 0.0422,
+      "usable": 1.0,
+      "n": 93
+    },
+    "C3t": {
+      "macro_acc": 0.8495,
+      "leaf_exact": 0.2043,
+      "leaf_overlap": 0.2665,
+      "entity_match": 0.7742,
+      "brand_correct": 0.871,
+      "completeness": 0.6918,
+      "typical_field_rate": 0.0757,
+      "usable": 1.0,
+      "n": 93
+    }
+  },
+  "page_trend": {
+    "completeness": {
+      "L": 2589.0,
+      "p": 1.2334846461802686e-21,
+      "order": [
+        "C0",
+        "C1",
+        "C2",
+        "C3"
+      ]
+    },
+    "leaf_overlap": {
+      "L": 2362.5,
+      "p": 0.08898371298403246,
+      "order": [
+        "C0",
+        "C1",
+        "C2",
+        "C3"
+      ]
+    }
+  },
+  "comparisons": {
+    "HV completeness photo>texte (qual<=2)": {
+      "metric": "completeness",
+      "a": "C0",
+      "b": "C1",
+      "n": 41,
+      "p": 7.909847332172941e-07,
+      "median_diff": 0.1429,
+      "gain_ci": {
+        "mean": 0.1454,
+        "ci_low": 0.1074,
+        "ci_high": 0.1833,
+        "n_families": 41,
+        "n_obs": 41
+      }
+    },
+    "H1 completeness multiphoto (C1->C2)": {
+      "metric": "completeness",
+      "a": "C1",
+      "b": "C2",
+      "n": 93,
+      "p": 3.7955669553166508e-06,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": 0.058,
+        "ci_low": 0.0362,
+        "ci_high": 0.0806,
+        "n_families": 92,
+        "n_obs": 93
+      }
+    },
+    "H1b completeness metadonnee (C2->C3)": {
+      "metric": "completeness",
+      "a": "C2",
+      "b": "C3",
+      "n": 93,
+      "p": 0.20085787364417762,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": -0.0054,
+        "ci_low": -0.0154,
+        "ci_high": 0.0031,
+        "n_families": 92,
+        "n_obs": 93
+      }
+    },
+    "H1b completeness metadonnee sans-fuite": {
+      "metric": "completeness",
+      "a": "C2",
+      "b": "C3",
+      "n": 49,
+      "p": 0.07414989773822231,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": -0.0092,
+        "ci_low": -0.0211,
+        "ci_high": 0.0008,
+        "n_families": 49,
+        "n_obs": 49
+      }
+    },
+    "H1c completeness traduction (C3->C3t)": {
+      "metric": "completeness",
+      "a": "C3",
+      "b": "C3t",
+      "n": 93,
+      "p": 0.574934084570652,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": -0.0019,
+        "ci_low": -0.0115,
+        "ci_high": 0.0069,
+        "n_families": 92,
+        "n_obs": 93
+      }
+    },
+    "H2 entity multiphoto (C1->C2)": {
+      "metric": "entity_match",
+      "a": "C1",
+      "b": "C2",
+      "n": 93,
+      "p": 0.002699796063260186,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": 0.129,
+        "ci_low": 0.0538,
+        "ci_high": 0.2083,
+        "n_families": 92,
+        "n_obs": 93
+      }
+    },
+    "H2 entity metadonnee (C2->C3)": {
+      "metric": "entity_match",
+      "a": "C2",
+      "b": "C3",
+      "n": 93,
+      "p": 0.033894853524689246,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": 0.0645,
+        "ci_low": 0.0109,
+        "ci_high": 0.1277,
+        "n_families": 92,
+        "n_obs": 93
+      }
+    },
+    "H2 entity metadonnee sans-fuite": {
+      "metric": "entity_match",
+      "a": "C2",
+      "b": "C3",
+      "n": 49,
+      "p": 0.5637028616507731,
+      "median_diff": 0.0,
+      "gain_ci": {
+        "mean": 0.0204,
+        "ci_low": -0.0408,
+        "ci_high": 0.0816,
+        "n_families": 49,
+        "n_obs": 49
+      }
+    }
+  },
+  "tost_metadata_clean": {
+    "p_tost": 2.5583990754641975e-09,
+    "equivalent": true,
+    "sesoi": 0.05
+  },
+  "expected_facets_by_macro": {
+    "Cell_Phones_and_Accessories": [
+      "capacity",
+      "color",
+      "compatible_with",
+      "feature",
+      "form_factor",
+      "material",
+      "model",
+      "size"
+    ],
+    "Video_Games": [
+      "capacity",
+      "color",
+      "compatible_with",
+      "feature",
+      "model",
+      "size"
+    ],
+    "Tools_and_Home_Improvement": [
+      "capacity",
+      "color",
+      "material",
+      "model",
+      "size"
+    ],
+    "Electronics": [
+      "capacity",
+      "color",
+      "model",
+      "size"
+    ]
+  }
+}

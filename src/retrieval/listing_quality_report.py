@@ -52,7 +52,8 @@ def _compare(records, expected, metric, ca, cb, subset=None) -> dict:
     prods, mat = paired_values(pp, [ca, cb])
     if len(prods) < 3:
         return {"n": len(prods), "note": "trop peu de paires"}
-    w = wilcoxon_pair(mat[ca], mat[cb])
+    # gain = b - a (sens « b améliore-t-il a »). median_diff aligné sur l'IC (même direction).
+    w = wilcoxon_pair(mat[cb], mat[ca])
     fams = [product_family(p) for p in prods]
     diff = [mat[cb][i] - mat[ca][i] for i in range(len(prods))]
     ci = clustered_bootstrap_ci(diff, fams)
@@ -76,13 +77,16 @@ def run() -> dict:
     poor = lambda r: r.get("metadata_quality", 0) <= 2  # noqa: E731
 
     comparisons = {
-        "HV_photo_vs_texte (quality<=2)": _compare(records, expected, HEADLINE, "C0", "C1", poor),
-        "H1_multiphoto (C1->C2)": _compare(records, expected, HEADLINE, "C1", "C2"),
-        "H1b_metadonnee (C2->C3)": _compare(records, expected, HEADLINE, "C2", "C3"),
-        "H1b_metadonnee_sans_fuite (C2->C3, clean)": _compare(
-            records, expected, HEADLINE, "C2", "C3", clean
-        ),
-        "H1c_traduction (C3->C3t)": _compare(records, expected, HEADLINE, "C3", "C3t"),
+        # completeness (remplissage de la fiche)
+        "HV completeness photo>texte (qual<=2)": _compare(records, expected, "completeness", "C0", "C1", poor),
+        "H1 completeness multiphoto (C1->C2)": _compare(records, expected, "completeness", "C1", "C2"),
+        "H1b completeness metadonnee (C2->C3)": _compare(records, expected, "completeness", "C2", "C3"),
+        "H1b completeness metadonnee sans-fuite": _compare(records, expected, "completeness", "C2", "C3", clean),
+        "H1c completeness traduction (C3->C3t)": _compare(records, expected, "completeness", "C3", "C3t"),
+        # entity_match (identification du bon produit) — la metadonnee y prouve sa valeur
+        "H2 entity multiphoto (C1->C2)": _compare(records, expected, "entity_match", "C1", "C2"),
+        "H2 entity metadonnee (C2->C3)": _compare(records, expected, "entity_match", "C2", "C3"),
+        "H2 entity metadonnee sans-fuite": _compare(records, expected, "entity_match", "C2", "C3", clean),
     }
     # TOST équivalence métadonnée (non-effet prédit) sur les produits sans fuite.
     pp = _per_product(records, expected, HEADLINE, clean)
