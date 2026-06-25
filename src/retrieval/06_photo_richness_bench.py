@@ -46,7 +46,9 @@ log = logging.getLogger(__name__)
 DATASET_DIR = REPO_ROOT / "data" / "photos_eval"
 REPORT_DIR = REPO_ROOT / "reports" / "05_retrieval"
 EXPERIMENT = "rakuten-photo-richness"
-CONDITIONS = ["C1", "C2", "C3"]
+# C3  = métadonnée vendeur BRUTE (FR), sans traduction (isole l'effet texte pur).
+# C3t = métadonnée TRADUITE FR→EN avant recherche = conditions réelles de production.
+CONDITIONS = ["C1", "C2", "C3", "C3t"]
 LIMIT = int(os.environ.get("PHOTO_BENCH_LIMIT", "0"))
 
 
@@ -100,10 +102,12 @@ def run() -> dict:
             continue
 
         meta_txt = meta.get("seller_metadata", "")
+        c3q = f"{ext2.title_guess} {meta_txt}".strip()
         queries = {
-            "C1": ext1.title_guess,
-            "C2": ext2.title_guess,
-            "C3": f"{ext2.title_guess} {meta_txt}".strip(),
+            "C1": (ext1.title_guess, False),  # 1 photo
+            "C2": (ext2.title_guess, False),  # N photos
+            "C3": (c3q, False),  # N + métadonnée brute (FR)
+            "C3t": (c3q, True),  # N + métadonnée traduite FR→EN (production)
         }
         gt_macro = meta["macro"]
         gt_path = meta.get("true_category_path", "")
@@ -112,8 +116,8 @@ def run() -> dict:
             "quality": meta.get("metadata_quality", {}).get("score", 0),
             "n_photos": len(photos),
         }
-        for cond, query in queries.items():
-            res = ident.identify(query, translate=False)
+        for cond, (query, tr) in queries.items():
+            res = ident.identify(query, translate=tr)
             pm = _macro_vote(res.candidates)
             rec[cond] = {
                 "macro_ok": int(pm == gt_macro),
@@ -121,9 +125,9 @@ def run() -> dict:
                 "confidence": round(float(res.predicted_category_confidence), 4),
             }
         rows.append(rec)
-        log.info("[%d/%d] %s q=%s : C1/C2/C3 overlap=%.2f/%.2f/%.2f",
-                 k, len(products), d.name[:32], rec["quality"],
-                 rec["C1"]["fine_overlap"], rec["C2"]["fine_overlap"], rec["C3"]["fine_overlap"])
+        log.info("[%d/%d] %s q=%s : overlap C1/C2/C3/C3t=%.2f/%.2f/%.2f/%.2f",
+                 k, len(products), d.name[:30], rec["quality"], rec["C1"]["fine_overlap"],
+                 rec["C2"]["fine_overlap"], rec["C3"]["fine_overlap"], rec["C3t"]["fine_overlap"])
 
     # ---- agrégats par condition ----
     agg = {
@@ -134,18 +138,18 @@ def run() -> dict:
         }
         for c in CONDITIONS
     }
-    # ---- gain C3−C2 stratifié par qualité de métadonnée ----
+    # ---- gain métadonnée traduite (C3t−C2) stratifié par qualité de métadonnée ----
     by_q: dict[int, list[float]] = defaultdict(list)
     for r in rows:
-        by_q[r["quality"]].append(r["C3"]["fine_overlap"] - r["C2"]["fine_overlap"])
-    strat = {str(q): {"gain_c3_c2": round(_mean(v), 4), "n": len(v)} for q, v in sorted(by_q.items())}
+        by_q[r["quality"]].append(r["C3t"]["fine_overlap"] - r["C2"]["fine_overlap"])
+    strat = {str(q): {"gain_c3t_c2": round(_mean(v), 4), "n": len(v)} for q, v in sorted(by_q.items())}
 
     summary = {
         "n_products": len(rows),
         "elapsed_sec": round(time.perf_counter() - t0, 1),
         "by_condition": agg,
-        "c3_minus_c2_gain_by_metadata_quality": strat,
-        "translation": "off (variable isolée)",
+        "c3t_minus_c2_gain_by_metadata_quality": strat,
+        "note": "C3=métadonnée brute FR (sans traduction) ; C3t=métadonnée traduite FR→EN (production)",
     }
     _log_mlflow(summary)
     _write_report(summary, rows)
@@ -168,8 +172,8 @@ def _log_mlflow(summary: dict) -> None:
                 mlflow.log_param("n_products", summary["n_products"])
                 mlflow.log_metrics(m)
         with mlflow.start_run(run_name="gain_by_quality"):
-            for q, g in summary["c3_minus_c2_gain_by_metadata_quality"].items():
-                mlflow.log_metric(f"gain_c3_c2_q{q}", g["gain_c3_c2"])
+            for q, g in summary["c3t_minus_c2_gain_by_metadata_quality"].items():
+                mlflow.log_metric(f"gain_c3t_c2_q{q}", g["gain_c3t_c2"])
         log.info("Conditions tracées dans MLflow ('%s').", EXPERIMENT)
     except Exception as e:  # noqa: BLE001
         log.warning("MLflow indisponible (scores calculés) : %s", e)
@@ -182,30 +186,36 @@ def _write_report(summary: dict, rows: list[dict]) -> None:
         encoding="utf-8",
     )
     a = summary["by_condition"]
+
+    def _row(label, c):
+        return f"| {label} | {a[c]['macro_acc']:.3f} | {a[c]['fine_overlap']:.3f} | {a[c]['confidence']:.3f} |"
+
     lines = [
         "# Phase 2 — richesse d'entrée (1 photo < N photos < N + métadonnée)",
         "",
         f"- **{summary['n_products']} produits réels** d'éval · extraction VLM Gemma 4 31B · "
-        f"retrieval + vote A2 · traduction {summary['translation']}.",
+        "retrieval + vote A2.",
+        f"- {summary['note']}",
         "",
         "| Condition | macro_acc | fine_overlap | confiance |",
         "|---|---|---|---|",
-        f"| C1 — 1 photo | {a['C1']['macro_acc']:.3f} | {a['C1']['fine_overlap']:.3f} | {a['C1']['confidence']:.3f} |",
-        f"| C2 — N photos | {a['C2']['macro_acc']:.3f} | {a['C2']['fine_overlap']:.3f} | {a['C2']['confidence']:.3f} |",
-        f"| **C3 — N + métadonnée** | **{a['C3']['macro_acc']:.3f}** | **{a['C3']['fine_overlap']:.3f}** | **{a['C3']['confidence']:.3f}** |",
+        _row("C1 — 1 photo", "C1"),
+        _row("C2 — N photos", "C2"),
+        _row("C3 — N + métadonnée brute (FR)", "C3"),
+        _row("**C3t — N + métadonnée traduite (prod)**", "C3t"),
         "",
-        "## Gain C3−C2 par qualité de métadonnée (`metadata_quality` /5)",
+        "## Gain C3t−C2 (métadonnée traduite) par qualité de métadonnée (`metadata_quality` /5)",
         "",
-        "| Qualité /5 | gain fine_overlap (C3−C2) | n |",
+        "| Qualité /5 | gain fine_overlap (C3t−C2) | n |",
         "|---|---|---|",
     ]
-    for q, g in summary["c3_minus_c2_gain_by_metadata_quality"].items():
-        lines.append(f"| {q} | {g['gain_c3_c2']:+.3f} | {g['n']} |")
+    for q, g in summary["c3t_minus_c2_gain_by_metadata_quality"].items():
+        lines.append(f"| {q} | {g['gain_c3t_c2']:+.3f} | {g['n']} |")
     lines += [
         "",
-        "> Lecture : `fine_overlap` = recouvrement breadcrumb réel ↔ prédit (robuste aux "
-        "formulations). La métadonnée (C3) doit aider **d'autant plus que sa qualité est haute** "
-        "→ le gain par tranche prouve l'impact réel de la métadonnée d'entrée.",
+        "> Lecture : `fine_overlap` = recouvrement breadcrumb réel ↔ prédit. C1→C2 = apport des "
+        "photos multiples ; C2→C3t = apport de la métadonnée (traduite, conditions production). "
+        "Le gain stratifié montre si la métadonnée aide ∝ sa qualité.",
     ]
     (REPORT_DIR / "photo_richness_bench.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     log.info("Rapport : %s", REPORT_DIR / "photo_richness_bench.md")
