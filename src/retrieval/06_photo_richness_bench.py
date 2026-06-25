@@ -125,9 +125,17 @@ def run() -> dict:
                 "confidence": round(float(res.predicted_category_confidence), 4),
             }
         rows.append(rec)
-        log.info("[%d/%d] %s q=%s : overlap C1/C2/C3/C3t=%.2f/%.2f/%.2f/%.2f",
-                 k, len(products), d.name[:30], rec["quality"], rec["C1"]["fine_overlap"],
-                 rec["C2"]["fine_overlap"], rec["C3"]["fine_overlap"], rec["C3t"]["fine_overlap"])
+        log.info(
+            "[%d/%d] %s q=%s : overlap C1/C2/C3/C3t=%.2f/%.2f/%.2f/%.2f",
+            k,
+            len(products),
+            d.name[:30],
+            rec["quality"],
+            rec["C1"]["fine_overlap"],
+            rec["C2"]["fine_overlap"],
+            rec["C3"]["fine_overlap"],
+            rec["C3t"]["fine_overlap"],
+        )
 
     # ---- agrégats par condition ----
     agg = {
@@ -142,7 +150,9 @@ def run() -> dict:
     by_q: dict[int, list[float]] = defaultdict(list)
     for r in rows:
         by_q[r["quality"]].append(r["C3t"]["fine_overlap"] - r["C2"]["fine_overlap"])
-    strat = {str(q): {"gain_c3t_c2": round(_mean(v), 4), "n": len(v)} for q, v in sorted(by_q.items())}
+    strat = {
+        str(q): {"gain_c3t_c2": round(_mean(v), 4), "n": len(v)} for q, v in sorted(by_q.items())
+    }
 
     summary = {
         "n_products": len(rows),
@@ -153,8 +163,12 @@ def run() -> dict:
     }
     _log_mlflow(summary)
     _write_report(summary, rows)
-    log.info("FAIT : C1/C2/C3 fine_overlap = %.3f / %.3f / %.3f",
-             agg["C1"]["fine_overlap"], agg["C2"]["fine_overlap"], agg["C3"]["fine_overlap"])
+    log.info(
+        "FAIT : C1/C2/C3 fine_overlap = %.3f / %.3f / %.3f",
+        agg["C1"]["fine_overlap"],
+        agg["C2"]["fine_overlap"],
+        agg["C3"]["fine_overlap"],
+    )
     return summary
 
 

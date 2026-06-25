@@ -1,0 +1,2357 @@
+{
+  "summary": {
+    "n_products": 92,
+    "elapsed_sec": 2469.2,
+    "by_condition": {
+      "C1": {
+        "macro_acc": 0.8152,
+        "fine_overlap": 0.3148,
+        "confidence": 0.6276
+      },
+      "C2": {
+        "macro_acc": 0.8913,
+        "fine_overlap": 0.3606,
+        "confidence": 0.6666
+      },
+      "C3": {
+        "macro_acc": 0.9022,
+        "fine_overlap": 0.3706,
+        "confidence": 0.6483
+      },
+      "C3t": {
+        "macro_acc": 0.8478,
+        "fine_overlap": 0.3397,
+        "confidence": 0.6513
+      }
+    },
+    "c3t_minus_c2_gain_by_metadata_quality": {
+      "0": {
+        "gain_c3t_c2": 0.0,
+        "n": 9
+      },
+      "1": {
+        "gain_c3t_c2": -0.0156,
+        "n": 18
+      },
+      "2": {
+        "gain_c3t_c2": -0.0247,
+        "n": 14
+      },
+      "3": {
+        "gain_c3t_c2": -0.0364,
+        "n": 30
+      },
+      "4": {
+        "gain_c3t_c2": 0.0025,
+        "n": 19
+      },
+      "5": {
+        "gain_c3t_c2": -0.125,
+        "n": 2
+      }
+    },
+    "note": "C3=métadonnée brute FR (sans traduction) ; C3t=métadonnée traduite FR→EN (production)"
+  },
+  "rows": [
+    {
+      "product": "01_power_supply_1000w_80_gold",
+      "quality": 1,
+      "n_photos": 1,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      }
+    },
+    {
+      "product": "02_canon_pixma_cli_581_xxl_multipack",
+      "quality": 4,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0909,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.3383
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.2642
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.2757
+      }
+    },
+    {
+      "product": "03_msi_geforce_rtx_4080_super_gaming_x_trio",
+      "quality": 4,
+      "n_photos": 13,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.2028
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 0.9361
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 0.9362
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 0.9338
+      }
+    },
+    {
+      "product": "04_nvidia_rtx_3090_founders_edition_24gb",
+      "quality": 4,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 0.9669
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      }
+    },
+    {
+      "product": "05_razer_headset",
+      "quality": 1,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.7562
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.7562
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.125,
+        "confidence": 0.4421
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.125,
+        "confidence": 0.3959
+      }
+    },
+    {
+      "product": "06_samsung_pd_25w_fast_charger_type_c",
+      "quality": 1,
+      "n_photos": 1,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2,
+        "confidence": 0.9603
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2,
+        "confidence": 0.9603
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2,
+        "confidence": 0.9212
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2,
+        "confidence": 0.7478
+      }
+    },
+    {
+      "product": "07_coros_pace_2",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.7207
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.7221
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.7198
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.6866
+      }
+    },
+    {
+      "product": "08_apple_iphone_13_screen",
+      "quality": 3,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.4451
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4545,
+        "confidence": 0.7276
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4545,
+        "confidence": 0.7788
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4545,
+        "confidence": 0.7393
+      }
+    },
+    {
+      "product": "09_rockstar_games_grand_theft_auto_v_gta_5",
+      "quality": 1,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.7532
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.7532
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.7524
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.8,
+        "confidence": 0.7274
+      }
+    },
+    {
+      "product": "10_apple_iphone_13",
+      "quality": 2,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.5295
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.5295
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.7363
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.7664
+      }
+    },
+    {
+      "product": "11_apple_iphone_14_128go",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.7137
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 1.0
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.5591
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.4244
+      }
+    },
+    {
+      "product": "12_apple_iphone_14_128go",
+      "quality": 2,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.8146
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 1.0
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 1.0
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.9637
+      }
+    },
+    {
+      "product": "13_jbl_flip_5",
+      "quality": 3,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9642
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9642
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9642
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9641
+      }
+    },
+    {
+      "product": "14_jbl_flip_6",
+      "quality": 4,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9016
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9672
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.9676
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.935
+      }
+    },
+    {
+      "product": "15_gigabyte_geforce_rtx_2060_oc_6gb",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.625,
+        "confidence": 1.0
+      }
+    },
+    {
+      "product": "16_rockstar_games_red_dead_redemption_2",
+      "quality": 2,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.8376
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.8376
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.878
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.7558
+      }
+    },
+    {
+      "product": "17_acer_aspire_3",
+      "quality": 3,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.9625
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.7953
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.859
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.7959
+      }
+    },
+    {
+      "product": "18_xiaomi_redmi_note_10_pro",
+      "quality": 2,
+      "n_photos": 7,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1667,
+        "confidence": 0.6678
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.9368
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.9055
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.874
+      }
+    },
+    {
+      "product": "19_t_l_30euros",
+      "quality": 0,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9628
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9613
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9617
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9613
+      }
+    },
+    {
+      "product": "20_far_tv_led_81_cm",
+      "quality": 0,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.7991
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.7991
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.5857
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.8388
+      }
+    },
+    {
+      "product": "21_apple_mac",
+      "quality": 0,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.4993
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9504
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9065
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.9057
+      }
+    },
+    {
+      "product": "22_apple_macbook_pro_15_2012_complete_scree",
+      "quality": 4,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 1.0
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.4819
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 1.0
+      }
+    },
+    {
+      "product": "23_nintendo_wii_accessories_and_games_bundl",
+      "quality": 2,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0833,
+        "confidence": 0.29
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.3607
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.3604
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.5843
+      }
+    },
+    {
+      "product": "24_amazon_fire_tv_cube",
+      "quality": 3,
+      "n_photos": 11,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0769,
+        "confidence": 0.5093
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0909,
+        "confidence": 0.5106
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.4039
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.3593
+      }
+    },
+    {
+      "product": "25_amazon_fire_tv_stick_4k_select",
+      "quality": 4,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1111,
+        "confidence": 0.5008
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 1.0
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.3412
+      }
+    },
+    {
+      "product": "26_apple_watch_se_2021",
+      "quality": 4,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.8317
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.8824
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.9037
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.9039
+      }
+    },
+    {
+      "product": "27_apple_watch_se_40mm_2021",
+      "quality": 4,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.4,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.4,
+        "confidence": 0.8957
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.4,
+        "confidence": 0.6683
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.4,
+        "confidence": 0.8561
+      }
+    },
+    {
+      "product": "28_atari_flashback",
+      "quality": 1,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.3784
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.3577
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.3587
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.3248
+      }
+    },
+    {
+      "product": "29_nintendo_wii_fit_rechargeable_battery",
+      "quality": 4,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.4144
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.4144
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.4588
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.477
+      }
+    },
+    {
+      "product": "30_nikon_d800",
+      "quality": 3,
+      "n_photos": 7,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.806
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.806
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8063
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8401
+      }
+    },
+    {
+      "product": "31_bose_wave_soundtouch_iv",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.2979
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.3318
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.2237
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.1582
+      }
+    },
+    {
+      "product": "32_asus_pce_ac_56",
+      "quality": 1,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2,
+        "confidence": 0.2356
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.4975
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.3696
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.4975
+      }
+    },
+    {
+      "product": "33_atheros_ar5b125_wifi_and_bluetooth_card",
+      "quality": 0,
+      "n_photos": 1,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.4511
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.4511
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.4641
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.5644
+      }
+    },
+    {
+      "product": "34_cartes_wifi",
+      "quality": 0,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.3735
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.6234
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.625
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.6234
+      }
+    },
+    {
+      "product": "35_sennheiser_momentum_3_wireless_white",
+      "quality": 4,
+      "n_photos": 9,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.8079
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.7619
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.3255
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.3003
+      }
+    },
+    {
+      "product": "36_sennheiser_hd_450bt_wireless",
+      "quality": 1,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.6301
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.602
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.6163
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.5772
+      }
+    },
+    {
+      "product": "37_logitech_keyboard",
+      "quality": 1,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.7004
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.7001
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.7959
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.7323
+      }
+    },
+    {
+      "product": "38_msi_strike_pro_wireless_keyboard_and_mou",
+      "quality": 1,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.5509
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.2222,
+        "confidence": 0.7027
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.2222,
+        "confidence": 0.6045
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.2222,
+        "confidence": 0.7357
+      }
+    },
+    {
+      "product": "39_msi_gaming_keyboard_azerty",
+      "quality": 1,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.3918
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.7196
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.709
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.7379
+      }
+    },
+    {
+      "product": "40_microsoft_xbox_one_hard_drive_2tb",
+      "quality": 3,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.4339
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.4794
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.4746
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.3599
+      }
+    },
+    {
+      "product": "41_seagate_barracuda_4tb",
+      "quality": 4,
+      "n_photos": 1,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.6108
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.6108
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.5117
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.5474
+      }
+    },
+    {
+      "product": "42_nvme_ssd_500gb",
+      "quality": 0,
+      "n_photos": 1,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.6386
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.6386
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.6147
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.6386
+      }
+    },
+    {
+      "product": "43_kingston_and_transcend_ssd_60gb",
+      "quality": 0,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.6868
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.8537
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.8179
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.7136
+      }
+    },
+    {
+      "product": "44_generic_karaoke_bluetooth_speaker_with_m",
+      "quality": 0,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.4483
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.7049
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.7493
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.8926
+      }
+    },
+    {
+      "product": "45_devialet_phantom_1_103db_silver",
+      "quality": 4,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0909,
+        "confidence": 0.29
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6926
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.5219
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6594
+      }
+    },
+    {
+      "product": "46_devialet_phantom_2",
+      "quality": 3,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6926
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6926
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.7385
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.702
+      }
+    },
+    {
+      "product": "47_devialet_phantom_ii_95db",
+      "quality": 4,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.5531
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.53
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.4624
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6481
+      }
+    },
+    {
+      "product": "48_samsung_galaxy_watch_4_classic",
+      "quality": 2,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.7625
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.7625
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.6383
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.5624
+      }
+    },
+    {
+      "product": "49_samsung_galaxy_watch_5_44mm_bluetooth",
+      "quality": 3,
+      "n_photos": 11,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.125,
+        "confidence": 0.9677
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.563
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.7321
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4,
+        "confidence": 0.6651
+      }
+    },
+    {
+      "product": "50_bose_lifestyle_v35_5_1",
+      "quality": 4,
+      "n_photos": 11,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0833,
+        "confidence": 0.5093
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.5347
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.5351
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0909,
+        "confidence": 0.4433
+      }
+    },
+    {
+      "product": "51_lego_pikachu_and_pok_ball_10025",
+      "quality": 1,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.2013
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.2174
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.1565
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.4928
+      }
+    },
+    {
+      "product": "52_leica_m6_2022_version",
+      "quality": 4,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.2783
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.267
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.2822
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1429,
+        "confidence": 0.3832
+      }
+    },
+    {
+      "product": "53_speedlink_pc_microphone",
+      "quality": 1,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.6318
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.7878
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.8773
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.8644
+      }
+    },
+    {
+      "product": "54_ugreen_pc_microphone",
+      "quality": 1,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.7861
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8081
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8521
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.1641
+      }
+    },
+    {
+      "product": "55_logitech_g203",
+      "quality": 5,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.8177
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.8272
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.8272
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.6794
+      }
+    },
+    {
+      "product": "56_hp_zbook_fury_g8_i5_16gb_500gb",
+      "quality": 4,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.9236
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.9245
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.822
+      }
+    },
+    {
+      "product": "57_pok_mon_pok_ball_2025_figure",
+      "quality": 4,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.2341
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.2509
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.3095
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.6187
+      }
+    },
+    {
+      "product": "58_sony_playstation_4",
+      "quality": 1,
+      "n_photos": 1,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.3473
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.3473
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.3854
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.4988
+      }
+    },
+    {
+      "product": "59_sony_playstation_5",
+      "quality": 1,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.2819
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.2326
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.2326
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.1591
+      }
+    },
+    {
+      "product": "60_samsung_galaxy_s8_64gb",
+      "quality": 5,
+      "n_photos": 7,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0769,
+        "confidence": 0.5883
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0769,
+        "confidence": 0.7021
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0769,
+        "confidence": 0.7688
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0769,
+        "confidence": 0.8033
+      }
+    },
+    {
+      "product": "61_logitech_g_pro_x_superlight_wireless_lig",
+      "quality": 3,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.5083
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.6133
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.6703
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.25,
+        "confidence": 0.4766
+      }
+    },
+    {
+      "product": "62_dell_wd15_docking_station",
+      "quality": 3,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.8011
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.8011
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.6669
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2222,
+        "confidence": 0.6194
+      }
+    },
+    {
+      "product": "63_nintendo_switch_oled_black",
+      "quality": 0,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.4816
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.4829
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.4415
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.4276
+      }
+    },
+    {
+      "product": "64_fotopro_tripod",
+      "quality": 1,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.6623
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.7004
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.7657
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.7009
+      }
+    },
+    {
+      "product": "65_huawei_mate_10_pro_128gb",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.4905
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.4401
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0769,
+        "confidence": 0.4207
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1,
+        "confidence": 0.4901
+      }
+    },
+    {
+      "product": "66_microsoft_xbox_one_s",
+      "quality": 2,
+      "n_photos": 8,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8509
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8569
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8568
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.8499
+      }
+    },
+    {
+      "product": "67_apple_airpods_pro_2",
+      "quality": 2,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 1.0
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.8456
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.8507
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.8102
+      }
+    },
+    {
+      "product": "68_apple_watch_se_2nd_gen_44mm_midnight_gps",
+      "quality": 2,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0909,
+        "confidence": 0.29
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.6614
+      },
+      "C3": {
+        "macro_ok": 0,
+        "fine_overlap": 0.4,
+        "confidence": 0.6447
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.4,
+        "confidence": 0.6916
+      }
+    },
+    {
+      "product": "69_xiaomi_redmi_note_12_128gb",
+      "quality": 4,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.8717
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.9054
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 1.0
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6,
+        "confidence": 0.9371
+      }
+    },
+    {
+      "product": "70_bosch_professional_gws_750",
+      "quality": 3,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.8632
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.829
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.8289
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.8284
+      }
+    },
+    {
+      "product": "71_bose_soundlink",
+      "quality": 2,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.4456
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.931
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.9305
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.8967
+      }
+    },
+    {
+      "product": "72_apple_magsafe_charger",
+      "quality": 2,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.5153
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.375,
+        "confidence": 0.1944
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1818,
+        "confidence": 0.2981
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.1,
+        "confidence": 0.2198
+      }
+    },
+    {
+      "product": "73_dewalt_dcf887",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.5856
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.6714
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.8025
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.8668
+      }
+    },
+    {
+      "product": "74_sony_dualshock_4_v2_red_magma",
+      "quality": 3,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.633
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.633
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.6332
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.4993
+      }
+    },
+    {
+      "product": "75_bosch_heat_gun",
+      "quality": 1,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3,
+        "confidence": 0.8903
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3,
+        "confidence": 0.9272
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3,
+        "confidence": 0.8955
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3,
+        "confidence": 0.9281
+      }
+    },
+    {
+      "product": "76_apple_ipad_air_10_9",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.9532
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.125,
+        "confidence": 0.8553
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.125,
+        "confidence": 0.8973
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.125,
+        "confidence": 0.9627
+      }
+    },
+    {
+      "product": "77_apple_ipad_pro_m2_2022_12_9",
+      "quality": 3,
+      "n_photos": 7,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.5233
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.5233
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0909,
+        "confidence": 0.3798
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.3044
+      }
+    },
+    {
+      "product": "78_karcher_k2",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.1984
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3,
+        "confidence": 0.2693
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.2501
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3,
+        "confidence": 0.2288
+      }
+    },
+    {
+      "product": "79_k_rcher_k3_full_control",
+      "quality": 3,
+      "n_photos": 6,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.4397
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.5624
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3636,
+        "confidence": 0.518
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4444,
+        "confidence": 0.6051
+      }
+    },
+    {
+      "product": "80_microsoft_xbox_series_controller",
+      "quality": 3,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.6667,
+        "confidence": 0.4667
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.449
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.4858
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.46
+      }
+    },
+    {
+      "product": "81_bosch_professional_gll_2_10",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0833,
+        "confidence": 0.3398
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4545,
+        "confidence": 0.3454
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4545,
+        "confidence": 0.3452
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4545,
+        "confidence": 0.3461
+      }
+    },
+    {
+      "product": "82_makita_14_4v_drill_driver_pack",
+      "quality": 2,
+      "n_photos": 7,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.4145
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.5843
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.4808
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.4781
+      }
+    },
+    {
+      "product": "83_bosch_professional_gsb_18v_55",
+      "quality": 4,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.7008
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.5058
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.4405
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.4703
+      }
+    },
+    {
+      "product": "84_makita_ddf485r_18v",
+      "quality": 2,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.25,
+        "confidence": 0.5528
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.4862
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.4861
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.3333,
+        "confidence": 0.5568
+      }
+    },
+    {
+      "product": "85_bosch_pex_400_ae",
+      "quality": 3,
+      "n_photos": 4,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.9038
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.9038
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.9665
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.375,
+        "confidence": 0.9023
+      }
+    },
+    {
+      "product": "86_sony_playstation_4_pro_1tb",
+      "quality": 3,
+      "n_photos": 8,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.6905
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.6905
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.8379
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.9597
+      }
+    },
+    {
+      "product": "87_sony_playstation_4_slim_500gb",
+      "quality": 3,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5714,
+        "confidence": 0.8826
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.7918
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 1.0,
+        "confidence": 0.7752
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.7258
+      }
+    },
+    {
+      "product": "88_samsung_galaxy_s22_plus",
+      "quality": 3,
+      "n_photos": 5,
+      "C1": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0769,
+        "confidence": 0.3375
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1111,
+        "confidence": 0.4818
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.1111,
+        "confidence": 0.5781
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0769,
+        "confidence": 0.7121
+      }
+    },
+    {
+      "product": "90_sony_wh_1000xm5",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.5534
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.4865
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.6736
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2857,
+        "confidence": 0.7078
+      }
+    },
+    {
+      "product": "91_bosch_electric_hedge_trimmer",
+      "quality": 1,
+      "n_photos": 7,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.1598
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.1688
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.1576
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.0,
+        "confidence": 0.159
+      }
+    },
+    {
+      "product": "92_microsoft_xbox_series_s_carbon_black_800",
+      "quality": 3,
+      "n_photos": 3,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.2,
+        "confidence": 0.207
+      },
+      "C2": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.6196
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.3091
+      },
+      "C3t": {
+        "macro_ok": 0,
+        "fine_overlap": 0.0,
+        "confidence": 0.8565
+      }
+    },
+    {
+      "product": "93_microsoft_xbox_series_s",
+      "quality": 2,
+      "n_photos": 2,
+      "C1": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6351
+      },
+      "C2": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.6344
+      },
+      "C3": {
+        "macro_ok": 1,
+        "fine_overlap": 0.5,
+        "confidence": 0.634
+      },
+      "C3t": {
+        "macro_ok": 1,
+        "fine_overlap": 0.4286,
+        "confidence": 0.6145
+      }
+    }
+  ]
+}

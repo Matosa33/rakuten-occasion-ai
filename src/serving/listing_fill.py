@@ -141,7 +141,9 @@ def assemble_listing(
     ]
     filled_labels = {f.name for f in fields}
     missing = [lbl for lbl in expected_labels if lbl not in filled_labels]
-    completeness = (len(expected_labels) - len(missing)) / len(expected_labels) if expected_labels else 0.0
+    completeness = (
+        (len(expected_labels) - len(missing)) / len(expected_labels) if expected_labels else 0.0
+    )
 
     return AssembledListing(
         level=level,
