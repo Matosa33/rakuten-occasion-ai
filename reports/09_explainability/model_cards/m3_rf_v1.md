@@ -1,4 +1,4 @@
-# Model Card — m3_rf_v1
+# Model Card — rf-embed_v1
 
 **Type** : RandomForest (300 estimators, max_depth=20)
 **Tâche** : Classification multi-cat (4 cat D-011)
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m3_rf_v1.json`
+`reports/04_classifiers_bench/rf-embed_v1.json`

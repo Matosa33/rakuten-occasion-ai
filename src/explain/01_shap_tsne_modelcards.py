@@ -58,7 +58,7 @@ MODEL_CARDS_DIR = OUT_DIR / "model_cards"
 # ─────────────────────────────────────────────────────────────────────────────
 
 MODEL_CARDS = {
-    "m1_knn_v1": {
+    "knn-faiss_v1": {
         "type": "k-NN cosine weighted",
         "task": "Classification multi-cat (4 cat D-011)",
         "input": "Embeddings Arctic Embed L v2 (1024 dim, FP16)",
@@ -66,7 +66,7 @@ MODEL_CARDS = {
         "training_data": "Arctic embed du train (3,16M items, 4 cat D-011)",
         "limitations": "Lent en inférence (k voisins par query). Pas de calibration native.",
     },
-    "m2_svm_v1": {
+    "svm-embed_v1": {
         "type": "LinearSVC + Platt calibration",
         "task": "Classification multi-cat (4 cat D-011)",
         "input": "Embeddings Arctic Embed L v2 (1024 dim, FP16)",
@@ -74,7 +74,7 @@ MODEL_CARDS = {
         "training_data": "Arctic embed du train",
         "limitations": "Hyperparamètre C non tuné (default). Linéaire — pas d'interactions.",
     },
-    "m3_rf_v1": {
+    "rf-embed_v1": {
         "type": "RandomForest (300 estimators, max_depth=20)",
         "task": "Classification multi-cat (4 cat D-011)",
         "input": "Embeddings Arctic Embed L v2 (1024 dim, FP16)",
@@ -82,7 +82,7 @@ MODEL_CARDS = {
         "training_data": "Arctic embed du train",
         "limitations": "RAM-intensive (~2 GB). Pas le meilleur F1 mais explicable via SHAP.",
     },
-    "m4_mlp_v1": {
+    "mlp-embed_v1": {
         "type": "MLPClassifier hidden=(512, 256), early stopping",
         "task": "Classification multi-cat (4 cat D-011)",
         "input": "Embeddings Arctic Embed L v2 (1024 dim, FP16)",
@@ -90,7 +90,7 @@ MODEL_CARDS = {
         "training_data": "Arctic embed du train",
         "limitations": "Boîte noire (peu d'explainability native). Sensible au scaling.",
     },
-    "m5_tfidf_linsvc_v1": {
+    "tfidf-svm_v1": {
         "type": "TF-IDF (word 1-2gram + char 3-5gram) + LinearSVC + Platt",
         "task": "Classification multi-cat (4 cat D-011)",
         "input": "Texte brut (titre + description)",
@@ -99,7 +99,7 @@ MODEL_CARDS = {
         "performance": "F1_w test = 0.9503, F1_m = 0.9375, ECE = 0.0092",
         "limitations": "Pas de sémantique (mots seuls), mais excellent baseline.",
     },
-    "m6_fusion_v1": {
+    "fusion_v1": {
         "type": "Fusion adaptive (moyenne pondérée probas)",
         "task": "Classification multi-cat (4 cat D-011)",
         "input": "Probas calibrées de M2/M3/M4/M5",
@@ -107,7 +107,7 @@ MODEL_CARDS = {
         "training_data": "Probas val M2-M5, grid search α",
         "limitations": "Coût inférence = 4× modèle individuel. À adopter uniquement si gain > +0.02 F1_w.",
     },
-    "m7_faiss_hnsw_v1": {
+    "faiss-hnsw_v1": {
         "type": "FAISS HNSW (M=32, efConstruction=200, efSearch=64)",
         "task": "Recherche similarité produit (k-NN top-K)",
         "input": "Embedding query (Arctic 1024 dim)",
@@ -115,7 +115,7 @@ MODEL_CARDS = {
         "training_data": "Index sur 3,16M items train",
         "limitations": "Approximate (recall ~95-98 %). À comparer Flat IP en référence.",
     },
-    "m8_pricing_v1": {
+    "pricing-cascade_v1": {
         "type": "Algorithmique cascade L1-L4 (transparent, pas de ML)",
         "task": "Suggestion prix indicatif + niveau confiance",
         "input": "(catalog_price, knn_neighbors_prices, category_median, condition, age, category)",
@@ -269,7 +269,7 @@ def main() -> None:
         log.info("vision_siglip_val.npy absent → skip t-SNE vision (lance Cycle 2.2 d'abord)")
 
     # 4. SHAP M3 (si modèle dispo)
-    m3_path = DATA_MODELS / "m3_rf_v1.joblib"
+    m3_path = DATA_MODELS / "rf-embed_v1.joblib"
     if m3_path.exists():
         try:
             import joblib
@@ -300,7 +300,7 @@ def main() -> None:
         except ImportError:
             log.warning("Lib `shap` absente → skip SHAP")
     else:
-        log.info("m3_rf_v1.joblib absent → skip SHAP M3 (lance Cycle 3.1 M3 d'abord)")
+        log.info("rf-embed_v1.joblib absent → skip SHAP M3 (lance Cycle 3.1 M3 d'abord)")
 
     log.info("Cycle 8.1 explainability OK.")
 

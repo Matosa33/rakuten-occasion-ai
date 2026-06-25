@@ -1,4 +1,4 @@
-# Model Card — m6_fusion_v1
+# Model Card — fusion_v1
 
 **Type** : Fusion adaptive (moyenne pondérée probas)
 **Tâche** : Classification multi-cat (4 cat D-011)
@@ -24,4 +24,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m6_fusion_v1.json`
+`reports/04_classifiers_bench/fusion_v1.json`

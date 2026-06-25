@@ -1,4 +1,4 @@
-# Model Card — m7_faiss_hnsw_v1
+# Model Card — faiss-hnsw_v1
 
 **Type** : FAISS HNSW (M=32, efConstruction=200, efSearch=64)
 **Tâche** : Recherche similarité produit (k-NN top-K)
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m7_faiss_hnsw_v1.json`
+`reports/04_classifiers_bench/faiss-hnsw_v1.json`

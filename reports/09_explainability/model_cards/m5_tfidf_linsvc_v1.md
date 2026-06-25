@@ -1,4 +1,4 @@
-# Model Card — m5_tfidf_linsvc_v1
+# Model Card — tfidf-svm_v1
 
 **Type** : TF-IDF (word 1-2gram + char 3-5gram) + LinearSVC + Platt
 **Tâche** : Classification multi-cat (4 cat D-011)
@@ -28,4 +28,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m5_tfidf_linsvc_v1.json`
+`reports/04_classifiers_bench/tfidf-svm_v1.json`

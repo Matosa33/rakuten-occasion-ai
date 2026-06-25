@@ -5,7 +5,7 @@ pour avoir des probabilités. Comparable à M5 (TF-IDF + LinearSVC) mais
 sur un input dense sémantique au lieu d'un input sparse lexical.
 
 Sortie :
-- `data/models/m2_svm_v1.joblib`
+- `data/models/svm-embed_v1.joblib`
 - `reports/04_classifiers_bench/m2_svm.json`
 
 Lance :
@@ -43,7 +43,7 @@ from src.mlops.mlflow_utils import log_training_run
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m2_svm_v1"
+MODEL_NAME = "svm-embed_v1"
 C_PARAM = 1.0
 CALIBRATION_CV = 3
 

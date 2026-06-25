@@ -378,7 +378,7 @@ class PricingService:
     def load(self) -> None:
         import joblib
 
-        path = DATA_MODELS / "m8_pricing_v1.joblib"
+        path = DATA_MODELS / "pricing-cascade_v1.joblib"
         if not path.exists():
             raise FileNotFoundError(f"{path} introuvable. Lance Cycle 7.1 d'abord.")
         self._config = joblib.load(path)

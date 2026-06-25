@@ -31,7 +31,7 @@ Dépréciation linéaire par catégorie (config YAML)
 - Tools_and_Home_Improvement : -5 %/an (vieillit lentement)
 
 Sortie :
-- `data/models/m8_pricing_v1.joblib` (config sérialisée + KNN référence)
+- `data/models/pricing-cascade_v1.joblib` (config sérialisée + KNN référence)
 - `reports/08_pricing/pricing_v1.{md,json}` (MAPE par niveau, couverture)
 
 Lance APRÈS Cycle 4.1 (FAISS index pour KNN voisins) :
@@ -66,7 +66,7 @@ from src.config import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m8_pricing_v1"
+MODEL_NAME = "pricing-cascade_v1"
 
 # Seuil prix valide : exclut les "0.0" parasites des metas Amazon
 MIN_VALID_PRICE_USD = 0.01

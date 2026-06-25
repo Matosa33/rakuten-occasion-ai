@@ -1,4 +1,4 @@
-# Model Card — m1_knn_v1
+# Model Card — knn-faiss_v1
 
 **Type** : k-NN cosine weighted
 **Tâche** : Classification multi-cat (4 cat D-011)
@@ -25,4 +25,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m1_knn_v1.json`
+`reports/04_classifiers_bench/knn-faiss_v1.json`

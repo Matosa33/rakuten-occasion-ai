@@ -1,4 +1,4 @@
-# Model Card — m2_svm_v1
+# Model Card — svm-embed_v1
 
 **Type** : LinearSVC + Platt calibration
 **Tâche** : Classification multi-cat (4 cat D-011)
@@ -25,4 +25,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m2_svm_v1.json`
+`reports/04_classifiers_bench/svm-embed_v1.json`

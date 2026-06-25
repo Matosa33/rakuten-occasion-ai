@@ -16,7 +16,7 @@ Si vision indexée disponible (Cycle 2.2 SigLIP) : ajouter une branche
 classifieur visuel (à activer en post-MVP).
 
 Sortie :
-- `data/models/m6_fusion_v1.joblib` (poids α + références aux modèles)
+- `data/models/fusion_v1.joblib` (poids α + références aux modèles)
 - `reports/04_classifiers_bench/m6_fusion.json`
 
 Lance APRÈS M1-M5 :
@@ -53,7 +53,7 @@ from src.mlops.mlflow_utils import log_training_run
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m6_fusion_v1"
+MODEL_NAME = "fusion_v1"
 ALPHA_GRID = (0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0)
 
 OUT_MODEL = DATA_MODELS / f"{MODEL_NAME}.joblib"
@@ -120,10 +120,10 @@ def main() -> None:
     probas_val = {}
     probas_test = {}
     for model_name, X_val_input, X_test_input in [
-        ("m2_svm_v1", X_val_emb, X_test_emb),
-        ("m3_rf_v1", X_val_emb, X_test_emb),
-        ("m4_mlp_v1", X_val_emb, X_test_emb),
-        ("m5_tfidf_linsvc_v1", val_texts, test_texts),
+        ("svm-embed_v1", X_val_emb, X_test_emb),
+        ("rf-embed_v1", X_val_emb, X_test_emb),
+        ("mlp-embed_v1", X_val_emb, X_test_emb),
+        ("tfidf-svm_v1", val_texts, test_texts),
     ]:
         log.info("  %s …", model_name)
         p_val = _get_proba_or_skip(model_name, X_val_input, (len(y_val), len(set(y_train))))

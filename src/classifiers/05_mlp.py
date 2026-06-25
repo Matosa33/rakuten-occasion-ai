@@ -12,7 +12,7 @@ Mais on utilise sklearn MLPClassifier ici par simplicité (CPU mais plus
 simple qu'une boucle PyTorch custom — Cycle 3 = baselines, pas SOTA).
 
 Sortie :
-- `data/models/m4_mlp_v1.joblib`
+- `data/models/mlp-embed_v1.joblib`
 - `reports/04_classifiers_bench/m4_mlp.json`
 
 Lance :
@@ -50,7 +50,7 @@ from src.mlops.mlflow_utils import log_training_run
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m4_mlp_v1"
+MODEL_NAME = "mlp-embed_v1"
 HIDDEN_LAYERS = (512, 256)
 BATCH_SIZE = 256
 MAX_ITER = 30  # peut s'arrêter avant via early stopping

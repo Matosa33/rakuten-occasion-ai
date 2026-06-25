@@ -135,7 +135,7 @@ class TestPrice:
         assert r.status_code == 503
 
     @pytest.mark.skipif(
-        not (DATA_MODELS / "m8_pricing_v1.joblib").exists(),
+        not (DATA_MODELS / "pricing-cascade_v1.joblib").exists(),
         reason="M8 pricing artifact absent (lance Cycle 7.1)",
     )
     def test_price_real_m8(self):
@@ -163,7 +163,7 @@ class TestDescribe:
 
 class TestPricingService:
     @pytest.mark.skipif(
-        not (DATA_MODELS / "m8_pricing_v1.joblib").exists(),
+        not (DATA_MODELS / "pricing-cascade_v1.joblib").exists(),
         reason="M8 pricing artifact absent",
     )
     def test_suggest_uses_category_median(self):

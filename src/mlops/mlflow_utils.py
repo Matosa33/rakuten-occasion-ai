@@ -13,7 +13,7 @@ Usage dans un script d'entraînement :
     setup_mlflow()
     ... entraînement ...
     log_training_run(
-        model_id="m2_svm_v1", model=clf, hyperparams={...}, results={...},
+        model_id="svm-embed_v1", model=clf, hyperparams={...}, results={...},
         x_example=X_val[:2], sklearn=True, n_train=..., register=True,
     )
 """

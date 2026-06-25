@@ -1,4 +1,4 @@
-# Model Card — m4_mlp_v1
+# Model Card — mlp-embed_v1
 
 **Type** : MLPClassifier hidden=(512, 256), early stopping
 **Tâche** : Classification multi-cat (4 cat D-011)
@@ -25,4 +25,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m4_mlp_v1.json`
+`reports/04_classifiers_bench/mlp-embed_v1.json`

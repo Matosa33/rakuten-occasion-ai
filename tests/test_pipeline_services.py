@@ -13,7 +13,7 @@ import pytest
 from src.api.pipeline import DescribeService, IdentificationService, PricingService
 from src.config import DATA_INDEX, DATA_MODELS, DATA_PROCESSED_PRODUCTS
 
-_M8 = DATA_MODELS / "m8_pricing_v1.joblib"
+_M8 = DATA_MODELS / "pricing-cascade_v1.joblib"
 _FAISS = DATA_INDEX / "text_arctic_hnsw.index"
 _TRAIN = DATA_PROCESSED_PRODUCTS / "train.parquet"
 

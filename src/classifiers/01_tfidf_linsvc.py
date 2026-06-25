@@ -19,7 +19,7 @@ R3 anti-leakage strict :
 - jamais fit sur val ou test
 
 Sortie :
-- `data/models/m5_tfidf_linsvc_v1.joblib`
+- `data/models/tfidf-svm_v1.joblib`
 - `reports/04_classifiers_bench/m5_tfidf_linsvc.json` (métriques)
 
 Lance ce script depuis la racine :
@@ -58,7 +58,7 @@ from src.mlops.mlflow_utils import log_training_run
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m5_tfidf_linsvc_v1"
+MODEL_NAME = "tfidf-svm_v1"
 MAX_FEATURES = 50_000
 NGRAM_RANGE = (1, 2)
 C_PARAM = 1.0

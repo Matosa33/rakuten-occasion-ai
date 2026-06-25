@@ -25,12 +25,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 log = logging.getLogger(__name__)
 
 MODEL_FILES = [
-    "m1_knn_v1.json",
-    "m2_svm_v1.json",
-    "m3_rf_v1.json",
-    "m4_mlp_v1.json",
-    "m5_tfidf_linsvc_v1.json",
-    "m6_fusion_v1.json",
+    "knn-faiss_v1.json",
+    "svm-embed_v1.json",
+    "rf-embed_v1.json",
+    "mlp-embed_v1.json",
+    "tfidf-svm_v1.json",
+    "fusion_v1.json",
 ]
 
 OUT_MD = REPORTS_CLASSIFIERS / "bench_v1.md"

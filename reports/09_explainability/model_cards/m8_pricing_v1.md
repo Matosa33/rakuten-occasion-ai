@@ -1,4 +1,4 @@
-# Model Card — m8_pricing_v1
+# Model Card — pricing-cascade_v1
 
 **Type** : Algorithmique cascade L1-L4 (transparent, pas de ML)
 **Tâche** : Suggestion prix indicatif + niveau confiance
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/m8_pricing_v1.json`
+`reports/04_classifiers_bench/pricing-cascade_v1.json`

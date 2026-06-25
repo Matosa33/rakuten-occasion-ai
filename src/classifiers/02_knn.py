@@ -13,8 +13,8 @@ si k-NN sur embeddings est mauvais, c'est que les embeddings ne capturent
 pas la frontière catégorielle → repenser les encoders.
 
 Sortie :
-- `data/models/m1_knn_v1.joblib` (placeholder : index FAISS référencé via path)
-- `reports/04_classifiers_bench/m1_knn_v1.json`
+- `data/models/knn-faiss_v1.joblib` (placeholder : index FAISS référencé via path)
+- `reports/04_classifiers_bench/knn-faiss_v1.json`
 
 Lance APRÈS Cycle 2.4 (FAISS HNSW bâti) :
 
@@ -50,7 +50,7 @@ from src.mlops.mlflow_utils import log_training_run
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m1_knn_v1"
+MODEL_NAME = "knn-faiss_v1"
 K_NEIGHBORS = 5
 HNSW_EF_SEARCH = 64
 

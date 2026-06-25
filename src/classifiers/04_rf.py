@@ -16,7 +16,7 @@ Hyperparams choisis pour tenir RAM et temps :
 - max_features='sqrt' (32 dim par split — réduction nécessaire en haute dim)
 
 Sortie :
-- `data/models/m3_rf_v1.joblib`
+- `data/models/rf-embed_v1.joblib`
 - `reports/04_classifiers_bench/m3_rf.json`
 
 Lance :
@@ -52,7 +52,7 @@ from src.config import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL_NAME = "m3_rf_v1"
+MODEL_NAME = "rf-embed_v1"
 N_ESTIMATORS = 300
 MAX_DEPTH = 20
 MAX_FEATURES = "sqrt"
