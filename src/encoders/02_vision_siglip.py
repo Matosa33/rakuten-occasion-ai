@@ -4,7 +4,7 @@ Pour chaque produit (`parent_asin`) du périmètre actif (4 cat D-011, ~4,5 M
 items), on récupère son image principale depuis l'URL CDN Amazon et on
 l'encode via SigLIP en un vecteur 1024-dim normalisé L2.
 
-Modèle externe E1 (cf. docs/modeles.md) :
+Modèle externe siglip (cf. docs/modeles.md) :
     google/siglip-base-patch16-224
     - Architecture : ViT-B/16, sigmoid loss (vs softmax CLIP)
     - Output dim : 768 (base) ou 1024 (large) selon variant — base ici

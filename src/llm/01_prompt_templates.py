@@ -1,6 +1,6 @@
 """Cycle 6.1 — Prompt templates LLM rédacteur grounded.
 
-Templates Jinja2 pour le LLM rédacteur (E4) : génération titre annonce +
+Templates Jinja2 pour le LLM rédacteur (llm-writer) : génération titre annonce +
 description en français pour vendeur particulier sur le périmètre 4 cat
 D-011 (Electronics, Cell_Phones, Video_Games, Tools).
 

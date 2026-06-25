@@ -29,7 +29,7 @@ Cycle 9 quand l'API a besoin du vrai VLM.
 
 Sortie :
 - `reports/06_vlm_eval/zero_shot_eval.{md,json}` : métriques mock pour
-  pré-validation du pipeline + Model Card E3.
+  pré-validation du pipeline + Model Card vlm-validator.
 
 Lance APRÈS Cycle 4.1+ :
 
@@ -276,7 +276,7 @@ def main() -> None:
         "note": (
             "MockVLMValidator utilisé pour pré-validation pipeline. "
             "Métriques placeholder. Remplacer par OpenRouterVLMValidator en Cycle 9 "
-            "(GEMINI Flash via OpenRouter) pour la vraie évaluation E3."
+            "(GEMINI Flash via OpenRouter) pour la vraie évaluation vlm-validator."
         ),
         "sample_response": asdict(
             validator.validate("placeholder", "placeholder", {"title": "demo"})

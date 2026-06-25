@@ -368,7 +368,7 @@ async def describe(
     req: DescribeRequest,
     user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
 ) -> DescribeResponse:
-    """Génération titre + description grounded RAG (E4 OpenRouter si clé, sinon mock D-013)."""
+    """Génération titre + description grounded RAG (llm-writer OpenRouter si clé, sinon mock D-013)."""
     log.info("describe by user=%s", user)
     desc: DescribeService | None = APP_STATE.get("describe")
     if desc is None or not desc.ready:

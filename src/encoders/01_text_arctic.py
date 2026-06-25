@@ -4,7 +4,7 @@ Encode chaque produit (`title + description`) en un vecteur 1024-dim
 sémantique normalisé L2. Sortie : 1 fichier `.npy` par split + 1 index
 parquet pour le mapping `parent_asin → row_id`.
 
-Modèle externe E2 (cf. docs/modeles.md) :
+Modèle externe arctic (cf. docs/modeles.md) :
     Snowflake/snowflake-arctic-embed-l-v2.0
     - Architecture : XLM-RoBERTa-large multilingue
     - Output dim : 1024 (post-pooling, normalisé L2 par défaut sentence-transformers)

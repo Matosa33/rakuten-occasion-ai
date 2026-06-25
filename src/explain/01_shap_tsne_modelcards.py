@@ -7,7 +7,7 @@ Trois livrables d'explainability :
 2. **t-SNE / UMAP** des embeddings (text Arctic + vision SigLIP) colorés
    par catégorie → vérifier la **séparation visuelle** entre les 4 cat
    D-011 (cohérence avec F1 par cat).
-3. **Model Cards** format HuggingFace pour knn-faiss à pricing-cascade + E1-E4 → un fichier MD
+3. **Model Cards** format HuggingFace pour knn-faiss à pricing-cascade + les 4 modèles externes → un fichier MD
    par modèle dans `reports/09_explainability/model_cards/`.
 
 L'idée fondatrice : un modèle qui n'est pas explicable n'est pas

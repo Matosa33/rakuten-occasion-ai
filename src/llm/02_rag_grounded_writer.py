@@ -12,7 +12,7 @@ Pipeline RAG (Lewis 2020)
    pas duplicate, vote_up > seuil).
 2. **Augment** : injecter ces phrases dans le prompt template comme
    `grounding_sentences`.
-3. **Generate** : appel LLM (E4 = Gemini, Llama, OpenRouter — stub mock
+3. **Generate** : appel LLM (llm-writer = Gemini, Llama, OpenRouter — stub mock
    ici, vraie impl en Cycle 9).
 
 Évaluation

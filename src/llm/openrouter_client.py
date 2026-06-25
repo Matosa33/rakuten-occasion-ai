@@ -2,8 +2,8 @@
 
 Wrapper httpx minimal autour de l'API OpenRouter (compatible OpenAI
 chat/completions). Utilisé par :
-- le LLM rédacteur grounded (E4) : `/describe`
-- le VLM validateur (E3) : validation matching (Cycle 5 vraie impl, post-MVP)
+- le LLM rédacteur grounded (llm-writer) : `/describe`
+- le VLM validateur (vlm-validator) : validation matching (Cycle 5 vraie impl, post-MVP)
 
 Active uniquement si `OPENROUTER_API_KEY` présent dans l'env (sinon raise
 RuntimeError clair → l'endpoint bascule sur un mock). Mock-first par défaut.
@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 # Modèle vérifié dispo sur OpenRouter (query /models 2026-05). Gemma 4 31B IT
-# (tier payant, pas de rate-limit free) — text-only, suffisant pour le rédacteur E4.
+# (tier payant, pas de rate-limit free) — text-only, suffisant pour le rédacteur llm-writer.
 DEFAULT_LLM_MODEL = "google/gemma-4-31b-it"
 DEFAULT_TIMEOUT_SEC = 30.0
 

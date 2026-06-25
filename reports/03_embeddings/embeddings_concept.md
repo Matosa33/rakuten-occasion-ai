@@ -48,4 +48,4 @@ On pose les **briques mathématiques de base** (normalisation L2, cosine similar
 
 - Stack : `numpy 1.26+`, `scikit-learn 1.5+` (pour t-SNE dans le notebook)
 - Règles référencées : R3 (anti-leakage), R11 (guard L2), R20 (cleanup)
-- ADR référencées : D-009 (architecture cible RAG-grounded — les encoders sont E1/E2 frozen)
+- ADR référencées : D-009 (architecture cible RAG-grounded — les encoders sont siglip/arctic frozen)

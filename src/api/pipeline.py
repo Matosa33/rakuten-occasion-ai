@@ -420,7 +420,7 @@ class DescribeResult:
 
 
 class DescribeService:
-    """Service de rédaction grounded RAG (E4).
+    """Service de rédaction grounded RAG (llm-writer).
 
     Charge les métadonnées produit (train), récupère les phrases grounding
     sur la DESCRIPTION catalogue réelle, puis génère titre + description via
@@ -446,7 +446,7 @@ class DescribeService:
         return self._loaded
 
     def _get_writer(self):
-        """OpenRouter si clé dispo (E4 réel), sinon Mock (D-013)."""
+        """OpenRouter si clé dispo (llm-writer réel), sinon Mock (D-013)."""
         openrouter = importlib.import_module("src.llm.openrouter_client")
         if openrouter.is_available():
 
