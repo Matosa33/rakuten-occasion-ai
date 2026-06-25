@@ -26,6 +26,11 @@ _log = get_logger(__name__)
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 VLM_MODEL = os.environ.get("PHOTO_VLM_MODEL", "google/gemma-4-31b-it")
+# Déterminisme (repro protocole D-042) : température 0 + seed fixe. Provider épinglable
+# (fixe la quantization) via env `PHOTO_VLM_PROVIDER` — sinon routing OpenRouter par défaut.
+VLM_TEMPERATURE = float(os.environ.get("PHOTO_VLM_TEMPERATURE", "0"))
+VLM_SEED = int(os.environ.get("PHOTO_VLM_SEED", "42"))
+VLM_PROVIDER = os.environ.get("PHOTO_VLM_PROVIDER", "")
 TIMEOUT_SEC = 90
 MAX_PHOTOS_PER_CALL = 4  # toutes les vues passent dans UN appel (moins cher, contexte commun)
 
@@ -82,14 +87,19 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
     for p in photo_paths[:MAX_PHOTOS_PER_CALL]:
         content.append({"type": "image_url", "image_url": {"url": _to_data_url(p)}})
 
+    payload: dict = {
+        "model": VLM_MODEL,
+        "max_tokens": 250,
+        "temperature": VLM_TEMPERATURE,  # déterminisme repro (D-042)
+        "seed": VLM_SEED,
+        "messages": [{"role": "user", "content": content}],
+    }
+    if VLM_PROVIDER:  # provider épinglé → quantization stable
+        payload["provider"] = {"order": [VLM_PROVIDER], "allow_fallbacks": False}
     r = requests.post(
         OPENROUTER_URL,
         headers={"Authorization": f"Bearer {key}"},
-        json={
-            "model": VLM_MODEL,
-            "max_tokens": 250,
-            "messages": [{"role": "user", "content": content}],
-        },
+        json=payload,
         timeout=TIMEOUT_SEC,
     )
     r.raise_for_status()
