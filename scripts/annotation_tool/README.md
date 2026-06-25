@@ -1,47 +1,49 @@
 # Interface d'annotation — photos d'éval (Phase 2)
 
-Outil local pour saisir **vite et bien** le jeu de produits réels qui servira à prouver
-la chaîne de valeur photo-first (**1 photo < N photos < N photos + métadonnée**).
+Outil pour constituer **vite** le jeu de produits réels qui prouvera la chaîne de valeur
+photo-first (**1 photo < N photos < N photos + métadonnée**). Flux en **2 temps** :
 
-## Lancer
+## 1) Saisie rapide (humain) — `app.py`
 
 ```bash
-.venv/Scripts/python.exe scripts/annotation_tool/app.py
-# → http://127.0.0.1:8200
+.venv/Scripts/python.exe scripts/annotation_tool/app.py     # http://127.0.0.1:8200
 ```
 
-## Ce qu'elle fait
-
-Glisser-déposer les photos d'un produit, remplir le formulaire, « Enregistrer ». L'outil
-**range automatiquement** au bon endroit et au bon format (aucune manip de fichiers) :
+Pour chaque produit : glisser-déposer les **photos** + coller le **texte de l'annonce réelle**
+(titre + description Leboncoin/Vinted…). C'est tout. L'outil range automatiquement :
 
 ```
 data/photos_eval/<NN>_<slug>/
-    01.jpg 02.jpg …        # 01 = photo principale (sert seule en condition C1)
-    meta.json
+    01.jpg 02.jpg …        # 01 = photo principale (bordure verte), sert seule en condition C1
+    meta.json              # { listing_title, listing_description, photos, annotated:false }
 ```
 
-`meta.json` :
-```json
-{
-  "true_name": "iPhone 13 128 Go noir",
-  "macro": "Cell_Phones",
-  "true_category_path": "Cell Phones & Accessories > Cell Phones",
-  "seller_metadata": "Apple iPhone 13 128go",
-  "notes": "near-dup avec iPhone 14",
-  "photos": ["01.jpg", "02.jpg"],
-  "main_photo": "01.jpg"
-}
+Astuce : <kbd>Ctrl/Cmd + Entrée</kbd> enregistre. Le tableau de bord suit l'avancement
+(objectif ~100 produits, alerte « <2 photos »).
+
+## 2) Dérivation des métadonnées (auto) — `derive_meta.py`
+
+```bash
+.venv/Scripts/python.exe scripts/annotation_tool/derive_meta.py          # les non-annotés
+.venv/Scripts/python.exe scripts/annotation_tool/derive_meta.py --force  # tout re-dériver
 ```
+
+Lit chaque produit `annotated:false` et **dérive par LLM** (OpenRouter, clé dans `.env`) les
+champs structurés, écrits dans `meta.json` (`annotated:true`) :
+- `macro` (une des 4 : Electronics / Cell_Phones / Video_Games / Tools),
+- `true_category_path` (taxonomie fine « A > B > C »),
+- `true_name` (libellé normalisé),
+- `seller_metadata` (texte court vendeur = condition C3).
+
+Idempotent (skip les déjà annotés), tolérant (un échec n'arrête pas le lot), passe à l'échelle
+(~100 produits). Les cas hors-liste sont signalés pour relecture humaine.
 
 ## Pour un jeu « bien rempli »
 
-Le tableau de bord (à droite) suit l'avancement :
-- **≈ 20 produits**, répartis sur les **4 macro-catégories** (Electronics, Cell_Phones,
-  Video_Games, Tools) ;
-- **4-6 near-duplicates** (écrire « near-dup » dans les notes) — c'est là que N photos +
+- **~100 produits**, répartis sur les 4 macro-catégories ;
+- des **near-duplicates** (iPhone 13 vs 14, deux consoles proches…) — c'est là que N photos +
   métadonnée prouvent leur valeur ;
 - **≥ 2 photos** par produit (sinon le test 1 vs N ne montre rien) ;
-- la **photo principale** (bordure verte) doit être la plus représentative.
+- la **photo principale** doit être la plus représentative.
 
-> Les photos restent **locales** (`data/photos_eval/` est gitignoré) — rien n'est publié.
+> Les photos restent **locales** (`data/photos_eval/` gitignoré) — rien n'est publié.
