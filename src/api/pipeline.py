@@ -48,6 +48,19 @@ IDENTIFIED_THRESHOLD = 0.60  # >= : produit identifié avec confiance
 CONFIRM_THRESHOLD = 0.45  # [0.45, 0.60[ : à confirmer par le vendeur ; < : incertain
 AMBIGUITY_GAP_THRESHOLD = 0.05  # gap top1-top2 → désambiguation Akinator
 
+
+def status_from_score(top1_score: float) -> str:
+    """Niveau de confiance OOD sur le score absolu du top-1 (3 niveaux, D-012).
+
+    >= 0,60 → `identified` ; [0,45 ; 0,60[ → `to_confirm` ; < 0,45 → `uncertain`.
+    Fonction pure (testable sans index).
+    """
+    if top1_score >= IDENTIFIED_THRESHOLD:
+        return "identified"
+    if top1_score >= CONFIRM_THRESHOLD:
+        return "to_confirm"
+    return "uncertain"
+
 # Akinator backend (import dynamique : module préfixé par un chiffre)
 _akinator = importlib.import_module("src.retrieval.04_akinator_backend")
 _pricing = importlib.import_module("src.pricing.01_algorithmique")
@@ -349,14 +362,12 @@ class IdentificationService:
             )
 
         # 3 niveaux de confiance sur le score absolu top-1. Candidats TOUJOURS montrés.
-        if top1.score >= IDENTIFIED_THRESHOLD:
-            status = "identified"
+        status = status_from_score(top1.score)
+        if status == "identified":
             base = f"Produit identifié (score {top1.score:.3f})."
-        elif top1.score >= CONFIRM_THRESHOLD:
-            status = "to_confirm"
+        elif status == "to_confirm":
             base = f"Est-ce l'un de ces produits ? (score {top1.score:.3f}, à confirmer)"
         else:
-            status = "uncertain"
             base = (
                 f"Correspondance incertaine (score {top1.score:.3f}). "
                 "Vérifiez ou saisissez manuellement."
@@ -430,6 +441,19 @@ class DescribeResult:
     grounding_sentences_count: int
     grounding_sentences_preview: list[str]
     parse_ok: bool
+
+
+TITLE_MAX_LEN = 100  # un titre marketplace lisible ; au-delà = LLM qui déborde
+
+
+def _clamp_title(title: str, fallback: str) -> str:
+    """Borne le titre généré : repli sur le titre catalogue si vide, troncature propre si trop long."""
+    t = (title or "").strip()
+    if not t:
+        t = (fallback or "Produit").strip()
+    if len(t) > TITLE_MAX_LEN:
+        t = t[: TITLE_MAX_LEN - 1].rstrip() + "…"
+    return t
 
 
 class DescribeService:
@@ -518,9 +542,13 @@ class DescribeService:
         listing = _rag.generate_listing(
             product_meta, grounding_df, writer, seller_condition=condition
         )
+        # Garde-fou longueur : un LLM peut renvoyer un titre vide ou à rallonge (casse l'UI).
+        # On borne le titre (≤ 100 car, repli sur le titre catalogue) et la description (≤ 4000 car).
+        title = _clamp_title(listing.title, fallback=str(product_meta.get("title") or "Produit"))
+        description = listing.description.strip()[:4000]
         return DescribeResult(
-            title=listing.title,
-            description=listing.description,
+            title=title,
+            description=description,
             grounding_sentences_count=len(listing.grounding_sentences_used),
             grounding_sentences_preview=listing.grounding_sentences_used[:3],
             parse_ok=listing.parse_ok,
