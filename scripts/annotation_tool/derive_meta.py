@@ -52,11 +52,23 @@ Renvoie :
   "true_name": "libellé produit normalisé (marque + modèle + variante)",
   "macro": "UNE de ces 4 valeurs EXACTES: Electronics | Cell_Phones_and_Accessories | Video_Games | Tools_and_Home_Improvement",
   "true_category_path": "taxonomie fine en anglais, format 'A > B > C' (ex: 'Electronics > Computers > Graphics Cards')",
-  "seller_metadata": "texte court que le vendeur taperait (marque + modèle + mots-clés, ~5-8 mots)"
+  "metadata_quality": {{"brand": <bool marque nommée>, "model": <bool modèle/référence précis>,
+    "spec": <bool spec clé: capacité/taille/version/année>, "condition": <bool état mentionné>,
+    "unambiguous": <bool assez précis pour distinguer d'un produit voisin, pas juste un mot générique>}}
 }}
 
 Règles : macro DOIT être l'une des 4 valeurs. Téléphone/smartphone → Cell_Phones_and_Accessories ;
-jeu/console → Video_Games ; outil/bricolage → Tools_and_Home_Improvement ; reste high-tech → Electronics."""
+jeu/console → Video_Games ; outil/bricolage → Tools_and_Home_Improvement ; reste high-tech → Electronics.
+metadata_quality juge UNIQUEMENT le TITRE vendeur, pas la description."""
+
+QUALITY_KEYS = ["brand", "model", "spec", "condition", "unambiguous"]
+
+
+def _quality(crit: object) -> dict:
+    """5 critères booléens + score /5 (qualité de la métadonnée d'entrée)."""
+    crit = crit if isinstance(crit, dict) else {}
+    flags = {k: bool(crit.get(k, False)) for k in QUALITY_KEYS}
+    return {"score": sum(flags.values()), **flags}
 
 
 def _parse_json(text: str) -> dict | None:
@@ -88,7 +100,9 @@ def derive_one(meta: dict) -> dict | None:
         "true_name": str(data.get("true_name", title)).strip(),
         "macro": macro,
         "true_category_path": str(data.get("true_category_path", "")).strip(),
-        "seller_metadata": str(data.get("seller_metadata", title)).strip(),
+        # métadonnée d'entrée = titre vendeur verbatim (déjà capturé) + sa qualité /5
+        "seller_metadata": title,
+        "metadata_quality": _quality(data.get("metadata_quality")),
     }
 
 

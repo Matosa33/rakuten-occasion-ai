@@ -19,6 +19,10 @@ Le PDF est *image-only* (pas de texte) : le script **rend + recadre** chaque pag
 `annotated:true`). Idempotent (skip les `source_pdf` déjà ingérés), tolérant. **C'est la voie
 recommandée** : tu scrapes, je n'ai qu'à lancer l'ingestion.
 
+Le script note aussi la **qualité de la métadonnée d'entrée** (`metadata_quality.score` ∈ [0,5],
+5 critères : marque / modèle / spec / état / non-ambigu). C'est ce qui permettra de **mesurer
+l'impact réel de la métadonnée** selon sa richesse (Phase 2, condition C3).
+
 > Besoin des extras `[annotation]` (pymupdf, pillow) + `[api]` (requests) + clé OpenRouter.
 
 ## 1) Alternative manuelle — saisie rapide (humain) — `app.py`

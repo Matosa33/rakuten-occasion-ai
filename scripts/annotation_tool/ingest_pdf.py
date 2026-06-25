@@ -76,8 +76,24 @@ CARD_PROMPT = (
     ' "true_category_path": "fine taxonomy in English, format A > B > C",\n'
     ' "price_eur": <number or null>,\n'
     ' "condition": "état shown (e.g. Pour pièces, Bon état) or empty",\n'
-    ' "seller_metadata": "short text a seller would type (brand + model + keywords)"}'
+    ' "listing_title": "the EXACT title the seller wrote, verbatim",\n'
+    ' "metadata_quality": {"brand": <bool: a brand is named>, '
+    '"model": <bool: a specific model name/reference>, '
+    '"spec": <bool: a key spec like capacity/size/version/year>, '
+    '"condition": <bool: condition stated>, '
+    '"unambiguous": <bool: specific enough to tell apart from a close product, not just a '
+    'generic word like "téléphone">}}\n'
+    "metadata_quality must judge ONLY the seller's title text (listing_title), not the photos."
 )
+
+QUALITY_KEYS = ["brand", "model", "spec", "condition", "unambiguous"]
+
+
+def _quality(crit: object) -> dict:
+    """Normalise les 5 critères booléens + score /5 (qualité de la métadonnée d'entrée)."""
+    crit = crit if isinstance(crit, dict) else {}
+    flags = {k: bool(crit.get(k, False)) for k in QUALITY_KEYS}
+    return {"score": sum(flags.values()), **flags}
 
 
 def _render(page: fitz.Page) -> Image.Image:
@@ -195,7 +211,10 @@ def ingest_one(pdf: Path) -> str:
         "true_category_path": str(fields.get("true_category_path", "")),
         "price_eur": fields.get("price_eur"),
         "condition": str(fields.get("condition", "")),
-        "seller_metadata": str(fields.get("seller_metadata") or name),
+        # métadonnée d'entrée = ce que le vendeur a VRAIMENT écrit (verbatim), + sa qualité /5
+        # → permet de mesurer l'impact de la qualité de la métadonnée en Phase 2.
+        "seller_metadata": str(fields.get("listing_title") or name),
+        "metadata_quality": _quality(fields.get("metadata_quality")),
         "photos": photos,
         "main_photo": photos[0] if photos else "",
         "annotated": annotated,
