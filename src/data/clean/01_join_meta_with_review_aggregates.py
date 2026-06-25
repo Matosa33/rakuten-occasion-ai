@@ -7,7 +7,7 @@ chaque ligne = 1 produit avec sa fiche meta + ses signaux d'usage.
 
 Pourquoi product-level (vs review-level)
 -----------------------------------------
-Les 8 modèles ML internes (M1-M8) du projet sont **product-level** :
+Les 8 modèles ML internes (knn-faiss à pricing-cascade) du projet sont **product-level** :
 classifier la catégorie d'un produit, retrouver un produit dans le
 catalogue (FAISS), prédire son prix. La granularité review-level n'est
 utile qu'au RAG (Cycle 6) qui aura besoin du texte des reviews — ce

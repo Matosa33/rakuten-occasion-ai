@@ -1,4 +1,4 @@
-"""Benchmark end-to-end : prédiction de taxonomie par retrieval (bras A0→A3).
+"""Benchmark end-to-end : prédiction de taxonomie par retrieval (bras top1-copy → coarse-to-fine).
 
 Question : avec notre stack (embeddings Arctic + index FAISS), quelle architecture
 prédit le mieux la catégorie **la plus fine possible** d'un produit ? On compare
@@ -12,12 +12,12 @@ donne la feuille la plus probable, à chaque niveau, sans entraîner de modèle 
 
 Les bras
 --------
-- **A0 actuel**       : on prend la taxo du **top-1** voisin (ce que fait l'app aujourd'hui).
-- **A1 gate macro**   : vote macro (4 cl.) → on **post-filtre** les voisins de cette macro,
+- **top1-copy actuel**       : on prend la taxo du **top-1** voisin (ce que fait l'app aujourd'hui).
+- **macro-gated gate macro**   : vote macro (4 cl.) → on **post-filtre** les voisins de cette macro,
                         puis top-1 leaf des voisins restants.
-- **A2 vote k-NN fin**: **vote pondéré** par similarité sur la leaf des top-k voisins
+- **knn-vote vote k-NN fin**: **vote pondéré** par similarité sur la leaf des top-k voisins
                         (le gain quasi-gratuit), sans gate.
-- **A3 coarse-to-fine**: gate macro **+** vote pondéré sur les voisins de la macro prédite
+- **coarse-to-fine coarse-to-fine**: gate macro **+** vote pondéré sur les voisins de la macro prédite
                         (recherche élargie puis filtrée — approxime des sous-index par macro).
 
 Métriques (par niveau de taxo `category_path` = breadcrumb « A > B > C »)
@@ -122,10 +122,10 @@ def _path_of_leaf(leaf_pred, n_leaf, n_path, n_score):
 
 def predict_arm(arm, n_macro, n_leaf, n_path, n_score):
     """Retourne (macro_pred, leaf_pred, path_pred) pour un bras donné, sur les voisins triés."""
-    if arm == "A0_actuel":
+    if arm == "top1-copy":
         return n_macro[0], n_leaf[0], n_path[0]
 
-    if arm == "A1_gate_macro":
+    if arm == "macro-gated":
         macro_pred = _weighted_vote(n_macro, n_score)
         keep = [i for i, m in enumerate(n_macro) if m == macro_pred]
         if not keep:  # garde-fou : aucun voisin de la macro votée → top-1 brut
@@ -133,12 +133,12 @@ def predict_arm(arm, n_macro, n_leaf, n_path, n_score):
         i0 = keep[0]  # déjà triés par score décroissant
         return macro_pred, n_leaf[i0], n_path[i0]
 
-    if arm == "A2_vote_fin":
+    if arm == "knn-vote":
         macro_pred = _weighted_vote(n_macro, n_score)
         leaf_pred = _weighted_vote(n_leaf, n_score)
         return macro_pred, leaf_pred, _path_of_leaf(leaf_pred, n_leaf, n_path, n_score)
 
-    if arm == "A3_coarse_to_fine":
+    if arm == "coarse-to-fine":
         macro_pred = _weighted_vote(n_macro, n_score)
         keep = [i for i, m in enumerate(n_macro) if m == macro_pred]
         if not keep:
@@ -221,7 +221,7 @@ def run() -> dict:
     search_sec = time.perf_counter() - t0
     latency_ms = 1000.0 * search_sec / len(sample)
 
-    arms = ["A0_actuel", "A1_gate_macro", "A2_vote_fin", "A3_coarse_to_fine"]
+    arms = ["top1-copy", "macro-gated", "knn-vote", "coarse-to-fine"]
     results: dict[str, dict] = {}
 
     for arm in arms:
@@ -326,7 +326,7 @@ def _write_report(summary: dict) -> None:
         f"recall_at_{cfg['top_k']}_leaf",
     ]
     lines = [
-        "# Benchmark taxonomie par retrieval (A0→A3)",
+        "# Benchmark taxonomie par retrieval (top1-copy → coarse-to-fine)",
         "",
         f"- Échantillon test stratifié : **{cfg['sample_n']}** requêtes · top-k={cfg['top_k']} · "
         f"efSearch={cfg['ef_search']} · seed={cfg['seed']}",

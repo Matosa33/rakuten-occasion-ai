@@ -10,7 +10,7 @@ Items absents d'une vue : score 0 pour cette vue.
 
 Avantages RRF vs moyenne pondérée des scores :
 - Robuste aux échelles de scores différentes (cosine vs distance)
-- Pas de tuning de poids α (à la différence de la fusion adaptive M6)
+- Pas de tuning de poids α (à la différence de la fusion adaptive fusion)
 - Théoriquement optimal pour combiner rankings sans alignement de scores
 
 Sortie :

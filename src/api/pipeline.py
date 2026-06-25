@@ -4,9 +4,9 @@ Câble les briques locales (text-only MVP, cf. D-014) en services
 consommés par les endpoints FastAPI :
 
 - `IdentificationService` : encode la requête texte (Arctic) → FAISS HNSW
-  search → vote k-NN cat (= M1) → garde-fou OOD (seuil D-012=0.600) →
+  search → vote k-NN cat (= knn-faiss) → garde-fou OOD (seuil D-012=0.600) →
   Akinator si ambiguïté (gap top1-top2 < seuil).
-- `PricingService` : cascade M8 L1-L4 transparente.
+- `PricingService` : cascade pricing-cascade L1-L4 transparente.
 
 R19 grounded-avant-génératif : l'identification est retrieval-first.
 R7 assertions dims : Arctic = 1024, vérifié au runtime.
@@ -77,7 +77,7 @@ class IdentificationResult:
     candidates: list[Candidate]
     next_observation: object | None  # ObservationRequest | None
     explanation: str
-    # Catégorie fine par vote k-NN pondéré (bras A2, champion du benchmark Cycle 33 :
+    # Catégorie fine par vote k-NN pondéré (bras knn-vote, champion du benchmark Cycle 33 :
     # +2,4 pts leaf-acc vs la catégorie du seul top-1). Confiance = part du vote.
     predicted_category_fine: str = ""
     predicted_category_confidence: float = 0.0
@@ -85,7 +85,7 @@ class IdentificationResult:
 
 
 def weighted_fine_vote(candidates: list[Candidate]) -> tuple[str, float, str]:
-    """Vote k-NN pondéré par similarité sur la catégorie fine des candidats (bras A2).
+    """Vote k-NN pondéré par similarité sur la catégorie fine des candidats (bras knn-vote).
 
     Plus robuste que la catégorie du seul top-1 (mesuré : +2,4 pts de leaf-accuracy sur
     15 000 requêtes, cf. `reports/05_retrieval/taxonomy_bench.md`). Retourne
@@ -370,7 +370,7 @@ class IdentificationService:
 
 
 class PricingService:
-    """Service de pricing transparent cascade M8 L1-L4."""
+    """Service de pricing transparent cascade pricing-cascade L1-L4."""
 
     def __init__(self) -> None:
         self._config: dict | None = None
@@ -396,7 +396,7 @@ class PricingService:
         catalog_price: float | None = None,
         knn_neighbors_prices: list[float] | None = None,
     ):
-        """Délègue à la cascade M8 avec la médiane catégorie chargée."""
+        """Délègue à la cascade pricing-cascade avec la médiane catégorie chargée."""
         if self._config is None:
             raise RuntimeError("PricingService non chargé.")
         cat_median = self._config.get("category_medians_usd", {}).get(category)

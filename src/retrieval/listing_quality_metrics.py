@@ -181,7 +181,7 @@ def main() -> None:
     )
     print("expected_facets (induit, >=50%):", dict(expected))
     print(f"\n{'cond':5} {'macro':6} {'leaf':6} {'lf_ov':6} {'entity':7} {'brand':6} {'compl':6} usable")
-    for cond in ["C0", "C0t", "C1", "C2", "C3", "C3t"]:
+    for cond in ["text-only", "text-fr-en", "one-photo", "multi-photo", "multi-photo-meta", "multi-photo-meta-fr-en"]:
         m = agg.get(cond)
         if m:
             print(

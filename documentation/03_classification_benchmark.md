@@ -85,12 +85,12 @@ Une seule mesure peut masquer un défaut. On en utilise donc quatre familles com
 
 | Code | Fichier | Modèle | En clair |
 |---|---|---|---|
-| **M1** | `02_knn.py` | k plus proches voisins, par similarité, via l'index FAISS | on retrouve les 5 produits du train les plus ressemblants et on vote leur catégorie |
-| **M2** | `03_svm.py` | Machine à vecteurs de support linéaire (LinearSVC) + calibration de Platt | tracée sur un échantillon de 500 000 lignes pour limiter le coût |
-| M3 | `04_rf.py` | Forêt aléatoire (Random Forest) | **écartée**, peu efficace en grande dimension (1024) |
-| **M4** | `05_mlp.py` | Petit réseau de neurones (perceptron multicouche) | échantillon de 500 000 lignes |
-| **M5** | `01_tfidf_linsvc.py` | TF-IDF + machine à vecteurs de support + Platt | n'utilise PAS les vecteurs ; travaille directement sur les mots du texte |
-| **M6** | `06_fusion_adaptive.py` | Fusion, combinaison adaptative des modèles | mélange pondéré des probabilités de plusieurs modèles |
+| **knn-faiss** | `02_knn.py` | k plus proches voisins, par similarité, via l'index FAISS | on retrouve les 5 produits du train les plus ressemblants et on vote leur catégorie |
+| **svm-embed** | `03_svm.py` | Machine à vecteurs de support linéaire (LinearSVC) + calibration de Platt | tracée sur un échantillon de 500 000 lignes pour limiter le coût |
+| rf-embed | `04_rf.py` | Forêt aléatoire (Random Forest) | **écartée**, peu efficace en grande dimension (1024) |
+| **mlp-embed** | `05_mlp.py` | Petit réseau de neurones (perceptron multicouche) | échantillon de 500 000 lignes |
+| **tfidf-svm** | `01_tfidf_linsvc.py` | TF-IDF + machine à vecteurs de support + Platt | n'utilise PAS les vecteurs ; travaille directement sur les mots du texte |
+| **fusion** | `06_fusion_adaptive.py` | Fusion, combinaison adaptative des modèles | mélange pondéré des probabilités de plusieurs modèles |
 | (outil) | `07_bench_report.py` et `metrics.py` | génère le tableau comparatif et calcule toutes les mesures | F1 pondéré et macro, exactitude, top-1 et top-3, ECE en 10 tranches |
 
 Quelques mots pour comprendre les noms techniques utilisés ci-dessus.
@@ -99,40 +99,40 @@ Quelques mots pour comprendre les noms techniques utilisés ci-dessus.
   sens d'un produit. Deux produits proches dans cette représentation ont un sens proche. Ces
   vecteurs sont produits en amont par un modèle de langue, à partir du titre et de la description.
 - **FAISS** est une bibliothèque qui retrouve très vite, parmi des millions de vecteurs, ceux qui
-  ressemblent le plus à un vecteur donné. M1 s'appuie dessus pour trouver les voisins en une
+  ressemblent le plus à un vecteur donné. knn-faiss s'appuie dessus pour trouver les voisins en une
   fraction de milliseconde.
 - **TF-IDF** (de l'anglais *Term Frequency, Inverse Document Frequency*) est une technique
   ancienne et robuste qui transforme un texte en chiffres en pesant chaque mot selon son
   importance : un mot fréquent dans une fiche mais rare dans le catalogue est jugé révélateur.
-  Contrairement aux autres modèles, M5 ne lit pas les vecteurs de sens, il lit directement les
+  Contrairement aux autres modèles, tfidf-svm ne lit pas les vecteurs de sens, il lit directement les
   mots.
 
 ### Réglages exacts de chaque modèle
 
-- **M1 (k plus proches voisins)** : pour chaque produit à classer, on cherche ses **5** voisins
+- **knn-faiss (k plus proches voisins)** : pour chaque produit à classer, on cherche ses **5** voisins
   les plus proches dans le train (k = 5), avec une mesure de proximité par cosinus (l'angle entre
   deux vecteurs ; les vecteurs étant normalisés, c'est équivalent au produit scalaire). Chaque
   voisin vote pour sa catégorie, et son vote pèse selon sa ressemblance. La recherche passe par un
   index FAISS de type HNSW (un graphe de navigation qui accélère énormément la recherche, réglé
   ici avec M = 32 connexions et un paramètre d'exploration efSearch = 64).
-- **M2 (machine à vecteurs de support sur les vecteurs de sens)** : LinearSVC avec un paramètre de
+- **svm-embed (machine à vecteurs de support sur les vecteurs de sens)** : LinearSVC avec un paramètre de
   régularisation C = 1.0, des poids de classe équilibrés (pour ne pas négliger les catégories
   rares), une calibration de Platt validée en 3 plis. Apprentissage sur un échantillon de
   500 000 lignes.
-- **M4 (petit réseau de neurones)** : une architecture 1024 puis 512 puis 256 puis 4 sorties (une
+- **mlp-embed (petit réseau de neurones)** : une architecture 1024 puis 512 puis 256 puis 4 sorties (une
   par catégorie), fonction d'activation ReLU, optimiseur Adam, lots (batches) de 256 exemples,
   au plus 30 passages sur les données avec arrêt anticipé (on stoppe dès que la qualité cesse de
   progresser sur une part de validation interne). Apprentissage sur un échantillon de 500 000
   lignes.
-- **M5 (TF-IDF + machine à vecteurs de support)** : on retient jusqu'à 50 000 mots et expressions,
+- **tfidf-svm (TF-IDF + machine à vecteurs de support)** : on retient jusqu'à 50 000 mots et expressions,
   en comptant les mots seuls et les paires de mots consécutifs (ngram_range de 1 à 2), en ignorant
   les termes apparaissant moins de deux fois, avec une pondération adoucie (sublinear_tf). Le
   classifieur derrière est de nouveau un LinearSVC (C = 1.0, poids équilibrés) suivi d'une
   calibration de Platt en 3 plis. Ce modèle apprend sur la totalité du train.
-- **M3 (forêt aléatoire), écartée mais documentée** : elle avait été préparée avec 300 arbres, une
+- **rf-embed (forêt aléatoire), écartée mais documentée** : elle avait été préparée avec 300 arbres, une
   profondeur maximale de 20 et la racine carrée du nombre de dimensions testée à chaque coupe. Elle
   reste peu adaptée à des vecteurs de 1024 dimensions et n'a pas été retenue dans le classement.
-- **M6 (fusion)** : on ne réentraîne rien. On prend les probabilités déjà produites par plusieurs
+- **fusion (fusion)** : on ne réentraîne rien. On prend les probabilités déjà produites par plusieurs
   modèles, on en fait une moyenne pondérée, et on cherche les poids qui donnent le meilleur
   résultat sur l'ensemble de validation (recherche sur une grille de poids). Toutes les
   probabilités sont calibrées par Platt, donc comparables entre elles.
@@ -141,7 +141,7 @@ Quelques mots pour comprendre les noms techniques utilisés ci-dessus.
 
 - **Pas de fuite de données.** On entraîne (on « ajuste ») uniquement sur le train, puis on mesure
   (on « prédit ») sur la validation puis sur le test. Jamais rien n'est réglé en regardant le test.
-  Pour les deux modèles les plus longs à entraîner (M2 et M4), on apprend sur un **échantillon de
+  Pour les deux modèles les plus longs à entraîner (svm-embed et mlp-embed), on apprend sur un **échantillon de
   500 000 lignes** prélevé dans le train (qui en compte plus de 3 millions) au lieu de la totalité.
   Cet échantillon est tiré uniquement côté train, et la validation comme le test sont évalués en
   entier. On a vérifié que l'écart de F1 entre 500 000 lignes et le train complet est inférieur à
@@ -154,13 +154,13 @@ Quelques mots pour comprendre les noms techniques utilisés ci-dessus.
   outil de suivi qui conserve automatiquement les réglages, les scores et les fichiers produits.
   Tout est ainsi reproductible et comparable après coup.
 
-### Pourquoi M1 est le meilleur, mais M5 est celui mis en service
+### Pourquoi knn-faiss est le meilleur, mais tfidf-svm est celui mis en service
 
-M1 (les k plus proches voisins via FAISS) obtient le **meilleur score**, mais il ne fonctionne que
-si l'index FAISS est présent et chargé : il ne sait rien faire tout seul. M5 (TF-IDF avec machine à
+knn-faiss (les k plus proches voisins via FAISS) obtient le **meilleur score**, mais il ne fonctionne que
+si l'index FAISS est présent et chargé : il ne sait rien faire tout seul. tfidf-svm (TF-IDF avec machine à
 vecteurs de support), lui, est **autonome et facile à déplacer** : c'est un seul fichier qui
-contient tout. On garde donc **M1 comme moteur de la recherche par ressemblance** (le cœur du
-produit) et **M5 comme classifieur effectivement déployé et versionné**. C'est un choix
+contient tout. On garde donc **knn-faiss comme moteur de la recherche par ressemblance** (le cœur du
+produit) et **tfidf-svm comme classifieur effectivement déployé et versionné**. C'est un choix
 d'ingénierie de mise en production (portabilité), pas un hasard.
 
 ### À quoi sert vraiment ce classifieur, et comment on attribue la catégorie fine
@@ -172,7 +172,7 @@ moteur d'identification des produits en ligne. Ils servent à deux choses.
    l'objet de ce document.
 2. **Faire vivre la chaîne de mise en production** : pour démontrer un cycle de vie complet
    (versionner un modèle, le promouvoir, le réentraîner, le servir), il faut un vrai modèle
-   déployé. C'est le classifieur texte portable (M5) qui joue ce rôle.
+   déployé. C'est le classifieur texte portable (tfidf-svm) qui joue ce rôle.
 
 En usage réel, l'identification d'un produit passe par la **recherche de ressemblance** (on
 retrouve les produits voisins), pas par le classifieur servi. Et la **catégorie la plus fine**
@@ -208,26 +208,26 @@ Modèles triés par F1 pondéré sur le test (du meilleur au moins bon).
 
 | Rang | Modèle | F1 pondéré | F1 macro | ECE | Temps d'entraînement |
 |---|---|---|---|---|---|
-| 1 | **M1 k plus proches voisins (FAISS)** | **0,9537** | 0,9415 | 0,0069 | environ 0 s (réutilise l'index) |
-| 2 | M6 fusion | 0,9522 | 0,9418 | 0,0230 | environ 0 s |
-| 3 | **M5 TF-IDF + machine à vecteurs de support** | **0,9503** | 0,9375 | 0,0092 | 956 s |
-| 4 | M4 petit réseau de neurones | 0,9489 | 0,9382 | **0,0013** (meilleure calibration) | 514 s |
-| 5 | M2 machine à vecteurs de support sur vecteurs | 0,9311 | 0,9193 | 0,0145 | 924 s |
+| 1 | **knn-faiss k plus proches voisins (FAISS)** | **0,9537** | 0,9415 | 0,0069 | environ 0 s (réutilise l'index) |
+| 2 | fusion fusion | 0,9522 | 0,9418 | 0,0230 | environ 0 s |
+| 3 | **tfidf-svm TF-IDF + machine à vecteurs de support** | **0,9503** | 0,9375 | 0,0092 | 956 s |
+| 4 | mlp-embed petit réseau de neurones | 0,9489 | 0,9382 | **0,0013** (meilleure calibration) | 514 s |
+| 5 | svm-embed machine à vecteurs de support sur vecteurs | 0,9311 | 0,9193 | 0,0145 | 924 s |
 
 Lecture des chiffres. Partout, le F1 pondéré et le F1 macro sont très proches : le modèle gère
 donc **bien les catégories rares**, et pas seulement les grandes. L'objectif que l'on s'était fixé
-(« un F1 supérieur à 0,90 ») est **largement atteint**. M4 affiche la **meilleure calibration**
+(« un F1 supérieur à 0,90 ») est **largement atteint**. mlp-embed affiche la **meilleure calibration**
 (ECE de 0,0013) : sa confiance est la plus fiable, ce qui serait précieux si l'on cherchait
 avant tout un modèle dont les pourcentages de certitude sont dignes de foi.
 
-Un point d'honnêteté sur la fusion (M6) : elle ne dépasse pas le meilleur modèle individuel. Son
-F1 pondéré au test (0,9522) est même très légèrement inférieur à celui de M1 (0,9537), soit un
+Un point d'honnêteté sur la fusion (fusion) : elle ne dépasse pas le meilleur modèle individuel. Son
+F1 pondéré au test (0,9522) est même très légèrement inférieur à celui de knn-faiss (0,9537), soit un
 écart de 0,0015 dans le mauvais sens. Combiner plusieurs modèles a donc ici un coût (il faut faire
 tourner plusieurs modèles) sans bénéfice de qualité : c'est un résultat utile à connaître, et
 exactement le genre de constat qu'un benchmark sert à révéler.
 
-> Chiffres pour une diapositive : « 6 modèles comparés », « F1 pondéré 0,954 pour M1 », « F1 macro
-> proche du F1 pondéré, donc catégories rares bien gérées », « ECE 0,0013 pour M4 », « objectif
+> Chiffres pour une diapositive : « 6 modèles comparés », « F1 pondéré 0,954 pour knn-faiss », « F1 macro
+> proche du F1 pondéré, donc catégories rares bien gérées », « ECE 0,0013 pour mlp-embed », « objectif
 > de 0,90 atteint ». Capture d'écran suggérée : le tableau de comparaison plus la liste des
 > exécutions dans MLflow, triables par F1.
 
@@ -252,9 +252,9 @@ exactement le genre de constat qu'un benchmark sert à révéler.
   de zéro. C'est un choix adapté (la recherche par ressemblance fait l'essentiel du travail), mais
   il faut le dire clairement : la valeur démontrée ici est « comparer rigoureusement plusieurs
   modèles », pas « entraîner un énorme réseau ».
-- La forêt aléatoire (M3) a été écartée car inefficace en 1024 dimensions. C'est une décision
+- La forêt aléatoire (rf-embed) a été écartée car inefficace en 1024 dimensions. C'est une décision
   documentée, pas un oubli.
-- L'échantillon de 500 000 lignes pour M2 et M4 est justifié (plateau d'apprentissage vérifié),
+- L'échantillon de 500 000 lignes pour svm-embed et mlp-embed est justifié (plateau d'apprentissage vérifié),
   mais ce n'est pas le train complet.
 - Le détail catégorie par catégorie est calculé par le code mais n'est pas mis en avant dans le
   tableau de synthèse (le F1 macro le résume). C'est un axe d'amélioration en matière de
@@ -284,4 +284,4 @@ exactement le genre de constat qu'un benchmark sert à révéler.
 protocole, sans fuite de données, en mesurant le F1 pondéré, le F1 macro, la calibration (ECE) et
 le temps. Le meilleur atteint 0,954 de F1, le F1 macro reste proche du pondéré (les catégories
 rares sont donc bien gérées), et le modèle réellement mis en service est choisi pour une raison
-d'ingénierie (sa portabilité, M5), pas par hasard.*
+d'ingénierie (sa portabilité, tfidf-svm), pas par hasard.*

@@ -76,7 +76,7 @@ La stratification cat-par-cat préserve naturellement la distribution temporelle
 - Du coup ses reviews train et test partagent le même `user_id`
 
 **Conséquence pratique** :
-- ✅ **OK pour M1-M8 product-level** : les classifieurs et le retrieval n'utilisent pas `user_id` comme feature, donc pas de fuite.
+- ✅ **OK pour knn-faiss à pricing-cascade product-level** : les classifieurs et le retrieval n'utilisent pas `user_id` comme feature, donc pas de fuite.
 - ⚠️ **À traiter au Cycle 7+** si on entraîne un **modèle préférence user** (recommendation, sentiment user-personnalisé) : refaire un split dédié `GroupKFold(user_id)` qui forcera train_users ∩ test_users = ∅.
 
 **Documentation** : ce point est inscrit comme **C4-bis** dans `reports/02_cleaning/cleaning_report.md` §11. À rappeler lors de la première sous-todo qui voudrait apprendre des préférences user.
@@ -110,7 +110,7 @@ Toutes les features dérivées en étape 5 sont **purement pointwise** (calculé
 | **P4** | Overlap user_id reviews_index | **expected** (88,2 % overlap, design choice) | refaire GroupKFold(user_id) si modèle préférence user |
 | **P5** | Feature engineering stateless | **ok** (0 stateful détecté) | maintenir la discipline si nouvelles features |
 
-**Verdict global** : pipeline 1.2 anti-leakage **au niveau requis pour les modèles M1-M8 product-level** (cf. `docs/modeles.md`). La limitation P4 est explicitement documentée et n'impacte pas le scope nominal du projet.
+**Verdict global** : pipeline 1.2 anti-leakage **au niveau requis pour les modèles knn-faiss à pricing-cascade product-level** (cf. `docs/modeles.md`). La limitation P4 est explicitement documentée et n'impacte pas le scope nominal du projet.
 
 ## Annexes
 

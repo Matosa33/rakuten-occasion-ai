@@ -3,7 +3,7 @@
 Design **within-product** → tests APPARIÉS (chaque produit passe toutes les conditions). On fournit :
 - **Page's L** (monotonie ORDONNÉE des conditions de richesse) — `scipy.stats.page_trend_test`.
 - **Wilcoxon apparié** (comparaison de 2 conditions) + différence médiane.
-- **TOST** (équivalence, pour le NON-effet prédit C3≈C2) avec SESOI métier.
+- **TOST** (équivalence, pour le NON-effet prédit multi-photo≈multi-photo-meta) avec SESOI métier.
 - **Bootstrap CLUSTERISÉ par famille de produit** (gère les doublons iPhone14×2, PS4×… → N_eff).
 
 Fonctions pures (matrices appariées en entrée) → testables sans I/O. Le run complet (34.7) les
@@ -18,8 +18,8 @@ from collections import defaultdict
 import numpy as np
 from scipy import stats
 
-# Axe de RICHESSE (croissant) pour la monotonie. C0t/C3t = facteur LANGUE, comparés à part.
-RICHNESS_ORDER = ["C0", "C1", "C2", "C3"]
+# Axe de RICHESSE (croissant) pour la monotonie. text-fr-en/multi-photo-meta-fr-en = facteur LANGUE, comparés à part.
+RICHNESS_ORDER = ["text-only", "one-photo", "multi-photo", "multi-photo-meta"]
 
 
 def product_family(product: str) -> str:

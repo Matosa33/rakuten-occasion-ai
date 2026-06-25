@@ -1,6 +1,6 @@
 """Helpers MLflow partagés — instrumentation LIVE des entraînements (Cycle 11, R5).
 
-Pattern idéal (vs logging rétroactif) : chaque script d'entraînement (M1-M6)
+Pattern idéal (vs logging rétroactif) : chaque script d'entraînement (les 6 modèles)
 ouvre un run MLflow et logge **au moment de l'entraînement** ses params, metrics,
 le modèle (avec signature + input_example pour validation au serving), la lignée
 de données (`log_input`) et des tags de traçabilité (git commit, cycle).

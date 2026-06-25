@@ -119,7 +119,7 @@ class IdentifyResponse(BaseModel):
     vlm_validation: dict | None = None  # {match, confidence, reason}
     next_observation: ObservationToRequest | None = None
     explanation: str
-    # Catégorie fine prédite par vote k-NN pondéré (bras A2, champion bench Cycle 33).
+    # Catégorie fine prédite par vote k-NN pondéré (bras knn-vote, champion bench Cycle 33).
     predicted_category_fine: str = Field(
         default="", description="Catégorie la plus fine prédite (vote pondéré des voisins)"
     )

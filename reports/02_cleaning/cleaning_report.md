@@ -14,7 +14,7 @@
 
 Cf. ADR D-009 (architecture cible RAG-grounded). Granularité retenue :
 
-- **Dataset principal product-level** (`data/processed/products/`) : 1 ligne par `parent_asin`, ~26 M items. Carburant pour M1-M8 (classification, encoders, FAISS retrieval, pricing).
+- **Dataset principal product-level** (`data/processed/products/`) : 1 ligne par `parent_asin`, ~26 M items. Carburant pour knn-faiss à pricing-cascade (classification, encoders, FAISS retrieval, pricing).
 - **`reviews_index` séparé** (`data/processed/reviews_index/`) : `(parent_asin, asin, user_id, timestamp, _split)` × ~348 M lignes (4 colonnes, ~5-10 GB). Permet au RAG Cycle 6 de retrouver toutes les reviews d'un produit dans le bon split sans dupliquer le contenu reviews — la jointure se fait lazy à la demande sur `data/raw/full/reviews/` déjà sur disque.
 - **Pas de matérialisation review × meta complète** (gaspillage 50-80 GB).
 
@@ -171,7 +171,7 @@ Ratio val/test légèrement asymétrique (15,22 vs 15,10) car le nombre de revie
 ## 11. Conditions à respecter aval (C06+ → C03)
 
 - **C1** : Filtrer ou imputer les ~4 624 items sans aucune review (n_reviews null). Pour la classification, on peut soit les drop, soit les garder en posant `n_reviews=0` et flags spéciaux.
-- **C2** : Pour le pricing M8 (Cycle 7), ne garder que les ~7,53 M items train avec `price_num not null` (40,8 %). Les modèles de pricing baseline doivent gérer le cas `price_band=None`.
+- **C2** : Pour le pricing pricing-cascade (Cycle 7), ne garder que les ~7,53 M items train avec `price_num not null` (40,8 %). Les modèles de pricing baseline doivent gérer le cas `price_band=None`.
 - **C3** : Au train classifier (Cycle 3), utiliser `class_weight='balanced'` ou stratifier le DataLoader pour absorber le ratio max/min cat 31,67 (cf. audit B1).
 - **C4** : Le titre `description` est utilisable directement par les encoders SigLIP/Arctic (cap 8192 ≪ context 8192 tokens des encoders).
 - **C5** : Pour le RAG Cycle 6, utiliser `reviews_index/{split}.parquet` pour ne récupérer que les reviews du bon split (anti-leakage L2).

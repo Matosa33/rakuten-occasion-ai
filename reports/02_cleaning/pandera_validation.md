@@ -60,7 +60,7 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 
 - **3 tests structurels** (toujours actifs, sans données) :
   - Schemas s'importent
-  - ProductSchema définit les 10 colonnes critiques pour M1-M8
+  - ProductSchema définit les 10 colonnes critiques pour knn-faiss à pricing-cascade
   - ReviewIndexSchema a `_split` avec check isin
 - **6 tests avec données** (skipif si parquets absents) :
   - 3 splits products → ProductSchema sur sample 1k

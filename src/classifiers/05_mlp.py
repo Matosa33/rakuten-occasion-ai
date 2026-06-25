@@ -1,13 +1,13 @@
-"""M4 — MLP head sur embeddings text (Cycle 3.1 / C12).
+"""mlp-embed — MLP head sur embeddings text (Cycle 3.1 / C12).
 
 MLP simple (2 couches) sur les embeddings text Arctic 1024 dim. Cible :
-F1 ≥ 0,90 (meilleur attendu de M1-M4 sur embeddings denses).
+F1 ≥ 0,90 (meilleur attendu de les modèles sur embeddings sur embeddings denses).
 
 Architecture : 1024 → 512 → 256 → 4 classes (softmax)
 Activation : ReLU + dropout 0.2
 Optimizer : Adam, early stopping sur val loss
 
-Plus rapide que RF (M3) sur grand volume car GPU-friendly via PyTorch.
+Plus rapide que RF (rf-embed) sur grand volume car GPU-friendly via PyTorch.
 Mais on utilise sklearn MLPClassifier ici par simplicité (CPU mais plus
 simple qu'une boucle PyTorch custom — Cycle 3 = baselines, pas SOTA).
 
@@ -77,7 +77,7 @@ def _load_split(split_name: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 def main() -> None:
-    log.info("=== M4 MLP sur embeddings text Arctic ===")
+    log.info("=== mlp-embed MLP sur embeddings text Arctic ===")
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
 

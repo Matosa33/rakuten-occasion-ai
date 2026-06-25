@@ -1,7 +1,7 @@
-"""M2 — LinearSVC + Platt sur embeddings text (Cycle 3.1 / C12).
+"""svm-embed — LinearSVC + Platt sur embeddings text (Cycle 3.1 / C12).
 
 LinearSVC sur les embeddings text Arctic (1024 dim) avec calibration Platt
-pour avoir des probabilités. Comparable à M5 (TF-IDF + LinearSVC) mais
+pour avoir des probabilités. Comparable à tfidf-svm (TF-IDF + LinearSVC) mais
 sur un input dense sémantique au lieu d'un input sparse lexical.
 
 Sortie :
@@ -69,7 +69,7 @@ def _load_split(split_name: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 def main() -> None:
-    log.info("=== M2 LinearSVC + Platt sur embeddings text Arctic ===")
+    log.info("=== svm-embed LinearSVC + Platt sur embeddings text Arctic ===")
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
 

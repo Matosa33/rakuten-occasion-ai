@@ -37,8 +37,8 @@
 
 ## Question jury : « a-t-on fait assez d'entraînement ? »
 
-Fait mesuré dans MLflow : **3 entraînements réels** trackés (M2 SVM 596 s, M4 MLP 399 s,
-M5 TF-IDF+LinearSVC+Platt 1 585 s) + bench comparatif 5 modèles + calibration (ECE)
+Fait mesuré dans MLflow : **3 entraînements réels** trackés (svm-embed SVM 596 s, mlp-embed MLP 399 s,
+tfidf-svm TF-IDF+LinearSVC+Platt 1 585 s) + bench comparatif 5 modèles + calibration (ECE)
 + Registry @Production + **boucle de ré-entraînement automatisée** (Airflow,
 champion/challenger — des retrains réels ont créé les versions v4/v5 du registry).
 **SigLIP n'ajouterait RIEN ici : c'est un encoder FROZEN** (inférence + indexation,
@@ -67,4 +67,4 @@ QLoRA), conditionnel à une preuve de gain (D-009) — indépendant du choix ci-
    RRF réel et surtout tester le domain shift avec quelques vraies photos prises au
    téléphone. GO/NO-GO sur les 73 h complètes seulement après CE chiffre.
 3. Ni l'un ni l'autre ne change la réponse jury « entraînement » — elle est déjà
-   couverte (M2/M4/M5 + boucle retrain) et le seul levier serait F8 (hors décision).
+   couverte (svm-embed/mlp-embed/tfidf-svm + boucle retrain) et le seul levier serait F8 (hors décision).

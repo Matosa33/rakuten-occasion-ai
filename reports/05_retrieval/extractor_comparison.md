@@ -1,4 +1,4 @@
-# Comparaison d'extracteurs VLM — condition C2 (N photos)
+# Comparaison d'extracteurs VLM — condition multi-photo (N photos)
 
 - **93 produits** · métriques dures · cache keyé par modèle.
 

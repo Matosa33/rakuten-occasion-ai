@@ -1,4 +1,4 @@
-# Bench classifieurs Cycle 3 — M1-M6
+# Bench classifieurs Cycle 3 — les 6 modèles
 
 > Synthèse comparative des 6 modèles entraînés en Cycle 3 (P04, C12-C15).
 > Tri par F1_weighted_test décroissant. Vainqueur en haut → MLflow alias `@Production` (Cycle 11).
@@ -26,7 +26,7 @@ Les autres modèles restent disponibles via alias `@Latest` pour A/B test futur.
 
 ## Fusion adaptive
 
-- M6 fusion (`fusion_v1`) F1_w test = 0.9522
+- fusion fusion (`fusion_v1`) F1_w test = 0.9522
 - Meilleur modèle individuel : `knn-faiss_v1` à 0.9537
 - **Gain fusion vs best individual : -0.0015**
   - Si gain > +0,02 : la fusion vaut son coût computationnel (predict 4-5 modèles)

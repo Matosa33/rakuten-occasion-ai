@@ -4,11 +4,11 @@
 **Tâche** : Classification multi-cat (4 cat D-011)
 
 ## Inputs / Outputs
-- **Input** : Probas calibrées de M2/M3/M4/M5
+- **Input** : Probas calibrées de svm-embed/rf-embed/mlp-embed/tfidf-svm
 - **Output** : P(catégorie | inputs) fusionnée par α appris
 
 ## Données / Source
-- Training data : Probas val M2-M5, grid search α
+- Training data : Probas val svm-embed à tfidf-svm, grid search α
 
 ## Limitations
 - Coût inférence = 4× modèle individuel. À adopter uniquement si gain > +0.02 F1_w.

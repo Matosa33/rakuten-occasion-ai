@@ -4,10 +4,10 @@ Relie tout : lit le brut (`listing_quality_raw.jsonl`), calcule les métriques d
 applique les stats appariées (34.6), trace MLflow et écrit le rapport chiffré.
 
 Comparaisons confirmatoires (appariées) :
-- **HV** valeur de la photo : C1 vs C0 (stratifié `metadata_quality`≤2).
-- **H1** multi-photos       : C1 vs C2 + Page's L sur C0→C1→C2→C3.
-- **H1b** métadonnée        : C2 vs C3 (Wilcoxon + **TOST** non-effet) — stratifié `is_overlap=False`.
-- **H1c** traduction nuit   : C3 vs C3t.
+- **HV** valeur de la photo : one-photo vs text-only (stratifié `metadata_quality`≤2).
+- **H1** multi-photos       : one-photo vs multi-photo + Page's L sur text-only→one-photo→multi-photo→multi-photo-meta.
+- **H1b** métadonnée        : multi-photo vs multi-photo-meta (Wilcoxon + **TOST** non-effet) — stratifié `is_overlap=False`.
+- **H1c** traduction nuit   : multi-photo-meta vs multi-photo-meta-fr-en.
 
 Lancer (après `07_listing_quality_bench`) :
     .venv/Scripts/python.exe -m src.retrieval.listing_quality_report
@@ -78,20 +78,20 @@ def run() -> dict:
 
     comparisons = {
         # completeness (remplissage de la fiche)
-        "HV completeness photo>texte (qual<=2)": _compare(records, expected, "completeness", "C0", "C1", poor),
-        "H1 completeness multiphoto (C1->C2)": _compare(records, expected, "completeness", "C1", "C2"),
-        "H1b completeness metadonnee (C2->C3)": _compare(records, expected, "completeness", "C2", "C3"),
-        "H1b completeness metadonnee sans-fuite": _compare(records, expected, "completeness", "C2", "C3", clean),
-        "H1c completeness traduction (C3->C3t)": _compare(records, expected, "completeness", "C3", "C3t"),
+        "HV completeness photo>texte (qual<=2)": _compare(records, expected, "completeness", "text-only", "one-photo", poor),
+        "H1 completeness multiphoto (one-photo->multi-photo)": _compare(records, expected, "completeness", "one-photo", "multi-photo"),
+        "H1b completeness metadonnee (multi-photo->multi-photo-meta)": _compare(records, expected, "completeness", "multi-photo", "multi-photo-meta"),
+        "H1b completeness metadonnee sans-fuite": _compare(records, expected, "completeness", "multi-photo", "multi-photo-meta", clean),
+        "H1c completeness traduction (multi-photo-meta->multi-photo-meta-fr-en)": _compare(records, expected, "completeness", "multi-photo-meta", "multi-photo-meta-fr-en"),
         # entity_match (identification du bon produit) — la metadonnee y prouve sa valeur
-        "H2 entity multiphoto (C1->C2)": _compare(records, expected, "entity_match", "C1", "C2"),
-        "H2 entity metadonnee (C2->C3)": _compare(records, expected, "entity_match", "C2", "C3"),
-        "H2 entity metadonnee sans-fuite": _compare(records, expected, "entity_match", "C2", "C3", clean),
+        "H2 entity multiphoto (one-photo->multi-photo)": _compare(records, expected, "entity_match", "one-photo", "multi-photo"),
+        "H2 entity metadonnee (multi-photo->multi-photo-meta)": _compare(records, expected, "entity_match", "multi-photo", "multi-photo-meta"),
+        "H2 entity metadonnee sans-fuite": _compare(records, expected, "entity_match", "multi-photo", "multi-photo-meta", clean),
     }
     # TOST équivalence métadonnée (non-effet prédit) sur les produits sans fuite.
     pp = _per_product(records, expected, HEADLINE, clean)
-    prods, mat = paired_values(pp, ["C2", "C3"])
-    tost = tost_equivalence(mat["C2"], mat["C3"], SESOI) if len(prods) >= 3 else {"n": len(prods)}
+    prods, mat = paired_values(pp, ["multi-photo", "multi-photo-meta"])
+    tost = tost_equivalence(mat["multi-photo"], mat["multi-photo-meta"], SESOI) if len(prods) >= 3 else {"n": len(prods)}
 
     summary = {
         "headline_metric": HEADLINE,
@@ -147,7 +147,7 @@ def _write_report(summary: dict) -> None:
         "| Condition | " + " | ".join(cols) + " | n |",
         "|---|" + "---|" * (len(cols) + 1),
     ]
-    for cond in ["C0", "C0t", "C1", "C2", "C3", "C3t"]:
+    for cond in ["text-only", "text-fr-en", "one-photo", "multi-photo", "multi-photo-meta", "multi-photo-meta-fr-en"]:
         m = a.get(cond)
         if m:
             lines.append(
@@ -168,9 +168,9 @@ def _write_report(summary: dict) -> None:
     if "p_tost" in t:
         verdict = "ÉQUIVALENCE (métadonnée sans effet)" if t["equivalent"] else "non concluante"
         lines.append(
-            f"- **TOST C2≈C3 (sans fuite, SESOI {t['sesoi']})** : {verdict} · p={t['p_tost']:.4f}"
+            f"- **TOST multi-photo≈multi-photo-meta (sans fuite, SESOI {t['sesoi']})** : {verdict} · p={t['p_tost']:.4f}"
         )
-    lines += ["", "## Monotonie (Page's L, richesse C0→C1→C2→C3)", ""]
+    lines += ["", "## Monotonie (Page's L, richesse text-only→one-photo→multi-photo→multi-photo-meta)", ""]
     for metric, tr in summary["page_trend"].items():
         if "p" in tr:
             lines.append(f"- `{metric}` : L={tr['L']} · p={tr['p']:.4f}")

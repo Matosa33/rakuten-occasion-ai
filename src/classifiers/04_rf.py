@@ -1,4 +1,4 @@
-"""M3 — RandomForest sur embeddings text (Cycle 3.1 / C12).
+"""rf-embed — RandomForest sur embeddings text (Cycle 3.1 / C12).
 
 RandomForest est non-linéaire interprétable. Avantages :
 - Capture des interactions non-linéaires entre dimensions d'embeddings
@@ -74,7 +74,7 @@ def _load_split(split_name: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 def main() -> None:
-    log.info("=== M3 RandomForest sur embeddings text Arctic ===")
+    log.info("=== rf-embed RandomForest sur embeddings text Arctic ===")
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
 

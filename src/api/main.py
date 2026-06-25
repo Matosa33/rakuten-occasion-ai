@@ -87,7 +87,7 @@ async def lifespan(app: FastAPI):
     except (FileNotFoundError, ImportError) as e:
         log.warning("  IdentificationService indispo : %s → /identify renverra 503", e)
 
-    # PricingService (M8 cascade)
+    # PricingService (pricing-cascade cascade)
     try:
         pricing = PricingService()
         pricing.load()
@@ -339,11 +339,11 @@ async def price(
     req: PriceRequest,
     user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
 ) -> PriceResponse:
-    """Pricing transparent cascade L1-L4 (M8)."""
+    """Pricing transparent cascade L1-L4 (pricing-cascade)."""
     log.info("price by user=%s", user)
     pricing: PricingService | None = APP_STATE.get("pricing")
     if pricing is None or not pricing.ready:
-        raise HTTPException(503, "PricingService indisponible. Vérifie Cycle 7.1 (M8).")
+        raise HTTPException(503, "PricingService indisponible. Vérifie Cycle 7.1 (pricing-cascade).")
 
     result = pricing.suggest(
         category=req.category.value,

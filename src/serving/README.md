@@ -1,6 +1,6 @@
 # Serving BentoML — classifieur `@Production` (Cycle 12.2, D-022)
 
-Sert le modèle promu `@Production` du Registry MLflow (M5 TF-IDF, D-020) via BentoML,
+Sert le modèle promu `@Production` du Registry MLflow (tfidf-svm TF-IDF, D-020) via BentoML,
 avec **métriques Prometheus natives** sur `/metrics`. Découplage API ↔ modèle : le
 service charge le modèle depuis le store BentoML, alimenté par le Registry MLflow.
 

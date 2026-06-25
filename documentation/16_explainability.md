@@ -124,10 +124,10 @@ Les quatre modèles externes réutilisés :
 
 | Fiche | Type | Source | Rôle |
 |---|---|---|---|
-| e1_siglip_base_v1 | SigLIP base ViT-B/16, gelé, 768 dimensions | google/siglip-base-patch16-224 | Transformer une image en embedding (liste de 768 nombres) |
-| e2_arctic_embed_l_v2 | Snowflake Arctic Embed L v2, gelé, 1024 dimensions, multilingue | Snowflake/snowflake-arctic-embed-l-v2.0 | Transformer un texte en embedding (liste de 1024 nombres) |
-| e3_vlm_zero_shot_v1 | Modèle vision-langage de pointe (Gemini 2.0 Flash via OpenRouter) | google/gemini-2.0-flash-exp | Valider qu'une image vendeur correspond bien à un candidat trouvé |
-| e4_llm_writer_v1 | Grand modèle de langage rédacteur (Gemini Flash via OpenRouter) | google/gemini-2.0-flash-exp | Rédiger un titre et une description d'annonce |
+| siglip_v1 | SigLIP base ViT-B/16, gelé, 768 dimensions | google/siglip-base-patch16-224 | Transformer une image en embedding (liste de 768 nombres) |
+| arctic_v1 | Snowflake Arctic Embed L v2, gelé, 1024 dimensions, multilingue | Snowflake/snowflake-arctic-embed-l-v2.0 | Transformer un texte en embedding (liste de 1024 nombres) |
+| vlm-validator_v1 | Modèle vision-langage de pointe (Gemini 2.0 Flash via OpenRouter) | google/gemini-2.0-flash-exp | Valider qu'une image vendeur correspond bien à un candidat trouvé |
+| llm-writer_v1 | Grand modèle de langage rédacteur (Gemini Flash via OpenRouter) | google/gemini-2.0-flash-exp | Rédiger un titre et une description d'annonce |
 
 Précisions sur ces modèles externes :
 

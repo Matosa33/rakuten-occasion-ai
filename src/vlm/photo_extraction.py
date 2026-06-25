@@ -121,7 +121,7 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
 
 
 def _parse(raw: str) -> PhotoExtraction:
-    """Parse tolérant (JSON pur, fences markdown, prose) — même esprit que C6."""
+    """Parse tolérant (JSON pur, fences markdown, prose)."""
     candidates = [raw]
     if "```" in raw:
         inner = raw.split("```")[1]

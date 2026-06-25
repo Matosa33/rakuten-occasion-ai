@@ -1,7 +1,7 @@
 """Comparaison d'extracteurs VLM (Cycle 34.8, protocole D-042).
 
 Quelle VLM lit le mieux les photos pour produire une bonne fiche ? Pour 4 extracteurs **VISION
-vérifiés sur OpenRouter** (tous bon marché), sur la condition **C2 (N photos)** — celle qui dépend
+vérifiés sur OpenRouter** (tous bon marché), sur la condition **multi-photo (N photos)** — celle qui dépend
 du modèle — on produit la fiche et on mesure la qualité (métriques dures 34.5) + la latence.
 
 Index chargé **UNE fois** (on boucle les modèles dessus). Cache d'extraction **keyé par modèle**
@@ -161,7 +161,7 @@ def run() -> dict:
     (REPORT_DIR / "extractor_comparison_raw.jsonl").write_text(
         "\n".join(json.dumps(r, ensure_ascii=False) for r in raw_records) + "\n", encoding="utf-8"
     )
-    summary = {"by_model": results, "condition": "C2 (N photos)", "n_products": len(products)}
+    summary = {"by_model": results, "condition": "multi-photo (N photos)", "n_products": len(products)}
     _log_mlflow(summary)
     _write_report(summary)
     return summary
@@ -198,7 +198,7 @@ def _write_report(summary: dict) -> None:
         "price_usd_per_mtok_in",
     ]
     lines = [
-        "# Comparaison d'extracteurs VLM — condition C2 (N photos)",
+        "# Comparaison d'extracteurs VLM — condition multi-photo (N photos)",
         "",
         f"- **{summary['n_products']} produits** · métriques dures · cache keyé par modèle.",
         "",

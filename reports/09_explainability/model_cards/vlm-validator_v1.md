@@ -1,4 +1,4 @@
-# Model Card — e3_vlm_zero_shot_v1
+# Model Card — vlm-validator_v1
 
 **Type** : VLM frontier zero-shot (Gemini 2.0 Flash via OpenRouter)
 **Tâche** : Validation matching produit (image vendeur ↔ candidat retrieval)
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/e3_vlm_zero_shot_v1.json`
+`reports/04_classifiers_bench/vlm-validator_v1.json`

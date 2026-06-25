@@ -6,14 +6,14 @@ annonces (`data/photos_eval/`). Ce fichier (34.4) produit les **sorties brutes**
 s'appuieront dessus.
 
 Conditions (richesse d'entrée croissante, design factoriel) :
-- **C0**  : texte vendeur seul (FR), 0 photo            — baseline texte
-- **C0t** : texte vendeur traduit EN                    — isole la LANGUE
-- **C1**  : 1 photo                                      — base photo (extraction VLM)
-- **C2**  : N photos (≤4)                                — multi-vues
-- **C3**  : N photos + texte vendeur (FR brut)          — + métadonnée
-- **C3t** : N photos + texte vendeur traduit            — + traduction
+- **text-only**  : texte vendeur seul (FR), 0 photo            — baseline texte
+- **text-fr-en** : texte vendeur traduit EN                    — isole la LANGUE
+- **one-photo**  : 1 photo                                      — base photo (extraction VLM)
+- **multi-photo**  : N photos (≤4)                                — multi-vues
+- **multi-photo-meta**  : N photos + texte vendeur (FR brut)          — + métadonnée
+- **multi-photo-meta-fr-en** : N photos + texte vendeur traduit            — + traduction
 
-Garde-fous de VALIDITÉ : extraction VLM **mise en cache** (C2/C3/C3t partagent UNE extraction —
+Garde-fous de VALIDITÉ : extraction VLM **mise en cache** (multi-photo/multi-photo-meta/multi-photo-meta-fr-en partagent UNE extraction —
 sinon on confond métadonnée et tirage VLM) ; **anti-fuite** = on logge `seller_meta_overlap` par
 produit pour stratifier (gain métadonnée crédible sur les produits SANS recouvrement).
 
@@ -42,7 +42,7 @@ DATASET_DIR = REPO_ROOT / "data" / "photos_eval"
 REPORT_DIR = REPO_ROOT / "reports" / "05_retrieval"
 CACHE_PATH = DATASET_DIR / "_cache" / "extractions.jsonl"
 RAW_OUT = REPORT_DIR / "listing_quality_raw.jsonl"
-CONDITIONS = ["C0", "C0t", "C1", "C2", "C3", "C3t"]
+CONDITIONS = ["text-only", "text-fr-en", "one-photo", "multi-photo", "multi-photo-meta", "multi-photo-meta-fr-en"]
 LIMIT = int(os.environ.get("PHOTO_BENCH_LIMIT", "0"))
 RELIABLE = 0.60  # seuil match fiable (= IDENTIFIED_THRESHOLD)
 
@@ -79,12 +79,12 @@ def _conditions_for(meta: dict, photos: list[Path], cache: ExtractionCache) -> d
     extn, _ = cache.get_or_extract(photos[:4]) if len(photos) > 1 else (ext1, True)
     c3q = f"{extn.title_guess} {seller}".strip()
     return {
-        "C0": (seller, False, {}),
-        "C0t": (seller, True, {}),
-        "C1": (ext1.title_guess, False, ext1.attributes),
-        "C2": (extn.title_guess, False, extn.attributes),
-        "C3": (c3q, False, extn.attributes),
-        "C3t": (c3q, True, extn.attributes),
+        "text-only": (seller, False, {}),
+        "text-fr-en": (seller, True, {}),
+        "one-photo": (ext1.title_guess, False, ext1.attributes),
+        "multi-photo": (extn.title_guess, False, extn.attributes),
+        "multi-photo-meta": (c3q, False, extn.attributes),
+        "multi-photo-meta-fr-en": (c3q, True, extn.attributes),
     }
 
 

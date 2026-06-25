@@ -125,7 +125,7 @@ production suit donc automatiquement la dernière promotion, sans intervention m
 
 - Dans le registre du modèle `rakuten-classifier`, on compte **cinq versions** au total (de la
   version 1 à la version 5). L'étiquette **`@Production` pointe vers la version 2**, qui correspond au
-  meilleur modèle obtenu (appelé en interne « M5 »).
+  meilleur modèle obtenu (appelé en interne « tfidf-svm »).
 - Les **ré-entraînements automatiques**, déclenchés par l'orchestrateur de tâches (Airflow, l'outil
   qui planifie et enchaîne les traitements), ont **réellement produit** les versions 3, 4 et 5.
 - **La preuve que la barrière protège la production** : les versions 3, 4 et 5 sont d'autres modèles
@@ -138,7 +138,7 @@ production suit donc automatiquement la dernière promotion, sans intervention m
   MLflow (version 3.x), le registre est également peuplé dans le serveur exécuté en conteneur, sur le
   port réseau 5000. Un conteneur est un environnement logiciel isolé et reproductible.
 
-> [SLIDE] **Chiffres à montrer** : « registre de 5 versions (v1 à v5) », « `@Production` = M5 (la
+> [SLIDE] **Chiffres à montrer** : « registre de 5 versions (v1 à v5) », « `@Production` = tfidf-svm (la
 > version 2) », « les ré-entraînements ont créé les versions 3 à 5, mais la barrière a **refusé** les
 > moins bonnes (0,931 et 0,949 contre 0,950) : la production a été protégée ».
 > [CAPTURE] La page *Models* de MLflow (liste des versions et de l'alias), accompagnée d'un extrait du

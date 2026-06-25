@@ -1,10 +1,10 @@
-"""M6 — Fusion adaptive multimodale (Cycle 3.4 / C15).
+"""fusion — Fusion adaptive multimodale (Cycle 3.4 / C15).
 
-Méta-modèle qui combine les sorties des classifieurs M1-M5 pour produire
+Méta-modèle qui combine les sorties des classifieurs les modèles de base pour produire
 une prédiction finale plus robuste qu'un seul modèle.
 
 Stratégie : fusion par moyenne pondérée des probabilités, avec α appris
-par grid search sur le val set. Pour chaque cat séparément (M6 par cat
+par grid search sur le val set. Pour chaque cat séparément (fusion par cat
 pour absorber B1).
 
 Score final = α_text_arctic × P_M2_svm + α_text_tfidf × P_M5_tfidf
@@ -19,7 +19,7 @@ Sortie :
 - `data/models/fusion_v1.joblib` (poids α + références aux modèles)
 - `reports/04_classifiers_bench/m6_fusion.json`
 
-Lance APRÈS M1-M5 :
+Lance APRÈS les modèles de base :
 
     python -m src.classifiers.06_fusion_adaptive
 """
@@ -90,8 +90,8 @@ def _get_proba_or_skip(model_name: str, X_input, fallback_shape) -> np.ndarray |
 
 
 def main() -> None:
-    log.info("=== M6 Fusion adaptive multimodale (Cycle 3.4 / C15) ===")
-    log.info("Cherche grid α sur (M1, M2, M3, M4, M5) prob fusion par moyenne pondérée")
+    log.info("=== fusion Fusion adaptive multimodale (Cycle 3.4 / C15) ===")
+    log.info("Cherche grid α sur (knn-faiss, svm-embed, rf-embed, mlp-embed, tfidf-svm) prob fusion par moyenne pondérée")
 
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
@@ -114,9 +114,9 @@ def main() -> None:
         time.time() - t0,
     )
 
-    log.info("Collecte des probas M1-M5 sur val + test…")
-    # M1 (k-NN) skipped — placeholder ne charge pas
-    # M5 (TF-IDF) prend texte brut
+    log.info("Collecte des probas les modèles de base sur val + test…")
+    # knn-faiss (k-NN) skipped — placeholder ne charge pas
+    # tfidf-svm (TF-IDF) prend texte brut
     probas_val = {}
     probas_test = {}
     for model_name, X_val_input, X_test_input in [
@@ -236,7 +236,7 @@ def main() -> None:
     log.info("→ %s + %s", OUT_MODEL.name, OUT_METRICS.name)
 
     # MLflow LIVE (R5) : tracking params (α optimaux) + metrics. Méta-modèle = dict
-    # de poids référençant M1-M5 → sklearn=False, non registré (cf. D-020).
+    # de poids référençant les modèles de base → sklearn=False, non registré (cf. D-020).
     log_training_run(
         MODEL_NAME,
         model=None,

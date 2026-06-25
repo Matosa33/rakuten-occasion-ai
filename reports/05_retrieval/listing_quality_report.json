@@ -2,7 +2,7 @@
   "headline_metric": "completeness",
   "n_records": 558,
   "by_condition": {
-    "C0": {
+    "text-only": {
       "macro_acc": 0.871,
       "leaf_exact": 0.1505,
       "leaf_overlap": 0.2245,
@@ -13,7 +13,7 @@
       "usable": 1.0,
       "n": 93
     },
-    "C0t": {
+    "text-fr-en": {
       "macro_acc": 0.8495,
       "leaf_exact": 0.1613,
       "leaf_overlap": 0.2416,
@@ -24,7 +24,7 @@
       "usable": 1.0,
       "n": 93
     },
-    "C1": {
+    "one-photo": {
       "macro_acc": 0.8172,
       "leaf_exact": 0.1935,
       "leaf_overlap": 0.2456,
@@ -35,7 +35,7 @@
       "usable": 1.0,
       "n": 93
     },
-    "C2": {
+    "multi-photo": {
       "macro_acc": 0.9032,
       "leaf_exact": 0.1935,
       "leaf_overlap": 0.2686,
@@ -46,7 +46,7 @@
       "usable": 1.0,
       "n": 93
     },
-    "C3": {
+    "multi-photo-meta": {
       "macro_acc": 0.8925,
       "leaf_exact": 0.2151,
       "leaf_overlap": 0.2711,
@@ -57,7 +57,7 @@
       "usable": 1.0,
       "n": 93
     },
-    "C3t": {
+    "multi-photo-meta-fr-en": {
       "macro_acc": 0.8495,
       "leaf_exact": 0.2043,
       "leaf_overlap": 0.2665,
@@ -74,28 +74,28 @@
       "L": 2589.0,
       "p": 1.2334846461802686e-21,
       "order": [
-        "C0",
-        "C1",
-        "C2",
-        "C3"
+        "text-only",
+        "one-photo",
+        "multi-photo",
+        "multi-photo-meta"
       ]
     },
     "leaf_overlap": {
       "L": 2362.5,
       "p": 0.08898371298403246,
       "order": [
-        "C0",
-        "C1",
-        "C2",
-        "C3"
+        "text-only",
+        "one-photo",
+        "multi-photo",
+        "multi-photo-meta"
       ]
     }
   },
   "comparisons": {
     "HV completeness photo>texte (qual<=2)": {
       "metric": "completeness",
-      "a": "C0",
-      "b": "C1",
+      "a": "text-only",
+      "b": "one-photo",
       "n": 41,
       "p": 7.909847332172941e-07,
       "median_diff": 0.1429,
@@ -107,10 +107,10 @@
         "n_obs": 41
       }
     },
-    "H1 completeness multiphoto (C1->C2)": {
+    "H1 completeness multiphoto (one-photo->multi-photo)": {
       "metric": "completeness",
-      "a": "C1",
-      "b": "C2",
+      "a": "one-photo",
+      "b": "multi-photo",
       "n": 93,
       "p": 3.7955669553166508e-06,
       "median_diff": 0.0,
@@ -122,10 +122,10 @@
         "n_obs": 93
       }
     },
-    "H1b completeness metadonnee (C2->C3)": {
+    "H1b completeness metadonnee (multi-photo->multi-photo-meta)": {
       "metric": "completeness",
-      "a": "C2",
-      "b": "C3",
+      "a": "multi-photo",
+      "b": "multi-photo-meta",
       "n": 93,
       "p": 0.20085787364417762,
       "median_diff": 0.0,
@@ -139,8 +139,8 @@
     },
     "H1b completeness metadonnee sans-fuite": {
       "metric": "completeness",
-      "a": "C2",
-      "b": "C3",
+      "a": "multi-photo",
+      "b": "multi-photo-meta",
       "n": 49,
       "p": 0.07414989773822231,
       "median_diff": 0.0,
@@ -152,10 +152,10 @@
         "n_obs": 49
       }
     },
-    "H1c completeness traduction (C3->C3t)": {
+    "H1c completeness traduction (multi-photo-meta->multi-photo-meta-fr-en)": {
       "metric": "completeness",
-      "a": "C3",
-      "b": "C3t",
+      "a": "multi-photo-meta",
+      "b": "multi-photo-meta-fr-en",
       "n": 93,
       "p": 0.574934084570652,
       "median_diff": 0.0,
@@ -167,10 +167,10 @@
         "n_obs": 93
       }
     },
-    "H2 entity multiphoto (C1->C2)": {
+    "H2 entity multiphoto (one-photo->multi-photo)": {
       "metric": "entity_match",
-      "a": "C1",
-      "b": "C2",
+      "a": "one-photo",
+      "b": "multi-photo",
       "n": 93,
       "p": 0.002699796063260186,
       "median_diff": 0.0,
@@ -182,10 +182,10 @@
         "n_obs": 93
       }
     },
-    "H2 entity metadonnee (C2->C3)": {
+    "H2 entity metadonnee (multi-photo->multi-photo-meta)": {
       "metric": "entity_match",
-      "a": "C2",
-      "b": "C3",
+      "a": "multi-photo",
+      "b": "multi-photo-meta",
       "n": 93,
       "p": 0.033894853524689246,
       "median_diff": 0.0,
@@ -199,8 +199,8 @@
     },
     "H2 entity metadonnee sans-fuite": {
       "metric": "entity_match",
-      "a": "C2",
-      "b": "C3",
+      "a": "multi-photo",
+      "b": "multi-photo-meta",
       "n": 49,
       "p": 0.5637028616507731,
       "median_diff": 0.0,

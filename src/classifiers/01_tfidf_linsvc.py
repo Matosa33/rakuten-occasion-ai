@@ -1,4 +1,4 @@
-"""M5 — TF-IDF + LinearSVC + Platt calibration (Cycle 3.2 / C13).
+"""tfidf-svm — TF-IDF + LinearSVC + Platt calibration (Cycle 3.2 / C13).
 
 Baseline texte brut, ne nécessite pas les embeddings du Cycle 2.
 
@@ -6,7 +6,7 @@ Objectif
 --------
 Mesurer la performance de classification de catégorie (4 cat D-011)
 avec un pipeline TF-IDF classique calibré, comme **baseline texte** à
-laquelle comparer les modèles sur embeddings (M1-M4) et la fusion (M6).
+laquelle comparer les modèles sur embeddings (les modèles sur embeddings) et la fusion (fusion).
 
 Pipeline
 --------
@@ -83,7 +83,7 @@ def _load_split(split_name: str) -> tuple[list[str], np.ndarray]:
 
 
 def main() -> None:
-    log.info("=== M5 TF-IDF + LinearSVC + Platt (Cycle 3.2 / C13) ===")
+    log.info("=== tfidf-svm TF-IDF + LinearSVC + Platt (Cycle 3.2 / C13) ===")
     log.info("Périmètre : %d catégories (D-011)", len(CATEGORIES))
 
     DATA_MODELS.mkdir(parents=True, exist_ok=True)

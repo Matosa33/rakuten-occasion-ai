@@ -2,12 +2,12 @@
 
 Trois livrables d'explainability :
 
-1. **SHAP TreeExplainer** sur M3 (RF) → top-K features importantes par cat
+1. **SHAP TreeExplainer** sur rf-embed (RF) → top-K features importantes par cat
    (sample 1k items val, plot summary + per-class waterfall pour 3 cas).
 2. **t-SNE / UMAP** des embeddings (text Arctic + vision SigLIP) colorés
    par catégorie → vérifier la **séparation visuelle** entre les 4 cat
    D-011 (cohérence avec F1 par cat).
-3. **Model Cards** format HuggingFace pour M1-M8 + E1-E4 → un fichier MD
+3. **Model Cards** format HuggingFace pour knn-faiss à pricing-cascade + E1-E4 → un fichier MD
    par modèle dans `reports/09_explainability/model_cards/`.
 
 L'idée fondatrice : un modèle qui n'est pas explicable n'est pas
@@ -16,12 +16,12 @@ acceptable en production particulier. Le vendeur doit comprendre
 *pourquoi* le retrieval voit ces produits comme similaires (t-SNE).
 
 Sortie :
-- `reports/09_explainability/shap_m3.{md,png}` (si M3 dispo)
+- `reports/09_explainability/shap_m3.{md,png}` (si rf-embed dispo)
 - `reports/09_explainability/tsne_text.png` (si Arctic embed dispo)
 - `reports/09_explainability/tsne_vision.png` (si SigLIP embed dispo)
 - `reports/09_explainability/model_cards/{m1..m8,e1..e4}.md`
 
-Lance APRÈS Cycle 3 (M1-M6) :
+Lance APRÈS Cycle 3 (les 6 modèles) :
 
     python -m src.explain.01_shap_tsne_modelcards
 """
@@ -102,9 +102,9 @@ MODEL_CARDS = {
     "fusion_v1": {
         "type": "Fusion adaptive (moyenne pondérée probas)",
         "task": "Classification multi-cat (4 cat D-011)",
-        "input": "Probas calibrées de M2/M3/M4/M5",
+        "input": "Probas calibrées de svm-embed/rf-embed/mlp-embed/tfidf-svm",
         "output": "P(catégorie | inputs) fusionnée par α appris",
-        "training_data": "Probas val M2-M5, grid search α",
+        "training_data": "Probas val svm-embed à tfidf-svm, grid search α",
         "limitations": "Coût inférence = 4× modèle individuel. À adopter uniquement si gain > +0.02 F1_w.",
     },
     "faiss-hnsw_v1": {
@@ -123,7 +123,7 @@ MODEL_CARDS = {
         "training_data": "Médianes catégorie calculées sur train",
         "limitations": "Dépréciation linéaire (vs réelle = courbe). Pas d'effets temporels (saisonnalité).",
     },
-    "e1_siglip_base_v1": {
+    "siglip_v1": {
         "type": "SigLIP base ViT-B/16 (frozen, 768 dim)",
         "task": "Encodage image → embedding L2-normalized",
         "source": "google/siglip-base-patch16-224",
@@ -131,7 +131,7 @@ MODEL_CARDS = {
         "output": "Embedding 768 dim FP16",
         "limitations": "Frozen — pas d'adaptation aux produits Amazon. Cibler fine-tuning si gap mesuré > 5 pts.",
     },
-    "e2_arctic_embed_l_v2": {
+    "arctic_v1": {
         "type": "Snowflake Arctic Embed L v2 (frozen, 1024 dim, multilingue XLM-RoBERTa-large)",
         "task": "Encodage texte → embedding L2-normalized",
         "source": "Snowflake/snowflake-arctic-embed-l-v2.0",
@@ -139,7 +139,7 @@ MODEL_CARDS = {
         "output": "Embedding 1024 dim FP16",
         "limitations": "Frozen. max_seq=256 = trade-off vitesse (4× plus rapide que 512).",
     },
-    "e3_vlm_zero_shot_v1": {
+    "vlm-validator_v1": {
         "type": "VLM frontier zero-shot (Gemini 2.0 Flash via OpenRouter)",
         "task": "Validation matching produit (image vendeur ↔ candidat retrieval)",
         "source": "google/gemini-2.0-flash-exp via OpenRouter",
@@ -147,7 +147,7 @@ MODEL_CARDS = {
         "output": "JSON {match: bool, confidence: 0-1, reason: str}",
         "limitations": "Coût API ~ $0.0001/call. Latence ~ 1-3 s. Stub mock en attendant Cycle 9.",
     },
-    "e4_llm_writer_v1": {
+    "llm-writer_v1": {
         "type": "LLM frontier rédacteur grounded (Gemini Flash via OpenRouter)",
         "task": "Génération titre + description annonce vendeur particulier",
         "source": "google/gemini-2.0-flash-exp via OpenRouter",
@@ -268,14 +268,14 @@ def main() -> None:
     else:
         log.info("vision_siglip_val.npy absent → skip t-SNE vision (lance Cycle 2.2 d'abord)")
 
-    # 4. SHAP M3 (si modèle dispo)
+    # 4. SHAP rf-embed (si modèle dispo)
     m3_path = DATA_MODELS / "rf-embed_v1.joblib"
     if m3_path.exists():
         try:
             import joblib
             import shap
 
-            log.info("--- SHAP TreeExplainer M3 RF ---")
+            log.info("--- SHAP TreeExplainer rf-embed RF ---")
             model = joblib.load(m3_path)
             text_emb = np.load(text_emb_path).astype(np.float32)
             rng = np.random.default_rng(SEED)
@@ -300,7 +300,7 @@ def main() -> None:
         except ImportError:
             log.warning("Lib `shap` absente → skip SHAP")
     else:
-        log.info("rf-embed_v1.joblib absent → skip SHAP M3 (lance Cycle 3.1 M3 d'abord)")
+        log.info("rf-embed_v1.joblib absent → skip SHAP rf-embed (lance Cycle 3.1 rf-embed d'abord)")
 
     log.info("Cycle 8.1 explainability OK.")
 

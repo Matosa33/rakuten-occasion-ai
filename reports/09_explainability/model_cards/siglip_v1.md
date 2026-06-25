@@ -1,4 +1,4 @@
-# Model Card — e1_siglip_base_v1
+# Model Card — siglip_v1
 
 **Type** : SigLIP base ViT-B/16 (frozen, 768 dim)
 **Tâche** : Encodage image → embedding L2-normalized
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/e1_siglip_base_v1.json`
+`reports/04_classifiers_bench/siglip_v1.json`

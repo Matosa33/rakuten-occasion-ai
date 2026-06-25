@@ -1,4 +1,4 @@
-"""M1 — k-NN sur embeddings text via FAISS HNSW (Cycle 3.1 / C12).
+"""knn-faiss — k-NN sur embeddings text via FAISS HNSW (Cycle 3.1 / C12).
 
 Baseline non-paramétrique : pour chaque produit du val/test, trouver ses
 k plus proches voisins dans le train (par cosine sim sur embeddings text
@@ -119,7 +119,7 @@ def _knn_predict_proba(
 
 
 def main() -> None:
-    log.info("=== M1 k-NN sur embeddings text Arctic via FAISS HNSW (Cycle 3.1 / C12) ===")
+    log.info("=== knn-faiss k-NN sur embeddings text Arctic via FAISS HNSW (Cycle 3.1 / C12) ===")
     log.info(
         "k=%d, métrique=cosine (IP sur L2-normalisé), efSearch=%d", K_NEIGHBORS, HNSW_EF_SEARCH
     )
@@ -254,7 +254,7 @@ def main() -> None:
         cycle="3",
     )
 
-    log.info("M1 k-NN via FAISS OK.")
+    log.info("knn-faiss k-NN via FAISS OK.")
 
 
 if __name__ == "__main__":

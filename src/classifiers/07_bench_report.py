@@ -1,6 +1,6 @@
-"""Cycle 3 — Bench global M1-M6.
+"""Cycle 3 — Bench global les 6 modèles.
 
-Agrège les JSON de métriques produits par M1-M5 + M6 fusion en un rapport
+Agrège les JSON de métriques produits par les modèles de base + fusion fusion en un rapport
 markdown comparatif. Permet la sélection du modèle vainqueur pour MLflow
 Registry alias `@Production` (Cycle 11).
 
@@ -8,7 +8,7 @@ Sortie :
 - `reports/04_classifiers_bench/bench_v1.md` (synthèse humaine)
 - `reports/04_classifiers_bench/bench_v1.json` (machine-readable)
 
-Lance APRÈS M1-M6 :
+Lance APRÈS les 6 modèles :
 
     python -m src.classifiers.07_bench_report
 """
@@ -62,7 +62,7 @@ def _format_row(model_metrics: dict) -> dict:
 
 
 def main() -> None:
-    log.info("=== Cycle 3 — Bench global M1-M6 ===")
+    log.info("=== Cycle 3 — Bench global les 6 modèles ===")
 
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
 
@@ -76,7 +76,7 @@ def main() -> None:
         rows.append(_format_row(m))
 
     if not rows:
-        log.error("Aucun modèle trouvé. Lance d'abord les scripts M1-M6.")
+        log.error("Aucun modèle trouvé. Lance d'abord les scripts les 6 modèles.")
         return
 
     # Tri par F1 weighted test décroissant (vainqueur en premier)
@@ -86,7 +86,7 @@ def main() -> None:
 
     # Format markdown
     lines = [
-        "# Bench classifieurs Cycle 3 — M1-M6",
+        "# Bench classifieurs Cycle 3 — les 6 modèles",
         "",
         "> Synthèse comparative des 6 modèles entraînés en Cycle 3 (P04, C12-C15).",
         "> Tri par F1_weighted_test décroissant. Vainqueur en haut → MLflow alias `@Production` (Cycle 11).",
@@ -133,7 +133,7 @@ def main() -> None:
         gain_str = f"+{gain:.4f}" if gain >= 0 else f"{gain:.4f}"
         lines.extend(
             [
-                f"- M6 fusion (`{fusion_row['model']}`) F1_w test = {fusion_row['f1_w_test']:.4f}",
+                f"- fusion fusion (`{fusion_row['model']}`) F1_w test = {fusion_row['f1_w_test']:.4f}",
                 f"- Meilleur modèle individuel : `{best_individual['model']}` à {best_individual['f1_w_test']:.4f}",
                 f"- **Gain fusion vs best individual : {gain_str}**",
                 "  - Si gain > +0,02 : la fusion vaut son coût computationnel (predict 4-5 modèles)",
@@ -141,7 +141,7 @@ def main() -> None:
             ]
         )
     else:
-        lines.append("- M6 fusion non disponible (lance src.classifiers.06_fusion_adaptive)")
+        lines.append("- fusion fusion non disponible (lance src.classifiers.06_fusion_adaptive)")
 
     lines.extend(
         [

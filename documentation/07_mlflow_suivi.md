@@ -137,7 +137,7 @@ remplacement involontaire d'un bon modèle par un moins bon.
 ## 4. Résultats (mesurés et vérifiables)
 
 - **13 runs** enregistrés dans l'expérience `rakuten-mvp`. Ils couvrent les six modèles de
-  classification comparés dans le projet (notés M1 à M6), le modèle de prédiction de prix, et
+  classification comparés dans le projet (notés knn-faiss à fusion), le modèle de prédiction de prix, et
   quelques ré-essais. Chacun porte ses métriques réelles (F1 pondéré, F1 macro, exactitude, ECE
   qui mesure la fiabilité des probabilités annoncées, temps) et l'étiquette du commit git.
 - **Catalogue `rakuten-classifier`** alimenté de la version 1 à la version 5, avec l'étiquette
@@ -152,7 +152,7 @@ remplacement involontaire d'un bon modèle par un moins bon.
   reste la référence complète du projet.
 
 > Drapeau slide. Chiffres à afficher : « 13 entraînements tracés (réglages + scores + commit
-> git) », « 6 modèles comparés dans MLflow », « modèle `@Production` = M5 ». Capture d'écran à
+> git) », « 6 modèles comparés dans MLflow », « modèle `@Production` = tfidf-svm ». Capture d'écran à
 > montrer : l'interface MLflow (lancée par la commande `mlflow ui --backend-store-uri
 > sqlite:///mlflow.db`) avec la liste des runs triable par F1, et la page des modèles affichant
 > l'étiquette `@Production`. C'est la preuve visuelle que les entraînements sont bien suivis.

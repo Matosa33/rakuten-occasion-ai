@@ -1,4 +1,4 @@
-"""Cycle 7.1 — Pricing algorithmique transparent (M8).
+"""Cycle 7.1 — Pricing algorithmique transparent (pricing-cascade).
 
 Système déterministe (aucun ML opaque) qui retourne un **prix indicatif**
 + **niveau de confiance** + **explication lisible**. Préféré à un modèle
@@ -225,7 +225,7 @@ def main() -> None:
     # Import lazy : mlflow n'est nécessaire qu'au train standalone (cf. note module).
     from src.mlops.mlflow_utils import log_training_run
 
-    log.info("=== Cycle 7.1 — Pricing algorithmique transparent (M8) ===")
+    log.info("=== Cycle 7.1 — Pricing algorithmique transparent (pricing-cascade) ===")
     REPORTS_PRICING.mkdir(parents=True, exist_ok=True)
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
 

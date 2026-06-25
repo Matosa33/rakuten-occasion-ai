@@ -1,7 +1,7 @@
 """Module métriques d'évaluation pour classifieurs (Cycle 3.3 / C14).
 
 Module **importable** (pas de main()). Centralise toutes les métriques
-utilisées par M1-M6 pour comparaison équitable.
+utilisées par les 6 modèles pour comparaison équitable.
 
 Métriques disponibles
 ---------------------
@@ -68,7 +68,7 @@ def compute_calibration_ece(y_true: np.ndarray, y_proba: np.ndarray, n_bins: int
     """Expected Calibration Error (ECE).
 
     Mesure l'écart entre probabilités prédites et fréquence empirique.
-    Cible : < 0,05 pour M2 (LinearSVC + Platt) et M5 (TF-IDF + Platt).
+    Cible : < 0,05 pour svm-embed (LinearSVC + Platt) et tfidf-svm (TF-IDF + Platt).
 
     Args:
         y_true: shape (N,) — labels vrais (ou indices)
@@ -129,7 +129,7 @@ def format_classification_report(
 ) -> pl.DataFrame:
     """Format un rapport synthétique en DataFrame polars (1 ligne par modèle).
 
-    Utilisé en Cycle 3.3 pour comparaison tabulaire M1-M6.
+    Utilisé en Cycle 3.3 pour comparaison tabulaire les 6 modèles.
     """
     return pl.DataFrame(
         {

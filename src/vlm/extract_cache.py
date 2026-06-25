@@ -1,7 +1,7 @@
 """Cache disque des extractions VLM (Cycle 34.2 — prérequis protocole D-042).
 
 Trois raisons, toutes des conditions de **validité** ou de **reproductibilité** de l'expérience :
-1. **Validité** : les conditions C2/C3/C3t doivent partager UNE extraction — sinon on confond
+1. **Validité** : les conditions multi-photo/multi-photo-meta/multi-photo-meta-fr-en doivent partager UNE extraction — sinon on confond
    l'effet « métadonnée » avec un simple **tirage VLM différent** (l'API n'est pas déterministe).
 2. **Reproductibilité** : on peut rejouer le *scoring* sur les sorties brutes mises en cache,
    sans rappeler l'API (qui peut changer de provider/quantization).
