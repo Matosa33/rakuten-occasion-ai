@@ -31,6 +31,9 @@ VLM_MODEL = os.environ.get("PHOTO_VLM_MODEL", "google/gemma-4-31b-it")
 VLM_TEMPERATURE = float(os.environ.get("PHOTO_VLM_TEMPERATURE", "0"))
 VLM_SEED = int(os.environ.get("PHOTO_VLM_SEED", "42"))
 VLM_PROVIDER = os.environ.get("PHOTO_VLM_PROVIDER", "")
+# Budget de sortie : 250 suffit aux modèles directs ; les modèles à RAISONNEMENT (ex. mimo)
+# consomment des tokens en `reasoning` → relever pour qu'ils produisent quand même le `content`.
+VLM_MAX_TOKENS = int(os.environ.get("PHOTO_VLM_MAX_TOKENS", "250"))
 TIMEOUT_SEC = 90
 MAX_PHOTOS_PER_CALL = 4  # toutes les vues passent dans UN appel (moins cher, contexte commun)
 
@@ -89,7 +92,7 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
 
     payload: dict = {
         "model": VLM_MODEL,
-        "max_tokens": 250,
+        "max_tokens": VLM_MAX_TOKENS,
         "temperature": VLM_TEMPERATURE,  # déterminisme repro (D-042)
         "seed": VLM_SEED,
         "messages": [{"role": "user", "content": content}],
@@ -103,7 +106,11 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
         timeout=TIMEOUT_SEC,
     )
     r.raise_for_status()
-    raw = r.json()["choices"][0]["message"]["content"].strip()
+    msg = r.json()["choices"][0]["message"]
+    # certains modèles renvoient content=null et mettent la réponse dans `reasoning`.
+    raw = (msg.get("content") or msg.get("reasoning") or "").strip()
+    if not raw:
+        raise requests.HTTPError("réponse VLM vide (content null)")
     return _parse(raw)
 
 

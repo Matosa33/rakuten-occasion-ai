@@ -28,6 +28,7 @@ def extraction_key(photo_paths: list[Path | str]) -> str:
     h.update(photo_extraction.VLM_MODEL.encode())
     h.update(str(photo_extraction.VLM_TEMPERATURE).encode())
     h.update(str(photo_extraction.VLM_SEED).encode())
+    h.update(str(photo_extraction.VLM_MAX_TOKENS).encode())
     h.update(photo_extraction.EXTRACTION_PROMPT.encode())
     for p in photo_paths:
         h.update(Path(p).read_bytes())  # contenu, robuste aux changements de chemin
