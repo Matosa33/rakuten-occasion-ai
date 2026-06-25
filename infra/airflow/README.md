@@ -3,7 +3,7 @@
 Orchestrateur du retrain Rakuten via **Docker Compose** (ADR D-022).
 Principe : **l'orchestrateur orchestre, il ne calcule pas le GPU**. Le DAG ré-entraîne
 les têtes CPU (M5/M2/M4) sur les embeddings en cache, logge dans MLflow (D-021) et
-enregistre `rakuten-classifier@Production`. L'encodage GPU est une tâche amont isolée
+enregistre `rakuten-category-classifier@Production`. L'encodage GPU est une tâche amont isolée
 (worker GPU en prod ; no-op sur cache en démo).
 
 ## Lancer

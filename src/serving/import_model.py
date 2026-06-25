@@ -1,6 +1,6 @@
 """Importe le modèle `@Production` du Registry MLflow dans le store BentoML (Cycle 12.2).
 
-À lancer AVANT `bentoml serve` (le service référence `rakuten_classifier:latest`
+À lancer AVANT `bentoml serve` (le service référence `rakuten_category_classifier:latest`
 dans le store BentoML). Réexécuter après chaque promotion `@Production` (la boucle
 fermée 12.3 le déclenchera automatiquement).
 
@@ -20,8 +20,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 log = logging.getLogger(__name__)
 
 MLFLOW_URI = f"sqlite:///{(REPO_ROOT / 'mlflow.db').as_posix()}"
-REGISTRY_MODEL = "rakuten-classifier"  # nom dans le Registry MLflow (D-020)
-BENTO_NAME = "rakuten_classifier"  # nom dans le store BentoML (underscore)
+REGISTRY_MODEL = "rakuten-category-classifier"  # nom dans le Registry MLflow (D-020)
+BENTO_NAME = "rakuten_category_classifier"  # nom dans le store BentoML (underscore)
 
 
 def main() -> None:

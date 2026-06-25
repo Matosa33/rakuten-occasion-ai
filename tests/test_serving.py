@@ -27,7 +27,7 @@ def test_service_expose_classify_et_modele():
     assert "@bentoml.service" in src
     assert "@bentoml.api" in src
     assert "def classify(self, texts: list[str])" in src
-    assert 'bentoml.models.get("rakuten_classifier:latest")' in src
+    assert 'bentoml.models.get("rakuten_category_classifier:latest")' in src
     # confiance retournée (pas seulement la catégorie)
     assert "confidence" in src and "predict_proba" in src
 
@@ -35,6 +35,6 @@ def test_service_expose_classify_et_modele():
 def test_import_model_pointe_sur_production():
     """L'import lit bien le modèle @Production du Registry MLflow (D-020)."""
     src = IMPORT_MODEL.read_text(encoding="utf-8")
-    assert 'REGISTRY_MODEL = "rakuten-classifier"' in src
+    assert 'REGISTRY_MODEL = "rakuten-category-classifier"' in src
     assert "@Production" in src
     assert "bentoml.mlflow.import_model" in src

@@ -7,7 +7,7 @@ service charge le modèle depuis le store BentoML, alimenté par le Registry MLf
 ## Lancer
 
 ```bash
-make bento-import   # importe models:/rakuten-classifier@Production → store BentoML
+make bento-import   # importe models:/rakuten-category-classifier@Production → store BentoML
 make bento-serve    # sert sur http://localhost:8500 (UI OpenAPI à la racine)
 ```
 

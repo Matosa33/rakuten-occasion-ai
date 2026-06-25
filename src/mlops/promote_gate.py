@@ -1,4 +1,4 @@
-"""Promote gate champion/challenger pour `rakuten-classifier@Production` (Cycle 12.3, D-024).
+"""Promote gate champion/challenger pour `rakuten-category-classifier@Production` (Cycle 12.3, D-024).
 
 Compare le challenger (dernière version enregistrée) au champion (`@Production`)
 sur une métrique de référence et bouge l'alias seulement si **challenger ≥ champion + ε**.

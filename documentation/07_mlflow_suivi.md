@@ -116,7 +116,7 @@ plante pas : les paramètres et les scores restent enregistrés, et le run est m
 tard. C'est une dégradation propre, et non un échec brutal.
 
 **Un catalogue de modèles avec étiquette de production.** Quand on le demande, la fonction inscrit
-le modèle au catalogue sous le nom `rakuten-classifier` et peut poser l'étiquette `@Production`
+le modèle au catalogue sous le nom `rakuten-category-classifier` et peut poser l'étiquette `@Production`
 sur la version concernée. La version réellement créée par l'appel est lue directement dans la
 réponse de MLflow (et non devinée comme « la plus grande version »), ce qui évite les erreurs
 quand plusieurs enregistrements se croisent.
@@ -140,9 +140,9 @@ remplacement involontaire d'un bon modèle par un moins bon.
   classification comparés dans le projet (notés knn-faiss à fusion), le modèle de prédiction de prix, et
   quelques ré-essais. Chacun porte ses métriques réelles (F1 pondéré, F1 macro, exactitude, ECE
   qui mesure la fiabilité des probabilités annoncées, temps) et l'étiquette du commit git.
-- **Catalogue `rakuten-classifier`** alimenté de la version 1 à la version 5, avec l'étiquette
+- **Catalogue `rakuten-category-classifier`** alimenté de la version 1 à la version 5, avec l'étiquette
   `@Production` qui désigne le modèle servi. La résolution de l'adresse
-  `models:/rakuten-classifier@Production` (la formule qui demande à MLflow « donne-moi le modèle
+  `models:/rakuten-category-classifier@Production` (la formule qui demande à MLflow « donne-moi le modèle
   marqué Production ») a été vérifiée et fonctionne.
 - **Les deux stockages réconciliés.** Le serveur tournant dans un conteneur (sur le port 5000,
   appuyé sur PostgreSQL et MinIO) était bloqué sur une ancienne version 2 de MLflow alors que le

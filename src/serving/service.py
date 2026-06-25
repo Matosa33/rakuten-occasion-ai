@@ -20,11 +20,11 @@ import bentoml
 import numpy as np
 from bentoml.mlflow import MLFLOW_MODEL_FOLDER
 
-BENTO_MODEL = bentoml.models.get("rakuten_classifier:latest")
+BENTO_MODEL = bentoml.models.get("rakuten_category_classifier:latest")
 
 
 @bentoml.service(
-    name="rakuten_classifier",
+    name="rakuten_category_classifier",
     resources={"cpu": "1"},
     traffic={"timeout": 30},
 )

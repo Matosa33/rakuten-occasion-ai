@@ -73,7 +73,7 @@ Le tableau ci-dessous liste les fichiers de code concernés et leur rôle.
 | Brique | Fichier | Rôle |
 |---|---|---|
 | Barrière de promotion | `src/mlops/promote_gate.py` | compare le challenger au champion et déplace l'étiquette `@Production` **seulement s'il est meilleur** |
-| Import pour servir | `src/serving/import_model.py` | charge le modèle pointé par `models:/rakuten-classifier@Production` pour le mettre en service (via BentoML) |
+| Import pour servir | `src/serving/import_model.py` | charge le modèle pointé par `models:/rakuten-category-classifier@Production` pour le mettre en service (via BentoML) |
 | Service de mise en ligne | `src/serving/service.py` | expose le modèle au réseau (interface de programmation, plus des indicateurs de fonctionnement lisibles par l'outil de surveillance Prometheus) |
 | Tests | `test_promote_gate.py`, `test_serving.py` | vérifient la logique de décision sur une base de données temporaire jetable |
 
@@ -83,7 +83,7 @@ Le cœur du composant est la fonction `decide_and_promote(metric, epsilon)` du f
 `promote_gate.py`. Elle prend deux réglages : `metric`, le score de référence à comparer, et
 `epsilon`, la marge minimale à dépasser pour accepter un remplacement. Voici ce qu'elle fait :
 
-1. Elle lit la liste de toutes les versions du modèle nommé `rakuten-classifier` dans le registre.
+1. Elle lit la liste de toutes les versions du modèle nommé `rakuten-category-classifier` dans le registre.
    S'il n'y a aucune version, elle s'arrête et renvoie la décision `no_versions` (« rien à promouvoir »).
 2. Elle identifie le **challenger** : la version la plus récente enregistrée (le plus grand numéro).
 3. Elle identifie le **champion** : la version qui porte l'étiquette `@Production`. S'il n'y a pas
@@ -123,7 +123,7 @@ production suit donc automatiquement la dernière promotion, sans intervention m
 
 ## 4. Résultats mesurés, et la preuve que la barrière fonctionne
 
-- Dans le registre du modèle `rakuten-classifier`, on compte **cinq versions** au total (de la
+- Dans le registre du modèle `rakuten-category-classifier`, on compte **cinq versions** au total (de la
   version 1 à la version 5). L'étiquette **`@Production` pointe vers la version 2**, qui correspond au
   meilleur modèle obtenu (appelé en interne « tfidf-svm »).
 - Les **ré-entraînements automatiques**, déclenchés par l'orchestrateur de tâches (Airflow, l'outil

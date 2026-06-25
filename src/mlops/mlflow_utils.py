@@ -43,7 +43,7 @@ TRACKING_URI = os.environ.get("MLFLOW_TRACKING_URI", _DEFAULT_TRACKING_URI)
 # fallback sqlite local, on garde l'ancien dossier mlartifacts/ hôte.
 _HTTP_BACKEND = TRACKING_URI.startswith(("http://", "https://"))
 ARTIFACTS_URI = None if _HTTP_BACKEND else (REPO_ROOT / "mlartifacts").as_uri()
-REGISTERED_MODEL = "rakuten-classifier"
+REGISTERED_MODEL = "rakuten-category-classifier"
 
 _SETUP_DONE = False
 
