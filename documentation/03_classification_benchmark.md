@@ -183,14 +183,25 @@ Autrement dit, c'est l'index de recherche lui-même qui joue le rôle de classif
 
 On a comparé **quatre façons** d'attribuer cette catégorie fine, toujours sur le même protocole
 (échantillon de test, sans fuite de données : 15 000 requêtes, 200 voisins examinés par requête).
-La colonne donne le pourcentage de fois où la catégorie fine attribuée est exactement la bonne.
+Et surtout, on mesure la justesse à **chaque niveau du chemin de catégories**, pas seulement tout
+en bas. Un chemin va du plus général au plus précis : la grande famille (le « macro », par exemple
+Électronique), puis un premier sous-niveau intermédiaire (noté L1, par exemple Composants
+informatiques), puis un second (noté L2, par exemple Cartes graphiques), jusqu'à la feuille (en
+anglais « leaf »), la catégorie la plus fine. Mesurer chaque niveau montre exactement où la
+prédiction commence à se tromper.
 
-| Méthode | Idée | Exactitude de la catégorie fine |
-|---|---|---|
-| Catégorie du premier résultat | on recopie le tout premier voisin retrouvé | 0,710 |
-| Filtrage par famille puis premier | on restreint d'abord à la grande catégorie prédite | 0,709 |
-| **Vote des voisins** *(retenue)* | vote pondéré des catégories du groupe de voisins | **0,733** |
-| Du large au fin | on filtre par famille puis on vote | 0,731 |
+| Méthode | macro | L1 | L2 | feuille | F1 hiérarchique |
+|---|---|---|---|---|---|
+| Premier voisin recopié | 0,942 | 0,889 | 0,808 | 0,710 | 0,812 |
+| Filtrage par famille puis premier voisin | 0,949 | 0,893 | 0,810 | 0,709 | 0,812 |
+| **Vote des voisins** *(retenue)* | 0,949 | **0,949** | **0,849** | **0,733** | **0,820** |
+| Du large au fin (filtre par famille puis vote) | 0,949 | 0,947 | 0,848 | 0,731 | 0,818 |
+
+Le « F1 hiérarchique » récompense les bonnes réponses partielles : se tromper de feuille mais avoir
+juste les niveaux du dessus vaut mieux que tout rater. Lecture : la justesse baisse quand on descend
+(de 0,95 en grande famille à 0,73 en feuille), ce qui est normal puisque les catégories fines sont
+beaucoup plus nombreuses et se ressemblent davantage. Le vote des voisins est le meilleur ou à
+égalité à **tous les niveaux**, et nettement devant sur les niveaux intermédiaires (L1 et L2).
 
 Le **vote des voisins l'emporte** (gain de 2,3 points par rapport à recopier le premier voisin),
 pour un coût quasi nul, et il fournit en prime une mesure de **confiance** (la part du vote

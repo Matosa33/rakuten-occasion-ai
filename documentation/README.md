@@ -67,6 +67,8 @@ Chaque ligne ci-dessous décrit en clair ce que vous trouverez dans le document 
 
 - `16_explainability.md` : la capacité d'expliquer pourquoi le système décide ce qu'il décide. Pourquoi cette catégorie a été choisie, pourquoi ces produits sont jugés semblables, et la fiche d'identité de chaque modèle. Un système incapable de se justifier ne serait pas acceptable face à un particulier.
 
+- `17_etude_chaine_valeur_photo.md` : l'étude scientifique qui prouve, chiffres et tests statistiques à l'appui, la valeur de chaque maillon de la chaîne. Elle démontre sur 93 annonces réelles que la photo est le signal décisif (mieux que le texte du vendeur, et plusieurs photos mieux qu'une seule), que les informations saisies par le vendeur n'ajoutent rien une fois les photos disponibles, et quel modèle de lecture d'image a été retenu après comparaison. C'est la pièce maîtresse de la démonstration.
+
 Les quatre derniers documents (numéros 14 à 16, plus la vue d'ensemble) décrivent les couches que voit l'utilisateur final : l'interface qui relie toutes les briques entre elles, l'écran du vendeur, et les explications qui rendent les décisions compréhensibles.
 
 ## Documents de cadrage et de traçabilité

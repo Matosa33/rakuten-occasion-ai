@@ -85,20 +85,44 @@ C'est l'étape où le LLM écrit l'annonce finale à partir des faits.
 - **Preuve concrète d'ancrage.** Sur un produit testé, la mention "Snapdragon 732G" (le nom d'un processeur) apparaît dans l'annonce générée uniquement parce qu'elle figure dans la vraie fiche du produit. Elle ne vient ni du titre saisi, ni de la mémoire du modèle. C'est la démonstration que l'annonce s'appuie bien sur les faits fournis.
 - **Vérificateur visuel en fonctionnement.** Sur une photo d'iPhone, le modèle renvoie `{match: true, confidence: 1.0, reason: "diagonal dual-camera layout"}`, c'est-à-dire une correspondance confirmée avec une raison factuelle et observable (la disposition en diagonale du double appareil photo).
 - **Dégradation propre vérifiée.** Sans clé OpenRouter, la fonctionnalité de description bascule sur le mode de remplacement (un titre générique reconnaissable), pendant que l'identification du produit et l'estimation du prix, qui tournent en local, continuent normalement.
-- **Mesure de l'effet de la richesse des photos.** Une expérience a été menée sur **92 produits réels**, en faisant lire les photos par le VLM Gemma 4 31B puis en mesurant si la catégorie prédite était correcte. Quatre conditions ont été comparées :
+- **Quel modèle lit le mieux les photos.** Quatre modèles de lecture d'image disponibles via le
+  service OpenRouter ont été comparés sur 93 produits réels : Gemma 4 31B, MiMo V2.5, Gemini 2.5
+  Flash Lite et Qwen 3.5 Flash. Tous identifient aussi bien le bon produit (aucun écart
+  statistiquement significatif entre eux), mais **Qwen 3.5 Flash remplit la fiche plus complètement**
+  (différence réelle, confirmée par un test apparié) tout en étant **le moins cher**. Il a donc été
+  retenu comme modèle de lecture par défaut. Détail technique important : pour cette tâche de simple
+  lecture d'image, on désactive le « raisonnement » du modèle, car certains modèles passeraient
+  sinon tout leur budget de réponse à réfléchir sans jamais produire le résultat demandé.
 
-  | Condition | Catégorie correcte | Détail catégorie | Confiance |
-  |---|---|---|---|
-  | Une seule photo | 0,815 | 0,315 | 0,628 |
-  | Plusieurs photos | 0,891 | 0,361 | 0,667 |
-  | Plusieurs photos + description vendeur brute (français) | 0,902 | 0,371 | 0,648 |
-  | Plusieurs photos + description vendeur traduite en anglais | 0,848 | 0,340 | 0,651 |
+- **L'apport réel de la photo, mesuré sur la qualité de la fiche.** Une étude rigoureuse sur
+  **93 annonces réelles** compare ce que reçoit le système en entrée. La mesure principale est la
+  **complétude** de la fiche produite, c'est-à-dire la part des caractéristiques attendues pour ce
+  type de produit qui sont effectivement remplies, et non seulement la grande catégorie.
 
-  La colonne "Catégorie correcte" mesure la proportion de produits rangés dans la bonne grande catégorie. La colonne "Détail catégorie" mesure à quel point la sous-catégorie fine prédite recouvre la vraie sous-catégorie.
+  | Entrée du système | Complétude de la fiche | Bon produit identifié |
+  |---|---|---|
+  | Texte du vendeur seul | 0,505 | 0,720 |
+  | Une seule photo | 0,641 | 0,656 |
+  | Plusieurs photos | 0,699 | 0,785 |
+  | Plusieurs photos + description vendeur | 0,694 | 0,850 |
 
-  Trois enseignements ressortent. D'abord, **plusieurs photos valent mieux qu'une seule** (la catégorie correcte passe de 0,815 à 0,891) : en lisant plusieurs vues, le VLM identifie mieux la marque et le modèle. Ensuite, **ajouter la description écrite du vendeur n'apporte presque rien** quand elle reste en français (0,902, soit un gain marginal), car le VLM capte déjà l'essentiel sur les photos. Enfin, **traduire cette description en anglais la dégrade** (0,848, donc en dessous des photos seules) : la traduction réécrit et abîme le bon titre que le VLM avait produit. Conséquence directe, pilotée par la mesure : le projet ne traduit pas la requête une fois qu'elle est combinée aux photos. C'est un résultat honnête, y compris là où il contredit l'intuition de départ.
+  Trois enseignements, tous appuyés par des tests statistiques appariés (chaque produit est son
+  propre point de comparaison). D'abord, **la photo est le maillon décisif** : sur les produits dont
+  la description vendeur est pauvre, passer du texte seul à une photo fait gagner 0,145 de complétude
+  (résultat hautement significatif), et plusieurs photos valent mieux qu'une. Ensuite, **la
+  description écrite du vendeur n'apporte rien** une fois les photos disponibles : l'absence d'effet
+  a été formellement prouvée par un test d'équivalence dédié, après avoir écarté un faux gain dû au
+  fait que, sur certains produits, le texte du vendeur contenait déjà la réponse. Enfin, **traduire
+  l'entrée en anglais ne change rien**. Conséquence produit : on peut alléger la saisie demandée au
+  vendeur sans dégrader la fiche.
 
-> 📊 **Chiffres et faits pour la slide** : extraction et vérification assurées par Gemma 4 31B (jusqu'à 4 vues en un seul appel, sortie JSON, déterminisme à température 0 avec graine fixe pour l'extraction, température 0,4 pour la rédaction) ; preuve d'ancrage avec "Snapdragon 732G" qui vient des faits et non de la mémoire ; vérificateur visuel qui rend un verdict avec une raison factuelle ; dégradation propre par mode de remplacement quand le service externe est absent.
+> 📊 **Chiffres et faits pour la slide** : lecture des photos par Qwen 3.5 Flash (champion d'une
+> comparaison de quatre modèles, retenu pour sa complétude et son coût), jusqu'à 4 vues en un seul
+> appel, sortie JSON, raisonnement désactivé, déterminisme à température 0 avec graine fixe pour
+> l'extraction et température 0,4 pour la rédaction ; la photo prouvée comme maillon décisif (gain de
+> 0,145 de complétude par rapport au texte seul) ; description vendeur prouvée sans effet (test
+> d'équivalence) ; preuve d'ancrage avec "Snapdragon 732G" venu des faits et non de la mémoire ;
+> dégradation propre par mode de remplacement quand le service externe est absent.
 > 📸 **Capture suggérée** : l'annonce générée affichée à côté de la fiche catalogue (les caractéristiques correspondent) et le badge de correspondance visuelle dans l'application.
 
 ---
