@@ -27,5 +27,5 @@
       "n_grounding": 0
     }
   ],
-  "note": "MockLLMWriter pour pré-validation pipeline. À remplacer par OpenRouter en Cycle 9. RAG grounding fonctionnel : on extrait déjà les top-N phrases reviews et on les injecte dans le prompt."
+  "note": "ATTENTION : éval réalisée sur le MockLLMWriter (writer factice), PAS sur le rédacteur réel. Les métriques ci-dessus (grounding_coverage=0, parse_rate=1.0) ne sont DONC PAS une mesure de qualité du rédacteur : elles valident seulement la mécanique du pipeline. parse_rate=1.0 est trivial (le mock renvoie toujours un JSON valide), grounding_coverage=0 reflète que le mock n'utilise pas le grounding. Une vraie éval de qualité exige de rejouer sur le rédacteur OpenRouter réel + un juge. La preuve d'ancrage réelle est montrée ailleurs (exemple Snapdragon 732G, documentation 05)."
 }

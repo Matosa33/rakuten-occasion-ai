@@ -53,7 +53,10 @@ def decide_and_promote(metric: str = METRIC, epsilon: float = EPSILON) -> dict:
 
     try:
         champion = client.get_model_version_by_alias(REGISTERED_MODEL, "Production")
-    except Exception:  # noqa: BLE001 — pas d'alias encore
+    except Exception as e:  # noqa: BLE001 — alias absent = 1ʳᵉ promotion (cas normal)
+        # On LOG la raison plutôt que d'avaler en silence : un alias absent est normal à la 1ʳᵉ
+        # promotion, mais une autre erreur (réseau, registre KO) doit rester visible dans les logs.
+        log.warning("Pas de champion @Production (%s) → 1ʳᵉ promotion possible.", type(e).__name__)
         champion = None
 
     # D-023 in-container : artefact non poussé → pas de nouvelle version → latest = champion.

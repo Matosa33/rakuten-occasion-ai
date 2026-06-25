@@ -1,5 +1,10 @@
 # Rapport cleaning + features + split — Sous-todo 1.2
 
+> **Note de périmètre.** Ce rapport porte sur le dataset large d'exploration (15 catégories). Le
+> **périmètre FINAL livré du projet est de 4 catégories** (Electronics, Cell_Phones_and_Accessories,
+> Video_Games, Tools_and_Home_Improvement) ; l'entraînement, la recherche et la documentation finale
+> portent sur ces 4 catégories.
+
 > Version 1.0 — 2026-05-03
 > Statut : `completed` — chiffres mesurés sur l'exécution réelle du pipeline.
 > Aucun chiffre inventé (R8 du brain).

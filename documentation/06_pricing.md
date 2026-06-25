@@ -57,6 +57,13 @@ calcule l'écart entre le prix prédit et le prix réel, on l'exprime en pourcen
 on fait la moyenne de ces pourcentages. Un MAPE de 62 % signifie donc qu'en moyenne le prix prédit
 s'écarte de 62 % du prix réel.
 
+Une précision d'honnêteté sur ce 62 % lui-même : il est calculé en comparant notre estimation au
+**prix NEUF du catalogue, en dollars**, et uniquement sur les produits qui **ont** un prix au
+catalogue (une large part en est dépourvue). Ce chiffre n'est donc **pas** une vraie mesure de
+justesse sur de l'occasion en euros : c'est un indicateur grossier, à lire comme une borne, pas comme
+une performance. C'est précisément pourquoi nous ne présentons pas le pricing comme un modèle
+d'apprentissage performant, mais comme une estimation transparente assortie d'une fourchette.
+
 Enfin, une tendance forte du domaine consiste à afficher une incertitude et une explication plutôt
 qu'un seul chiffre sec, car cela renforce la confiance de l'utilisateur dans l'outil.
 

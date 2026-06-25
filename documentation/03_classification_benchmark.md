@@ -274,6 +274,14 @@ exactement le genre de constat qu'un benchmark sert à révéler.
   l'espace des vecteurs. Les F1 élevés reflètent donc aussi cette facilité du problème, ce qu'il
   faut contextualiser honnêtement. La difficulté réelle apparaît au niveau de la catégorie la plus
   fine, où l'on plafonne autour de 0,73 d'exactitude.
+- **Doublons quasi-identiques (à signaler honnêtement).** Le découpage train/test est propre au
+  niveau de l'identifiant produit (un même produit ne peut pas être à la fois en apprentissage et en
+  test). Mais le catalogue contient des annonces **quasi-identiques** sous des identifiants
+  différents (le même objet revendu par plusieurs boutiques, avec un texte presque copié). Le modèle
+  k plus proches voisins, qui retrouve les produits les plus ressemblants, en bénéficie un peu : son
+  F1 réel est donc légèrement **optimiste** (de l'ordre de quelques points). Ce n'est pas une fuite
+  de données au sens strict, mais une caractéristique du catalogue qu'il faut mentionner pour ne pas
+  survendre le score.
 
 ---
 

@@ -1,5 +1,12 @@
 # Audit dataset — Amazon Reviews 2023 (FULL sur 15 catégories evergreen-occasion)
 
+> **Note de périmètre (à lire en premier).** Cet audit explore le dataset large (15 catégories)
+> tel qu'il était au moment de l'exploration des données. Le **périmètre FINAL du projet a ensuite
+> été resserré à 4 catégories** (Electronics, Cell_Phones_and_Accessories, Video_Games,
+> Tools_and_Home_Improvement) pour garantir une qualité de bout en bout. Les chiffres ci-dessous
+> portent donc sur les 15 catégories d'exploration, pas sur le périmètre livré. Tous les rapports
+> d'entraînement, de recherche et la documentation finale portent, eux, sur les 4 catégories.
+
 > Version : v2 FULL D-008 (chiffres mesurés le 2026-04-30 sur les 15 catégories complètes)
 > Statut : `completed` — chiffres issus des 3 fichiers JSON dans `reports/`
 > (`audit_qualite_metrics.json`, `audit_distributions_metrics.json`,
