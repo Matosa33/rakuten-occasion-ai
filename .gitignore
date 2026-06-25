@@ -59,6 +59,9 @@ data/raw/cache/
 data/raw/full/
 # Photos vendeur uploadées (Cycle 17.1, D-035) — jamais committées (R2/vie privée).
 data/uploads/
+# Dataset photos d'éval (Phase 2) — vraies photos = privé, jamais committées.
+data/photos_eval/*
+!data/photos_eval/.gitkeep
 data/processed/*.parquet
 data/processed/**/*.parquet
 data/processed/*.json
