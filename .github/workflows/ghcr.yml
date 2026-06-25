@@ -90,3 +90,13 @@ jobs:
           # au lieu de ~10 min cold (torch CPU 1 Go à retélécharger sinon).
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+      - name: Scan vulnérabilités (Trivy)
+        # Sécurité (audit pré-prod) : scanne l'image publiée. Non bloquant pour l'instant
+        # (--exit-code 0) → on rend les vulnérabilités VISIBLES avant de durcir le gate
+        # (passage à --exit-code 1 + signature cosign = suivi infra, cf. BRAIN 35.8b).
+        # Image Trivy épinglée à une version (pas de GH action non épinglée).
+        run: |
+          docker run --rm aquasec/trivy:0.59.1 image \
+            --severity HIGH,CRITICAL --ignore-unfixed --no-progress --exit-code 0 \
+            "${{ fromJSON(steps.meta.outputs.json).tags[0] }}"

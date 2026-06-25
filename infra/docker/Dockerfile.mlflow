@@ -19,6 +19,10 @@ RUN pip install --no-cache-dir \
     "psycopg2-binary>=2.9.0" \
     "boto3>=1.28.0"
 
+# Sécurité (audit pré-prod) : serveur de tracking en utilisateur non privilégié.
+RUN useradd --create-home --uid 1000 mlflow
+USER mlflow
+
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

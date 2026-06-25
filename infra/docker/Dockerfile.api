@@ -48,6 +48,13 @@ ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1
 WORKDIR /opt/rakuten
 
+# Sécurité (audit pré-prod) : ne pas tourner en root. Utilisateur non privilégié + dossier
+# d'uploads créé et possédé (un volume monté au runtime le surcharge proprement).
+RUN useradd --create-home --uid 1000 appuser \
+    && mkdir -p /opt/rakuten/data/uploads \
+    && chown -R appuser:appuser /opt/rakuten
+USER appuser
+
 EXPOSE 8000
 
 # /health expose l'état des services (cf. src/api/main.py) → utilisable par
