@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -40,6 +41,32 @@ VLM_MAX_TOKENS = int(os.environ.get("PHOTO_VLM_MAX_TOKENS", "250"))
 VLM_REASONING = os.environ.get("PHOTO_VLM_REASONING", "off")
 TIMEOUT_SEC = 90
 MAX_PHOTOS_PER_CALL = 4  # toutes les vues passent dans UN appel (moins cher, contexte commun)
+# Retry : un 429 (rate-limit) ou 5xx (blip provider) ponctuel ne doit pas tuer le flow.
+MAX_RETRIES = 3
+RETRY_BACKOFF_SEC = 2.0
+
+
+def post_with_retry(payload: dict, key: str, timeout: int = TIMEOUT_SEC) -> requests.Response:
+    """POST OpenRouter avec retry exponentiel sur 429/5xx (partagé extraction + validateur)."""
+    last: Exception = requests.HTTPError("aucune tentative")
+    for attempt in range(MAX_RETRIES):
+        try:
+            r = requests.post(
+                OPENROUTER_URL, headers={"Authorization": f"Bearer {key}"}, json=payload, timeout=timeout
+            )
+            if r.status_code in (429, 500, 502, 503) and attempt < MAX_RETRIES - 1:
+                last = requests.HTTPError(f"HTTP {r.status_code}")
+                time.sleep(RETRY_BACKOFF_SEC * (2**attempt))
+                continue
+            r.raise_for_status()
+            return r
+        except (requests.ConnectionError, requests.Timeout) as e:
+            last = e
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_BACKOFF_SEC * (2**attempt))
+                continue
+            raise
+    raise last
 
 _MIME_BY_EXT = {
     ".jpg": "image/jpeg",
@@ -105,13 +132,7 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
         payload["provider"] = {"order": [VLM_PROVIDER], "allow_fallbacks": False}
     if VLM_REASONING == "off":  # extraction structurée : pas de chaîne de raisonnement
         payload["reasoning"] = {"enabled": False}
-    r = requests.post(
-        OPENROUTER_URL,
-        headers={"Authorization": f"Bearer {key}"},
-        json=payload,
-        timeout=TIMEOUT_SEC,
-    )
-    r.raise_for_status()
+    r = post_with_retry(payload, key)
     msg = r.json()["choices"][0]["message"]
     # certains modèles renvoient content=null et mettent la réponse dans `reasoning`.
     raw = (msg.get("content") or msg.get("reasoning") or "").strip()

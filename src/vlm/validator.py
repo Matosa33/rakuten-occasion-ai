@@ -16,10 +16,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-import requests
-
 from src.observability.logging import get_logger
-from src.vlm.photo_extraction import VLM_REASONING, _to_data_url
+from src.vlm.photo_extraction import VLM_REASONING, _to_data_url, post_with_retry
 
 _log = get_logger(__name__)
 
@@ -95,13 +93,7 @@ def validate_top1(
     if VLM_REASONING == "off":  # cohérent avec l'extraction : pas de chaîne de raisonnement
         payload["reasoning"] = {"enabled": False}
     try:
-        r = requests.post(
-            OPENROUTER_URL,
-            headers={"Authorization": f"Bearer {key}"},
-            json=payload,
-            timeout=TIMEOUT_SEC,
-        )
-        r.raise_for_status()
+        r = post_with_retry(payload, key, timeout=TIMEOUT_SEC)
         msg = r.json()["choices"][0]["message"]
         raw = (msg.get("content") or msg.get("reasoning") or "").strip()
         return _parse(raw) if raw else None
