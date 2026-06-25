@@ -86,6 +86,12 @@ dit « écris une annonce pour un iPhone 13 », il **inventera** des specs. Le R
  générique détectable), l'identification + le prix (locaux) continuent.
 - Éval RAG tracée (`reports/07_rag_eval/rag_grounded_eval.json`); tests `test_llm_rag`,
  `test_llm_writer`, `test_describe_openrouter`, `test_vlm_validator`.
+- **Mesure « richesse d'entrée » sur 92 vraies annonces** (`reports/05_retrieval/photo_richness_bench.md`):
+ **une seule photo < plusieurs photos** (catégorie correcte 0,82 → 0,89) — la lecture multi-vues
+ par le VLM extrait mieux marque + modèle. En revanche la **métadonnée vendeur ajoute peu** (le VLM
+ capte déjà l'essentiel sur les photos), et **traduire la requête entière la dégrade** (la
+ traduction réécrit le bon titre produit par le VLM). Décision pilotée par la mesure : **on ne
+ traduit pas la requête combinée**. Résultat honnête, y compris là où il infirme une intuition.
 
 > 📊 **Chiffres/faits slide**: « extraction + validation par Gemma 4 31B (4 vues en 1 appel,
 > JSON, température 0,4) », « preuve d'ancrage: Snapdragon 732G vient du grounding », « validateur

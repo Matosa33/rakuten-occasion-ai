@@ -80,6 +80,34 @@ M1 (k-NN FAISS) est le **plus précis**, mais il **dépend de l'index FAISS** po
 donc **M1 comme moteur du retrieval** (cœur produit) et **M5 comme classifieur servi** au
 Registry — un choix d'**ingénierie de déploiement**, pas un hasard.
 
+### Où ce classifieur sert réellement (et comment on attribue la catégorie fine)
+Distinction à dire clairement : ces classifieurs entraînés ne sont **pas** le moteur
+d'identification en ligne. Ils servent à **deux choses** :
+1. **prouver la rigueur** (entraîner / comparer / calibrer plusieurs modèles — ce benchmark) ;
+2. **faire vivre la chaîne MLOps** : il faut un *vrai* modèle à versionner, promouvoir,
+ ré-entraîner et servir — c'est le **classifieur texte portable** qui est déployé pour cette
+ démonstration MLOps.
+
+En production, l'identification passe par la **recherche de similarité**, pas par le classifieur
+servi. Et la **catégorie la plus fine** affichée sur la fiche n'est pas la sortie d'un modèle à
+2 956 classes (impossible à entraîner proprement vu la rareté) : c'est un **vote pondéré des
+catégories des produits voisins** retrouvés — autrement dit, **l'index *est* le classifieur fin**.
+
+On a comparé **quatre façons** d'attribuer cette catégorie fine, sur le même protocole (échantillon
+test, anti-fuite) :
+
+| Méthode | Idée | Exactitude catégorie fine |
+|---|---|---|
+| catégorie du 1ᵉʳ résultat | on recopie le tout premier candidat | 0,710 |
+| filtre par famille puis 1ᵉʳ | on restreint à la macro-catégorie prédite | 0,709 |
+| **vote des voisins** *(retenue)* | vote pondéré des catégories du top-k | **0,733** |
+| approche « du large au fin » | filtre par famille + vote | 0,731 |
+
+→ Le **vote des voisins l'emporte** (**+2,4 points** vs recopier le premier), à coût quasi nul, et
+fournit en prime une **confiance** (part du vote). Résultat **honnête** : le filtre par famille
+**n'aide pas** — les 4 familles sont déjà bien séparées dans l'espace, donc filtrer ne fait que
+jeter de bons voisins. Détail chiffré : `reports/05_retrieval/taxonomy_bench.md`.
+
 ---
 
 ## 4. Résultats (mesurés, `reports/04_classifiers_bench/bench_v1.md`)
