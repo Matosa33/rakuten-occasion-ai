@@ -46,6 +46,20 @@ export interface ObservationToRequest {
   discriminative_score: number;
 }
 
+// Fiche structurée à facettes explicites + provenance (rangement marketplace, D-041).
+export interface ListingField {
+  name: string; // libellé FR (« Marque », « Capacité »…)
+  value: string;
+  source: string; // observé | catalogue | typique-à-vérifier | catégorie | vendeur
+}
+
+export interface AssembledListing {
+  level: string; // N1_catalog | N2_category_photo | N3_observed
+  fields: ListingField[];
+  completeness: number; // part des facettes attendues qui sont remplies
+  missing: string[];
+}
+
 export interface IdentifyResponse {
   status: "identified" | "to_confirm" | "uncertain";
   top_candidates: CandidateMeta[];
@@ -57,6 +71,8 @@ export interface IdentifyResponse {
   predicted_category_fine: string;
   predicted_category_confidence: number;
   predicted_category_path: string;
+  // Fiche structurée du top-1 : facettes explicites + provenance + complétude (D-041).
+  informations_cles: AssembledListing | null;
 }
 
 export interface PriceResponse {

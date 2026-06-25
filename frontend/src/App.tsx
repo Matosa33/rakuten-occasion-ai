@@ -285,6 +285,7 @@ export default function App() {
               price={price}
               listing={listing}
               condition={condition}
+              informationsCles={ident?.informations_cles ?? null}
             />
             <button
               onClick={reset}

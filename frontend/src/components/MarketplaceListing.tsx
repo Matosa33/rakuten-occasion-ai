@@ -4,8 +4,23 @@
 // metadata parfaite), titre/description éditables (IKEA effect), copie enrichie.
 
 import { useEffect, useMemo, useState } from "react";
-import type { CandidateMeta, Condition, DescribeResponse, PriceResponse } from "../api";
+import type {
+  AssembledListing,
+  CandidateMeta,
+  Condition,
+  DescribeResponse,
+  PriceResponse,
+} from "../api";
 import { FACET_LABELS } from "../facets";
+
+// Couleur du tag de provenance d'un champ (transparence du rangement).
+const SOURCE_STYLE: Record<string, string> = {
+  observé: "bg-emerald-50 text-emerald-700",
+  catalogue: "bg-sky-50 text-sky-700",
+  "typique-à-vérifier": "bg-amber-50 text-amber-700",
+  catégorie: "bg-slate-100 text-slate-600",
+  vendeur: "bg-violet-50 text-violet-700",
+};
 import { PhotoLightbox } from "./PhotoLightbox";
 import type { UploadedPhoto } from "./PhotoUploader";
 
@@ -30,6 +45,7 @@ export function MarketplaceListing({
   price,
   listing,
   condition,
+  informationsCles,
 }: {
   photos: UploadedPhoto[];
   chosen: CandidateMeta | null;
@@ -38,6 +54,8 @@ export function MarketplaceListing({
   price: PriceResponse;
   listing: DescribeResponse;
   condition: Condition;
+  // Fiche structurée du produit identifié : facettes + provenance + complétude (D-041).
+  informationsCles?: AssembledListing | null;
 }) {
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
@@ -60,22 +78,30 @@ export function MarketplaceListing({
   // « Informations clés » façon marketplace : type produit + état + marque + facettes
   // (couleur, capacité, taille…). C'est la metadata structurée, visible et navigable.
   const keyInfo = useMemo(() => {
-    const rows: [string, string][] = [];
-    if (productType) rows.push(["Type de produit", productType]);
-    rows.push(["État", conditionLabel]);
-    if (chosen?.brand) rows.push(["Marque", chosen.brand]);
+    // Si l'API a assemblé la fiche structurée (facettes + provenance), on l'utilise telle quelle :
+    // chaque champ porte sa source (observé / catalogue / typique-à-vérifier / catégorie / vendeur).
+    if (informationsCles && informationsCles.fields.length > 0) {
+      return informationsCles.fields.map((f) => ({ name: f.name, value: f.value, source: f.source }));
+    }
+    // Repli : reconstruit depuis le candidat choisi (sans provenance).
+    const rows: { name: string; value: string; source: string }[] = [];
+    if (productType) rows.push({ name: "Type de produit", value: productType, source: "" });
+    rows.push({ name: "État", value: conditionLabel, source: "" });
+    if (chosen?.brand) rows.push({ name: "Marque", value: chosen.brand, source: "" });
     for (const [k, v] of Object.entries(chosen?.attributes ?? {})) {
       if (k === "brand" || k === "category") continue;
-      rows.push([FACET_LABELS[k] ?? k, v]);
+      rows.push({ name: FACET_LABELS[k] ?? k, value: v, source: "" });
     }
     return rows;
-  }, [chosen, productType, conditionLabel]);
+  }, [chosen, productType, conditionLabel, informationsCles]);
+
+  const completenessPct = informationsCles ? Math.round(informationsCles.completeness * 100) : null;
 
   // Breadcrumb : la catégorisation VOTÉE d'abord (le vrai rangement), repli sur le candidat.
   const breadcrumb = predicted?.path || chosen?.category_path || chosen?.category_fine || "";
 
   async function copyAll() {
-    const keyInfoText = keyInfo.map(([k, v]) => `${k} : ${v}`).join("\n");
+    const keyInfoText = keyInfo.map((r) => `${r.name} : ${r.value}`).join("\n");
     await navigator.clipboard.writeText(
       [
         title,
@@ -198,24 +224,47 @@ export function MarketplaceListing({
           </div>
           <p className="mt-2 text-xs leading-relaxed text-slate-500">{price.explanation}</p>
 
-          {/* Informations clés — la metadata structurée, façon marketplace */}
-          {keyInfo.length > 0 && (
-            <div className="mt-4">
+          {/* Informations clés — la metadata structurée à facettes, façon marketplace.
+              Chaque champ porte sa provenance (observé / catalogue / typique-à-vérifier),
+              et la complétude indique le remplissage sur le schéma attendu de la catégorie. */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Informations clés
               </p>
+              {completenessPct !== null && (
+                <span
+                  className="text-xs text-slate-400"
+                  title="Part des facettes attendues pour cette catégorie qui sont remplies"
+                >
+                  Fiche remplie à {completenessPct}%
+                </span>
+              )}
+            </div>
+            {keyInfo.length > 0 ? (
               <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {keyInfo.map(([k, v]) => (
-                  <div key={k} className="flex flex-col">
-                    <dt className="text-xs text-slate-400">{k}</dt>
-                    <dd className="truncate text-sm text-slate-700" title={v}>
-                      {v}
+                {keyInfo.map((r) => (
+                  <div key={r.name} className="flex flex-col">
+                    <dt className="flex items-center gap-1 text-xs text-slate-400">
+                      {r.name}
+                      {r.source && (
+                        <span
+                          className={`rounded px-1 py-px text-[10px] ${SOURCE_STYLE[r.source] ?? "bg-slate-100 text-slate-500"}`}
+                        >
+                          {r.source}
+                        </span>
+                      )}
+                    </dt>
+                    <dd className="truncate text-sm text-slate-700" title={r.value}>
+                      {r.value}
                     </dd>
                   </div>
                 ))}
               </dl>
-            </div>
-          )}
+            ) : (
+              <p className="mt-1.5 text-sm text-slate-400">(aucun attribut détecté)</p>
+            )}
+          </div>
         </div>
       </div>
 

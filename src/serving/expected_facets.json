@@ -1,0 +1,7 @@
+{
+  "_comment": "Schema fixe des facettes attendues par categorie macro (denominateur de completeness). Induit du catalogue (facettes presentes >=50% des produits de la macro) + facettes discriminantes (model/capacity/size). Source: src.retrieval.listing_quality_metrics.induce_expected_facets. Fige le rangement marketplace (D-041, D-044).",
+  "Electronics": ["capacity", "color", "model", "size"],
+  "Cell_Phones_and_Accessories": ["capacity", "color", "compatible_with", "feature", "form_factor", "material", "model", "size"],
+  "Video_Games": ["capacity", "color", "compatible_with", "feature", "model", "size"],
+  "Tools_and_Home_Improvement": ["capacity", "color", "material", "model", "size"]
+}

@@ -113,12 +113,32 @@ class ObservationToRequest(BaseModel):
     discriminative_score: float
 
 
+class ListingFieldOut(BaseModel):
+    """Un champ de la fiche structurée, avec sa provenance affichable."""
+
+    name: str  # libellé FR (« Marque », « Capacité »…)
+    value: str
+    source: str  # observé | catalogue | typique-à-vérifier | catégorie | vendeur
+
+
+class AssembledListingOut(BaseModel):
+    """Fiche structurée à facettes explicites (rangement marketplace, D-041)."""
+
+    level: str  # N1_catalog | N2_category_photo | N3_observed
+    fields: list[ListingFieldOut] = Field(default_factory=list)
+    completeness: float = Field(default=0.0, description="part des facettes attendues qui sont remplies")
+    missing: list[str] = Field(default_factory=list, description="facettes attendues non remplies")
+
+
 class IdentifyResponse(BaseModel):
     status: str = Field(..., description="identified | to_confirm | uncertain")
     top_candidates: list[CandidateMeta]
     vlm_validation: dict | None = None  # {match, confidence, reason}
     next_observation: ObservationToRequest | None = None
     explanation: str
+    # Fiche structurée du top-1 : facettes explicites + provenance + complétude (D-041).
+    # C'est le « rangement à facettes » exploitable par un moteur de recherche acheteur.
+    informations_cles: AssembledListingOut | None = None
     # Catégorie fine prédite par vote k-NN pondéré (bras knn-vote, champion bench Cycle 33).
     predicted_category_fine: str = Field(
         default="", description="Catégorie la plus fine prédite (vote pondéré des voisins)"

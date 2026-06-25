@@ -230,6 +230,7 @@ export function BatchMode() {
               price={open.price}
               listing={open.listing}
               condition={open.condition}
+              informationsCles={open.ident?.informations_cles ?? null}
             />
           </motion.div>
         )}

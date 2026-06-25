@@ -46,12 +46,14 @@ from src.api import persistence, uploads
 from src.api.middleware import request_id_middleware
 from src.api.pipeline import DescribeService, IdentificationService, PricingService
 from src.api.schemas import (
+    AssembledListingOut,
     CandidateMeta,
     DescribeRequest,
     DescribeResponse,
     HealthResponse,
     IdentifyRequest,
     IdentifyResponse,
+    ListingFieldOut,
     ObservationToRequest,
     PriceRequest,
     PriceResponse,
@@ -59,6 +61,8 @@ from src.api.schemas import (
     UploadResponse,
 )
 from src.auth import authenticate, create_access_token, get_current_user
+from src.config import REPO_ROOT
+from src.serving.listing_fill import assemble_listing
 from src.vlm.photo_extraction import PhotoExtractionUnavailable
 from src.vlm.photo_extraction import extract as extract_from_photos
 from src.vlm.validator import validate_top1
@@ -71,13 +75,28 @@ APP_STATE: dict[str, Any] = {
     "identification": None,
     "pricing": None,
     "describe": None,
+    "expected_facets": {},  # schéma fixe des facettes attendues par macro (rangement, D-041)
 }
+
+# Schéma fixe des facettes attendues par catégorie (dénominateur stable de la complétude).
+EXPECTED_FACETS_PATH = REPO_ROOT / "src" / "serving" / "expected_facets.json"
+
+
+def _load_expected_facets() -> dict[str, list[str]]:
+    """Charge le schéma de facettes par macro (config committée). Vide si absent."""
+    try:
+        raw = json.loads(EXPECTED_FACETS_PATH.read_text(encoding="utf-8"))
+        return {k: v for k, v in raw.items() if not k.startswith("_") and isinstance(v, list)}
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        log.warning("  expected_facets.json indispo (%s) → complétude sur schéma ad-hoc", e)
+        return {}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Hot loading des services au démarrage, free au shutdown."""
     log.info("=== Lifespan startup : chargement services ===")
+    APP_STATE["expected_facets"] = _load_expected_facets()
 
     # IdentificationService (FAISS + métadonnées train ; encodeur Arctic lazy)
     try:
@@ -307,6 +326,33 @@ async def identify(
             discriminative_score=obs.discriminative_score,
         )
 
+    # Fiche structurée du top-1 : facettes explicites + provenance + complétude (D-041).
+    # C'est le « rangement à facettes » : observé (photo) > catalogue > typique-à-vérifier,
+    # complétude mesurée sur le schéma FIXE de la catégorie (dénominateur stable).
+    informations_cles = None
+    if top1 is not None:
+        expected = APP_STATE.get("expected_facets", {}).get(top1.category)
+        assembled = assemble_listing(
+            category_leaf=result.predicted_category_fine or top1.category_fine,
+            category_confidence=result.predicted_category_confidence,
+            condition_label="",  # l'état (checklist vendeur) est ajouté côté front
+            photo_attributes=observed,  # attributs lus sur la photo (VLM) + observations
+            seller_metadata=req.text_hint,
+            match_brand=top1.brand,
+            match_attributes=top1.attributes,
+            match_reliable=top1.score >= 0.60,
+            expected_facets=expected,
+        )
+        informations_cles = AssembledListingOut(
+            level=assembled.level,
+            fields=[
+                ListingFieldOut(name=f.name, value=f.value, source=f.source)
+                for f in assembled.fields
+            ],
+            completeness=assembled.completeness,
+            missing=assembled.missing,
+        )
+
     return IdentifyResponse(
         status=result.status,
         top_candidates=[
@@ -331,6 +377,7 @@ async def identify(
         predicted_category_fine=result.predicted_category_fine,
         predicted_category_confidence=result.predicted_category_confidence,
         predicted_category_path=result.predicted_category_path,
+        informations_cles=informations_cles,
     )
 
 
