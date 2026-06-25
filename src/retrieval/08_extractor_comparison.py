@@ -90,6 +90,7 @@ def run() -> dict:
     ]
 
     results: dict[str, dict] = {}
+    raw_records: list[dict] = []  # une ligne par (produit, modèle) : vraies valeurs inspectables
     for model, price in MODELS:
         photo_extraction.VLM_MODEL = model  # le cache key inclut le modèle → pas de collision
         per: dict[str, list] = defaultdict(list)
@@ -130,6 +131,19 @@ def run() -> dict:
             m = metrics_for(rec, expected)
             for key in keys:
                 per[key].append(m[key])
+            raw_records.append(
+                {
+                    "product": d.name,
+                    "model": model,
+                    "true_name": meta.get("true_name", ""),
+                    "extracted_title": ext.title_guess,
+                    "extracted_attrs": ext.attributes,
+                    "top1_title": rec["top1_title"],
+                    "entity_match": m["entity_match"],
+                    "leaf_exact": m["leaf_exact"],
+                    "completeness": m["completeness"],
+                }
+            )
         results[model] = {
             "price_usd_per_mtok_in": price,
             "n": len(per["completeness"]),
@@ -144,6 +158,9 @@ def run() -> dict:
             results[model]["macro_acc"],
         )
 
+    (REPORT_DIR / "extractor_comparison_raw.jsonl").write_text(
+        "\n".join(json.dumps(r, ensure_ascii=False) for r in raw_records) + "\n", encoding="utf-8"
+    )
     summary = {"by_model": results, "condition": "C2 (N photos)", "n_products": len(products)}
     _log_mlflow(summary)
     _write_report(summary)

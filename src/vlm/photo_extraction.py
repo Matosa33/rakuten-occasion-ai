@@ -34,6 +34,10 @@ VLM_PROVIDER = os.environ.get("PHOTO_VLM_PROVIDER", "")
 # Budget de sortie : 250 suffit aux modèles directs ; les modèles à RAISONNEMENT (ex. mimo)
 # consomment des tokens en `reasoning` → relever pour qu'ils produisent quand même le `content`.
 VLM_MAX_TOKENS = int(os.environ.get("PHOTO_VLM_MAX_TOKENS", "250"))
+# Raisonnement désactivé par défaut : lire un titre sur une photo est une tâche de perception
+# structurée, pas de raisonnement. Le laisser actif fait que certains modèles (ex. mimo) épuisent
+# tout leur budget de sortie en réflexion et n'émettent jamais le JSON (réponse tronquée).
+VLM_REASONING = os.environ.get("PHOTO_VLM_REASONING", "off")
 TIMEOUT_SEC = 90
 MAX_PHOTOS_PER_CALL = 4  # toutes les vues passent dans UN appel (moins cher, contexte commun)
 
@@ -99,6 +103,8 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
     }
     if VLM_PROVIDER:  # provider épinglé → quantization stable
         payload["provider"] = {"order": [VLM_PROVIDER], "allow_fallbacks": False}
+    if VLM_REASONING == "off":  # extraction structurée : pas de chaîne de raisonnement
+        payload["reasoning"] = {"enabled": False}
     r = requests.post(
         OPENROUTER_URL,
         headers={"Authorization": f"Bearer {key}"},
