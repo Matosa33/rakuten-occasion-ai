@@ -134,6 +134,10 @@ def run() -> None:
                     # vérité terrain
                     "true_name": meta.get("true_name", ""),
                     "true_category_path": meta.get("true_category_path", ""),
+                    # top-1 retrouvé (pour entity_match)
+                    "top1_title": top1.title if top1 else "",
+                    "top1_brand": top1.brand if top1 else "",
+                    "top1_score": round(float(top1.score), 4) if top1 else 0.0,
                     # prédictions / fiche produite
                     "pred_macro": _macro_vote(res.candidates),
                     "pred_leaf": res.predicted_category_fine,
