@@ -298,7 +298,10 @@ async def identify(
         catalog_img = (top1.images[0] if top1.images else "") or top1.image_url
         if catalog_img:
             paths = [p for p in (uploads.get_upload_path(i) for i in req.image_ids) if p]
-            verdict = await asyncio.to_thread(validate_top1, paths, catalog_img, top1.title)
+            cand_attrs = {"brand": top1.brand, **top1.attributes} if top1.brand else dict(top1.attributes)
+            verdict = await asyncio.to_thread(
+                validate_top1, paths, catalog_img, top1.title, cand_attrs
+            )
             if verdict is not None:
                 vlm_validation = {
                     "match": verdict.match,

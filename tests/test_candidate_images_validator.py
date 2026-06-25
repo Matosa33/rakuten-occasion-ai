@@ -138,9 +138,10 @@ def test_identify_avec_photos_peuple_vlm_validation(tmp_path, monkeypatch):
     )
     captured = {}
 
-    def fake_validate(paths, catalog_img, title):
+    def fake_validate(paths, catalog_img, title, candidate_attributes=None):
         captured["catalog_img"] = catalog_img
         captured["n_photos"] = len(paths)
+        captured["attrs"] = candidate_attributes
         return VLMValidation(match=True, confidence=0.91, reason="Même modèle visible")
 
     monkeypatch.setattr(api_main, "validate_top1", fake_validate)
