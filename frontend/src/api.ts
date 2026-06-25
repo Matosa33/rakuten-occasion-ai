@@ -52,6 +52,11 @@ export interface IdentifyResponse {
   vlm_validation: VLMValidation | null;
   next_observation: ObservationToRequest | null;
   explanation: string;
+  // Catégorie fine VOTÉE (vote pondéré des voisins) + confiance + breadcrumb — la classification
+  // finale robuste, à afficher (plus fiable que la catégorie du seul candidat choisi).
+  predicted_category_fine: string;
+  predicted_category_confidence: number;
+  predicted_category_path: string;
 }
 
 export interface PriceResponse {

@@ -1,0 +1,53 @@
+{
+  "config": {
+    "sample_n": 15000,
+    "top_k": 200,
+    "ef_search": 128,
+    "seed": 42,
+    "search_latency_ms_per_query": 0.307,
+    "n_train_index": 3156705
+  },
+  "results": {
+    "A0_actuel": {
+      "macro_acc": 0.9423,
+      "path_L1_acc": 0.8889,
+      "path_L2_acc": 0.808,
+      "leaf_acc": 0.7097,
+      "leaf_weighted_f1": 0.7325,
+      "hierarchical_f1": 0.8118,
+      "recall_at_200_leaf": 0.9683,
+      "n_eval": 15000
+    },
+    "A1_gate_macro": {
+      "macro_acc": 0.9494,
+      "path_L1_acc": 0.8933,
+      "path_L2_acc": 0.8099,
+      "leaf_acc": 0.7092,
+      "leaf_weighted_f1": 0.7288,
+      "hierarchical_f1": 0.8115,
+      "recall_at_200_leaf": 0.9683,
+      "n_eval": 15000
+    },
+    "A2_vote_fin": {
+      "macro_acc": 0.9494,
+      "path_L1_acc": 0.9487,
+      "path_L2_acc": 0.8491,
+      "leaf_acc": 0.7333,
+      "leaf_weighted_f1": 0.7051,
+      "hierarchical_f1": 0.8197,
+      "recall_at_200_leaf": 0.9683,
+      "n_eval": 15000
+    },
+    "A3_coarse_to_fine": {
+      "macro_acc": 0.9494,
+      "path_L1_acc": 0.9471,
+      "path_L2_acc": 0.8478,
+      "leaf_acc": 0.7307,
+      "leaf_weighted_f1": 0.7031,
+      "hierarchical_f1": 0.8179,
+      "recall_at_200_leaf": 0.9683,
+      "n_eval": 15000
+    }
+  },
+  "champion_by_leaf_acc": "A2_vote_fin"
+}

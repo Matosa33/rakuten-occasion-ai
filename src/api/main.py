@@ -328,6 +328,9 @@ async def identify(
         vlm_validation=vlm_validation,  # F0.4 (17.2, D-035) — None si pas de photos
         next_observation=next_obs,
         explanation=result.explanation,
+        predicted_category_fine=result.predicted_category_fine,
+        predicted_category_confidence=result.predicted_category_confidence,
+        predicted_category_path=result.predicted_category_path,
     )
 
 
