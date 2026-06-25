@@ -69,6 +69,17 @@ transformation.
      catégorie + photos + prix + caractéristiques + description
 ```
 
+Un mot sur les **caractéristiques** de l'annonce finale (le bloc « informations clés »). Elles ne
+sont pas un simple recopiage : chaque champ (marque, couleur, capacité, modèle, taille…) porte sa
+**provenance**, c'est-à-dire d'où vient l'information. Trois origines, par ordre de fiabilité :
+**observé** (lu directement sur la photo du vendeur, le plus sûr pour cet objet précis),
+**catalogue** (tiré de la fiche du produit retrouvé) et **typique-à-vérifier** (valeur habituelle
+pour ce genre de produit, donc à confirmer, jamais affirmée). On mesure aussi la **complétude** de
+la fiche, c'est-à-dire la part des caractéristiques attendues pour cette catégorie qui sont
+effectivement remplies. Ce rangement à champs sourcés est ce qui rend les fiches exploitables par
+un moteur de recherche acheteur (filtrer par couleur, par capacité…), au lieu d'une simple grande
+catégorie.
+
 > À retenir : la photo est la seule entrée obligatoire. C'est à la fois la preuve pour
 > l'acheteur et le point de départ du traitement. Toutes les autres informations sont
 > facultatives mais améliorent le résultat : la précision texte affine la recherche,

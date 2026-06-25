@@ -166,3 +166,6 @@ reports/10_audit_app/
 
 # prep soutenance perso (local, non public)
 documentation/SOUTENANCE_PLAN.md
+
+# Audits internes (œil naïf, non publics — comme BRAIN/)
+auditV2/
