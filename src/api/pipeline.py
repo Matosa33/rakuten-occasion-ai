@@ -259,13 +259,20 @@ class IdentificationService:
             return text_query
 
     def identify(
-        self, text_query: str, already_observed: dict[str, str] | None = None
+        self,
+        text_query: str,
+        already_observed: dict[str, str] | None = None,
+        translate: bool = True,
     ) -> IdentificationResult:
-        """Pipeline complet : (traduire) → encode → search → OOD → Akinator si ambigu."""
+        """Pipeline complet : (traduire) → encode → search → OOD → Akinator si ambigu.
+
+        translate=False : utilise la requête telle quelle (ex. déjà en anglais, ou pour
+        isoler une variable en benchmark) → pas d'appel de traduction.
+        """
         if not self._loaded:
             raise RuntimeError("IdentificationService non chargé. Appelle load() au lifespan.")
 
-        search_query = self._maybe_translate(text_query)
+        search_query = self._maybe_translate(text_query) if translate else text_query
         query_emb = self.encode_query(search_query)
         scores, indices = self._index.search(query_emb, TOP_K_RETRIEVAL)
         scores, indices = scores[0], indices[0]
