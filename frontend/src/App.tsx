@@ -273,6 +273,15 @@ export default function App() {
               key={chosenAsin ?? "listing"}
               photos={photos}
               chosen={ident?.top_candidates.find((c) => c.parent_asin === chosenAsin) ?? null}
+              predicted={
+                ident
+                  ? {
+                      fine: ident.predicted_category_fine,
+                      confidence: ident.predicted_category_confidence,
+                      path: ident.predicted_category_path,
+                    }
+                  : null
+              }
               price={price}
               listing={listing}
               condition={condition}

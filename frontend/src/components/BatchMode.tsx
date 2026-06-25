@@ -218,6 +218,15 @@ export function BatchMode() {
               chosen={
                 open.ident?.top_candidates.find((c) => c.parent_asin === open.chosenAsin) ?? null
               }
+              predicted={
+                open.ident
+                  ? {
+                      fine: open.ident.predicted_category_fine,
+                      confidence: open.ident.predicted_category_confidence,
+                      path: open.ident.predicted_category_path,
+                    }
+                  : null
+              }
               price={open.price}
               listing={open.listing}
               condition={open.condition}

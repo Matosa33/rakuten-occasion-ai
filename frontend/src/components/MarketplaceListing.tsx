@@ -26,12 +26,15 @@ const CONFIDENCE_LABEL: Record<PriceResponse["confidence_level"], string> = {
 export function MarketplaceListing({
   photos,
   chosen,
+  predicted,
   price,
   listing,
   condition,
 }: {
   photos: UploadedPhoto[];
   chosen: CandidateMeta | null;
+  // Classification VOTÉE (vote pondéré des voisins) : la catégorisation finale robuste.
+  predicted: { fine: string; confidence: number; path: string } | null;
   price: PriceResponse;
   listing: DescribeResponse;
   condition: Condition;
@@ -49,31 +52,37 @@ export function MarketplaceListing({
     setMainPhoto(0);
   }, [listing]);
 
-  // Caractéristiques structurées = la metadata marketplace parfaite :
-  // marque + facettes catalogue du produit choisi (couleur, capacité, taille…).
-  const specs = useMemo(() => {
-    if (!chosen) return [] as [string, string][];
+  const conditionLabel = CONDITION_LABELS[condition];
+  // Type de produit = catégorie fine VOTÉE (plus robuste) ; repli sur le candidat choisi.
+  const productType = predicted?.fine || chosen?.category_fine || "";
+  const confidencePct = predicted ? Math.round(predicted.confidence * 100) : 0;
+
+  // « Informations clés » façon marketplace : type produit + état + marque + facettes
+  // (couleur, capacité, taille…). C'est la metadata structurée, visible et navigable.
+  const keyInfo = useMemo(() => {
     const rows: [string, string][] = [];
-    if (chosen.brand) rows.push(["Marque", chosen.brand]);
-    for (const [k, v] of Object.entries(chosen.attributes ?? {})) {
+    if (productType) rows.push(["Type de produit", productType]);
+    rows.push(["État", conditionLabel]);
+    if (chosen?.brand) rows.push(["Marque", chosen.brand]);
+    for (const [k, v] of Object.entries(chosen?.attributes ?? {})) {
       if (k === "brand" || k === "category") continue;
       rows.push([FACET_LABELS[k] ?? k, v]);
     }
     return rows;
-  }, [chosen]);
+  }, [chosen, productType, conditionLabel]);
 
-  const breadcrumb = chosen?.category_path || chosen?.category_fine || "";
-  const conditionLabel = CONDITION_LABELS[condition];
+  // Breadcrumb : la catégorisation VOTÉE d'abord (le vrai rangement), repli sur le candidat.
+  const breadcrumb = predicted?.path || chosen?.category_path || chosen?.category_fine || "";
 
   async function copyAll() {
-    const specsText = specs.map(([k, v]) => `${k} : ${v}`).join("\n");
+    const keyInfoText = keyInfo.map(([k, v]) => `${k} : ${v}`).join("\n");
     await navigator.clipboard.writeText(
       [
         title,
         "",
-        `Prix : ${price.suggested_price_eur.toFixed(2)} € · ${conditionLabel}`,
+        `Prix : ${price.suggested_price_eur.toFixed(2)} €`,
         breadcrumb ? `Catégorie : ${breadcrumb}` : "",
-        specsText ? `\nCaractéristiques :\n${specsText}` : "",
+        keyInfoText ? `\nInformations clés :\n${keyInfoText}` : "",
         "",
         description,
       ]
@@ -152,6 +161,20 @@ export function MarketplaceListing({
             className="w-full rounded-lg border border-transparent p-1.5 text-lg font-semibold text-slate-800 outline-none transition hover:border-slate-200 focus:border-rose-400"
           />
 
+          {/* Catégorie détectée automatiquement (vote des voisins) + confiance */}
+          {productType && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 px-1.5 text-xs">
+              <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
+                🏷️ {productType}
+              </span>
+              {predicted && (
+                <span className="text-slate-400">
+                  catégorie détectée · {confidencePct}% de confiance
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="mt-3 flex flex-wrap items-baseline gap-2">
             <span className="text-4xl font-bold text-rose-700">
               {price.suggested_price_eur.toFixed(2)} €
@@ -175,14 +198,14 @@ export function MarketplaceListing({
           </div>
           <p className="mt-2 text-xs leading-relaxed text-slate-500">{price.explanation}</p>
 
-          {/* Caractéristiques structurées — la metadata parfaite */}
-          {specs.length > 0 && (
+          {/* Informations clés — la metadata structurée, façon marketplace */}
+          {keyInfo.length > 0 && (
             <div className="mt-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Caractéristiques
+                Informations clés
               </p>
               <dl className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {specs.map(([k, v]) => (
+                {keyInfo.map(([k, v]) => (
                   <div key={k} className="flex flex-col">
                     <dt className="text-xs text-slate-400">{k}</dt>
                     <dd className="truncate text-sm text-slate-700" title={v}>
