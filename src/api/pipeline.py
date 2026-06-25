@@ -143,11 +143,22 @@ class IdentificationService:
         log.info("Loading FAISS HNSW index…")
         self._index = faiss.read_index(str(index_path))
         self._index.hnsw.efSearch = HNSW_EF_SEARCH
+        # Garde-fou : l'index doit avoir la dimension de l'encodeur (sinon search incohérent).
+        assert self._index.d == ARCTIC_EMBED_DIM, (
+            f"Dimension index {self._index.d} != encodeur {ARCTIC_EMBED_DIM} "
+            "(index périmé ? rebuild requis)"
+        )
 
         log.info("Loading train metadata (parent_asin, title, store, category, price)…")
         self._train_meta = pl.read_parquet(
             DATA_PROCESSED_PRODUCTS / "train.parquet",
             columns=["parent_asin", "title", "store", "_source_category", "price_num"],
+        )
+        # Garde-fou : l'index et les métadonnées train doivent être alignés 1:1 (même ordre,
+        # même longueur) — sinon `_train_meta[i]` renvoie le mauvais produit (corruption silencieuse).
+        assert len(self._train_meta) == self._index.ntotal, (
+            f"Désync index ({self._index.ntotal}) vs métadonnées train ({len(self._train_meta)}) "
+            "— rebuild de l'index requis après un re-split."
         )
         self._train_labels = self._train_meta["_source_category"].to_numpy()
         self._train_prices = self._train_meta["price_num"].to_numpy()  # prix catalogue (F4)
