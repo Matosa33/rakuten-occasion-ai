@@ -38,6 +38,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 import src.config  # noqa: E402, F401 — charge .env (OPENROUTER_API_KEY)
+from src.config import CATEGORIES  # noqa: E402 — source de vérité des 4 macros
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -46,15 +47,21 @@ DATASET_DIR = REPO_ROOT / "data" / "photos_eval"
 DEFAULT_SRC = Path.home() / "Downloads"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 VLM_MODEL = os.environ.get("PHOTO_VLM_MODEL", "google/gemma-4-31b-it")
-MACROS = ["Electronics", "Cell_Phones", "Video_Games", "Tools"]
+MACROS = list(CATEGORIES)  # Electronics | Cell_Phones_and_Accessories | Video_Games | Tools_and_Home_Improvement
 RENDER_DPI = 150
 CAPTION_BAND = 0.09  # fraction haute coupée (légende « Photo i/N »)
 
-# Repli déterministe catégorie FR leboncoin → macro (si le VLM dévie).
+# Alias formes courtes → canonique (si le VLM renvoie une forme abrégée).
+_MACRO_ALIASES = {
+    "cell_phones": "Cell_Phones_and_Accessories",
+    "phones": "Cell_Phones_and_Accessories",
+    "tools": "Tools_and_Home_Improvement",
+}
+# Repli déterministe catégorie FR leboncoin → macro canonique (si le VLM dévie).
 _FR_TO_MACRO = [
-    (("téléphone", "smartphone", "objets connectés", "phone"), "Cell_Phones"),
+    (("téléphone", "smartphone", "objets connectés", "phone"), "Cell_Phones_and_Accessories"),
     (("console", "jeux vidéo", "jeu vidéo", "gaming"), "Video_Games"),
-    (("bricolage", "outillage", "jardinage", "outil"), "Tools"),
+    (("bricolage", "outillage", "jardinage", "outil"), "Tools_and_Home_Improvement"),
     (("ordinateur", "informatique", "image & son", "électronique", "tablette", "tv", "photo"),
      "Electronics"),
 ]
@@ -64,7 +71,8 @@ CARD_PROMPT = (
     "Read it and reply in STRICT JSON only, no markdown:\n"
     '{"true_name": "normalized product name (brand + model + variant)",\n'
     ' "category_fr": "the listing category shown (Catégorie field)",\n'
-    ' "macro": "ONE of EXACTLY: Electronics | Cell_Phones | Video_Games | Tools",\n'
+    ' "macro": "ONE of EXACTLY: Electronics | Cell_Phones_and_Accessories | Video_Games | '
+    'Tools_and_Home_Improvement",\n'
     ' "true_category_path": "fine taxonomy in English, format A > B > C",\n'
     ' "price_eur": <number or null>,\n'
     ' "condition": "état shown (e.g. Pour pièces, Bon état) or empty",\n'
@@ -115,8 +123,11 @@ def _already_ingested() -> set[str]:
 
 
 def _map_macro(macro: str, category_fr: str) -> str:
+    macro = macro.strip()
     if macro in MACROS:
         return macro
+    if macro.lower() in _MACRO_ALIASES:
+        return _MACRO_ALIASES[macro.lower()]
     blob = f"{macro} {category_fr}".lower()
     for keys, m in _FR_TO_MACRO:
         if any(k in blob for k in keys):

@@ -32,13 +32,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 import src.config  # noqa: E402, F401 — son import charge .env (OPENROUTER_API_KEY) dans l'env
+from src.config import CATEGORIES  # noqa: E402 — source de vérité des 4 macros
 from src.llm import openrouter_client as orc  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
 DATASET_DIR = REPO_ROOT / "data" / "photos_eval"
-MACROS = ["Electronics", "Cell_Phones", "Video_Games", "Tools"]
+MACROS = list(CATEGORIES)  # valeurs réelles de `_source_category`
 
 PROMPT = """Tu classes une annonce de produit d'occasion. Réponds en JSON STRICT, rien d'autre.
 
@@ -49,13 +50,13 @@ DESCRIPTION: {desc}
 Renvoie :
 {{
   "true_name": "libellé produit normalisé (marque + modèle + variante)",
-  "macro": "UNE de ces 4 valeurs EXACTES: Electronics | Cell_Phones | Video_Games | Tools",
+  "macro": "UNE de ces 4 valeurs EXACTES: Electronics | Cell_Phones_and_Accessories | Video_Games | Tools_and_Home_Improvement",
   "true_category_path": "taxonomie fine en anglais, format 'A > B > C' (ex: 'Electronics > Computers > Graphics Cards')",
   "seller_metadata": "texte court que le vendeur taperait (marque + modèle + mots-clés, ~5-8 mots)"
 }}
 
-Règles : macro DOIT être l'une des 4 valeurs. Un téléphone → Cell_Phones ; jeu/console → Video_Games ;
-outil/bricolage → Tools ; le reste de l'high-tech → Electronics."""
+Règles : macro DOIT être l'une des 4 valeurs. Téléphone/smartphone → Cell_Phones_and_Accessories ;
+jeu/console → Video_Games ; outil/bricolage → Tools_and_Home_Improvement ; reste high-tech → Electronics."""
 
 
 def _parse_json(text: str) -> dict | None:
