@@ -94,6 +94,12 @@ export function MarketplaceListing({
   // peut être pollué par des accessoires (une coque ferait afficher « Basic Cases » pour un iPhone).
   const productType = chosen?.category_fine || predicted?.fine || "";
   const confidencePct = predicted ? Math.round(predicted.confidence * 100) : 0;
+  // Certitude d'IDENTIFICATION du PRODUIT (≠ « est-ce un casque ») : le vote k-NN sur la catégorie
+  // fine se fragmente quand les candidats sont des produits variés (marques/modèles différents) →
+  // signal que le modèle exact n'est pas cerné → on demande confirmation plutôt qu'afficher un % bas
+  // trompeur. (Si le vendeur a précisé le modèle, l'IA est en général confiante → pas de bandeau.)
+  const idConfident = (predicted?.confidence ?? 1) >= 0.6;
+  const needsConfirmation = !reasoned?.catalog_miss && (!!reasoned?.ask_question || !idConfident);
 
   // « Informations clés » façon marketplace : type produit + état + marque + facettes
   // (couleur, capacité, taille…). C'est la metadata structurée, visible et navigable.
@@ -179,10 +185,14 @@ export function MarketplaceListing({
           Prix et caractéristiques à vérifier.
         </div>
       )}
-      {/* Question discriminante proposée par l'IA (capacité, variante…) pour affiner. */}
-      {reasoned?.ask_question && reasoned.facet_question && (
-        <div className="border-b border-sky-200 bg-sky-50 px-5 py-2.5 text-sm text-sky-800">
-          💡 Pour affiner : {reasoned.facet_question}
+      {/* Identification du MODÈLE incertaine → flag actionnable (plutôt qu'un % bas trompeur).
+          Soit la question discriminante de l'IA, soit l'invite à préciser le modèle / la photo. */}
+      {needsConfirmation && (
+        <div className="border-b border-amber-200 bg-amber-50 px-5 py-2.5 text-sm text-amber-800">
+          ⚠ <strong>Modèle à confirmer.</strong>{" "}
+          {reasoned?.ask_question && reasoned.facet_question
+            ? reasoned.facet_question
+            : "Précisez le nom du modèle (champ Précisions) ou ajoutez une photo de l'étiquette / de la boîte pour fiabiliser l'identification."}
         </div>
       )}
 
@@ -242,10 +252,11 @@ export function MarketplaceListing({
               <span className="rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700">
                 🏷️ {productType}
               </span>
-              {predicted && (
-                <span className="text-slate-400">
-                  catégorie détectée · {confidencePct}% de confiance
-                </span>
+              {/* On n'affiche le % du vote QUE s'il est net (≥60 %) : un % bas reflète une
+                  fragmentation du vote (produit exact ambigu), pas un doute sur la catégorie →
+                  trompeur ici. L'incertitude est alors portée par le bandeau « Modèle à confirmer ». */}
+              {predicted && idConfident && (
+                <span className="text-slate-400">catégorie · {confidencePct}% de confiance</span>
               )}
             </div>
           )}
