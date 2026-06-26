@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 
@@ -121,6 +122,41 @@ def weighted_fine_vote(candidates: list[Candidate]) -> tuple[str, float, str]:
         if c.category_fine == best and c.score > best_s:
             path, best_s = c.category_path, c.score
     return best, round(confidence, 4), path
+
+
+# Facettes extraites du TITRE (Cycle 36.A). Le build du lookup ne lit que le champ `details`
+# d'Amazon (souvent vide) → la capacité « 16GB » d'un « RTX 4080 16GB » était ABSENTE, ce qui
+# cassait la désambiguïsation, la complétude et la recherche. On complète à la volée depuis le
+# titre, SANS jamais écraser une facette déjà présente (le catalogue prime). Régex conservatrices :
+# capacité = GB/TB/Go/To seulement (évite 256-Bit, GDDR6X, 2550 MHz, 65 Piece) ; voltage = nVe ;
+# puissance = nnW.
+_RE_CAPACITY = re.compile(r"\b(\d{1,4})\s?(GB|TB|Go|To)\b", re.IGNORECASE)
+_RE_VOLTAGE = re.compile(r"\b(\d{1,3}(?:\.\d)?)\s?V\b")
+_RE_POWER = re.compile(r"\b(\d{2,4})\s?W\b")
+
+
+def enrich_facets_from_title(title: str, attrs: dict[str, str]) -> dict[str, str]:
+    """Complète les facettes ABSENTES depuis le titre (capacité/voltage/puissance).
+
+    Ne remplace jamais une facette déjà présente (la valeur catalogue `details` prime).
+    """
+    if not title:
+        return attrs
+    out = dict(attrs)
+    if not out.get("capacity"):
+        m = _RE_CAPACITY.search(title)
+        if m:
+            unit = m.group(2).upper().replace("GO", "GB").replace("TO", "TB")
+            out["capacity"] = f"{m.group(1)} {unit}"
+    if not out.get("voltage"):
+        m = _RE_VOLTAGE.search(title)
+        if m:
+            out["voltage"] = f"{m.group(1)}V"
+    if not out.get("power"):
+        m = _RE_POWER.search(title)
+        if m:
+            out["power"] = f"{m.group(1)}W"
+    return out
 
 
 class IdentificationService:
@@ -317,9 +353,12 @@ class IdentificationService:
             store = str(self._train_meta["store"][int(i)] or "")
             brand = self._brand_lookup.get(asin, "") or store
             category_fine = self._category_lookup.get(asin, "")
+            title = str(self._train_meta["title"][int(i)] or "")
             # Attributs facetables pour l'Akinator (entropie côté front) : facettes
             # curées + marque + catégorie fine, uniquement les non-vides.
             attributes = dict(self._facets_lookup.get(asin, {}))
+            # 36.A : complète capacité/voltage/puissance depuis le titre si absentes du catalogue.
+            attributes = enrich_facets_from_title(title, attributes)
             if brand:
                 attributes["brand"] = brand
             if category_fine:
@@ -327,7 +366,7 @@ class IdentificationService:
             candidates.append(
                 Candidate(
                     parent_asin=asin,
-                    title=str(self._train_meta["title"][int(i)] or ""),
+                    title=title,
                     store=store,
                     category=str(self._train_labels[int(i)]),
                     score=float(s),
