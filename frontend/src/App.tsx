@@ -343,6 +343,7 @@ export default function App() {
                   ? kindFromCategory(chosenCategory, ident?.predicted_category_fine ?? "")
                   : null
               }
+              purchaseYear={purchaseYear}
             />
             {ident && ident.top_candidates.length > 1 && (
               <button

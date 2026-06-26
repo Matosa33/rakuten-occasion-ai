@@ -37,7 +37,19 @@ FIELD_LABELS = {
     "size": "Taille",
     "storage": "Stockage",
     "material": "Matière",
+    "voltage": "Tension",
+    "power": "Puissance",
+    "feature": "Caractéristiques",
+    "form_factor": "Format",
+    "model_variant": "Variante",
+    "connectivity": "Connectivité",
+    "compatible_with": "Compatible avec",
+    "screen_type": "Type d'écran",
 }
+
+# Au-delà des facettes du schéma, on affiche aussi les attributs RICHES observés/catalogue (le
+# vendeur veut une fiche complète) — valeurs longues tronquées pour éviter le bruit (listes Amazon).
+_MAX_FACET_VALUE = 80
 
 
 @dataclass
@@ -128,17 +140,30 @@ def assemble_listing(
 
     # Facettes attendues pour la catégorie (schéma) → remplies par photo/catalogue.
     facets = expected_facets or sorted(set(photo) | set(match_attrs))
+    shown_keys = {"brand", "category"}
     for key in facets:
         if key in ("brand",):  # déjà traité
             continue
+        shown_keys.add(key)
         f = value_with_source(key)
         if f:
             fields.append(f)
 
-    # Complétude = champs remplis / champs attendus (Type, État, Marque + facettes attendues).
-    expected_labels = ["Type de produit", "État", "Marque"] + [
-        _label(k) for k in facets if k != "brand"
-    ]
+    # Attributs RICHES hors schéma (form_factor, feature, voltage…) : on génère TOUT le structuré
+    # pertinent observé/catalogue (valeurs longues tronquées). Le vendeur dispose d'une fiche complète.
+    for key in [*photo, *match_attrs]:
+        if key in shown_keys or key == "category":
+            continue
+        shown_keys.add(key)
+        f = value_with_source(key)
+        if f:
+            if len(f.value) > _MAX_FACET_VALUE:
+                f.value = f.value[: _MAX_FACET_VALUE - 1].rstrip() + "…"
+            fields.append(f)
+
+    # Complétude = facettes du SCHÉMA remplies (Type + Marque + facettes attendues). L'« État » est
+    # un choix vendeur (toujours disponible à l'affichage) → exclu du dénominateur (ne pénalise pas).
+    expected_labels = ["Type de produit", "Marque"] + [_label(k) for k in facets if k != "brand"]
     filled_labels = {f.name for f in fields}
     missing = [lbl for lbl in expected_labels if lbl not in filled_labels]
     completeness = (

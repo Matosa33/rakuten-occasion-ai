@@ -84,6 +84,8 @@ def test_completude_compte_les_manquants():
         match_reliable=False,
         expected_facets=["color", "capacity"],
     )
-    # attendus : Type, État, Marque, Couleur, Capacité (5) ; remplis : Type + État (2)
+    # Cycle 36 : l'« État » (choix vendeur) est exclu du dénominateur (ne pénalise pas la complétude).
+    # attendus : Type, Marque, Couleur, Capacité (4) ; remplis parmi attendus : Type (1)
     assert "Marque" in res.missing and "Couleur" in res.missing
-    assert res.completeness == round(2 / 5, 4)
+    assert "État" not in res.missing
+    assert res.completeness == round(1 / 4, 4)

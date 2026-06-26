@@ -410,11 +410,27 @@ async def identify(
                 and not ri.ask_question
             )
         )
+        # « Type de produit » = catégorie du produit IDENTIFIÉ. Si la passe raisonnée a réordonné
+        # sur ce candidat, on prend SA catégorie fine (le vote pondéré peut être pollué par des
+        # accessoires : ex. une coque ferait afficher « Basic Cases » pour un iPhone).
+        reordered = ri is not None and ri.chosen_parent_asin == top1.parent_asin
+        display_leaf = (
+            top1.category_fine
+            if reordered and top1.category_fine
+            else (result.predicted_category_fine or top1.category_fine)
+        )
+        # Enrichit l'observé avec les facettes JUGÉES par l'IA (source « observed » = lues sur la
+        # photo) → la fiche génère TOUTES les données structurées disponibles (form_factor, etc.).
+        observed_listing = dict(observed)
+        if ri is not None:
+            for f in ri.facets:
+                if f.source == "observed" and f.value:
+                    observed_listing[f.key] = f.value
         assembled = assemble_listing(
-            category_leaf=result.predicted_category_fine or top1.category_fine,
+            category_leaf=display_leaf,
             category_confidence=result.predicted_category_confidence,
             condition_label="",  # l'état (checklist vendeur) est ajouté côté front
-            photo_attributes=observed,  # attributs lus sur la photo (VLM) + observations
+            photo_attributes=observed_listing,  # observé VLM + facettes jugées par l'IA
             seller_metadata=req.text_hint,
             match_brand=top1.brand,
             match_attributes=top1.attributes,

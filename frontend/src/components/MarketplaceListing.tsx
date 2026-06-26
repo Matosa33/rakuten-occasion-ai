@@ -52,6 +52,7 @@ export function MarketplaceListing({
   informationsCles,
   reasoned,
   kind,
+  purchaseYear,
 }: {
   photos: UploadedPhoto[];
   chosen: CandidateMeta | null;
@@ -66,6 +67,8 @@ export function MarketplaceListing({
   reasoned?: ReasonedIdentification | null;
   // Type DÉRIVÉ de la catégorie identifiée (Cycle 36) → questions d'état spécifiques au bon moment.
   kind?: ProductKind | null;
+  // Année d'achat saisie par le vendeur (affichée dans les données structurées de la fiche).
+  purchaseYear?: string;
 }) {
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
@@ -87,34 +90,40 @@ export function MarketplaceListing({
   const kindLabel = PRODUCT_KINDS.find((k) => k.value === kind)?.label ?? "";
 
   const conditionLabel = CONDITION_LABELS[condition];
-  // Type de produit = catégorie fine VOTÉE (plus robuste) ; repli sur le candidat choisi.
-  const productType = predicted?.fine || chosen?.category_fine || "";
+  // Type de produit = catégorie du produit CHOISI (réordonné par l'IA si dispo) ; le vote pondéré
+  // peut être pollué par des accessoires (une coque ferait afficher « Basic Cases » pour un iPhone).
+  const productType = chosen?.category_fine || predicted?.fine || "";
   const confidencePct = predicted ? Math.round(predicted.confidence * 100) : 0;
 
   // « Informations clés » façon marketplace : type produit + état + marque + facettes
   // (couleur, capacité, taille…). C'est la metadata structurée, visible et navigable.
   const keyInfo = useMemo(() => {
-    // Si l'API a assemblé la fiche structurée (facettes + provenance), on l'utilise telle quelle :
-    // chaque champ porte sa source (observé / catalogue / typique-à-vérifier / catégorie / vendeur).
-    if (informationsCles && informationsCles.fields.length > 0) {
-      return informationsCles.fields.map((f) => ({ name: f.name, value: f.value, source: f.source }));
-    }
-    // Repli : reconstruit depuis le candidat choisi (sans provenance).
     const rows: { name: string; value: string; source: string }[] = [];
+    // État + année = données VENDEUR, toujours pertinentes — en tête de la fiche structurée.
+    rows.push({ name: "État", value: conditionLabel, source: "vendeur" });
+    if (purchaseYear) rows.push({ name: "Année d'achat", value: purchaseYear, source: "vendeur" });
+    // Données structurées générées par l'API (facettes + provenance) : type, marque, capacité, etc.
+    if (informationsCles && informationsCles.fields.length > 0) {
+      for (const f of informationsCles.fields) {
+        if (f.name === "État") continue; // évite un doublon avec la ligne vendeur ci-dessus
+        rows.push({ name: f.name, value: f.value, source: f.source });
+      }
+      return rows;
+    }
+    // Repli : reconstruit depuis le candidat choisi (sans provenance fine).
     if (productType) rows.push({ name: "Type de produit", value: productType, source: "" });
-    rows.push({ name: "État", value: conditionLabel, source: "" });
     if (chosen?.brand) rows.push({ name: "Marque", value: chosen.brand, source: "" });
     for (const [k, v] of Object.entries(chosen?.attributes ?? {})) {
       if (k === "brand" || k === "category") continue;
       rows.push({ name: facetLabel(k), value: v, source: "" });
     }
     return rows;
-  }, [chosen, productType, conditionLabel, informationsCles]);
+  }, [chosen, productType, conditionLabel, informationsCles, purchaseYear]);
 
   const completenessPct = informationsCles ? Math.round(informationsCles.completeness * 100) : null;
 
-  // Breadcrumb : la catégorisation VOTÉE d'abord (le vrai rangement), repli sur le candidat.
-  const breadcrumb = predicted?.path || chosen?.category_path || chosen?.category_fine || "";
+  // Breadcrumb : le rangement du produit CHOISI d'abord (réordonné par l'IA), repli sur le vote.
+  const breadcrumb = chosen?.category_path || predicted?.path || chosen?.category_fine || "";
 
   async function copyAll() {
     const keyInfoText = keyInfo.map((r) => `${r.name} : ${r.value}`).join("\n");
