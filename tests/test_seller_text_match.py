@@ -15,6 +15,7 @@ from src.api.main import _seller_text_best_match
 class C:
     parent_asin: str
     title: str
+    price: float | None = None
 
 
 def _cands() -> list[C]:
@@ -50,3 +51,14 @@ def test_no_match_returns_empty() -> None:
 
 def test_empty_text() -> None:
     assert _seller_text_best_match("", _cands()) == ""
+
+
+def test_tiebreak_prefers_representative_price() -> None:
+    # plusieurs « Momentum 3 » : un à la donnée corrompue (9755), un sain (235) → on prend le sain.
+    cands = [
+        C("BAD", "Sennheiser Momentum 3 Wireless Headphones", 9755.48),
+        C("GOOD", "Sennheiser Momentum 3 Wireless Headphones", 234.99),
+        C("MID", "Sennheiser Momentum 3 Wireless Headphones", 249.95),
+    ]
+    # médiane des prix = 249.95 → le candidat MID (le plus proche) est retenu, jamais le 9755.
+    assert _seller_text_best_match("Sennheiser Momentum 3 Wireless", cands) == "MID"

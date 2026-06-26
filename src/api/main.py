@@ -34,6 +34,7 @@ import asyncio
 import json
 import logging
 import re
+import statistics
 import time
 from contextlib import asynccontextmanager
 from typing import Any
@@ -92,7 +93,9 @@ def _seller_text_best_match(text: str, candidates: list) -> str:
     parent_asin (déterministe, indépendant du LLM qui ignore parfois la consigne).
 
     Match fort exigé : ≥ 2 tokens discriminants du texte présents dans le titre candidat ET ≥ 50 %
-    des tokens du texte couverts. Renvoie "" si pas de texte exploitable / pas de match fort.
+    des tokens du texte couverts. Parmi les candidats à égalité, on retient celui au prix
+    REPRÉSENTATIF (le plus proche de la médiane) pour éviter une fiche à la donnée corrompue
+    (ex. un même « Momentum 3 » listé à 9755 $ par erreur). "" si pas de match fort.
     """
     toks = {
         t
@@ -101,13 +104,16 @@ def _seller_text_best_match(text: str, candidates: list) -> str:
     }
     if len(toks) < 2:
         return ""
-    best_asin, best_hits = "", 0
-    for c in candidates:
-        title = (c.title or "").lower()
-        hits = sum(1 for t in toks if t in title)
-        if hits > best_hits:
-            best_asin, best_hits = c.parent_asin, hits
-    return best_asin if best_hits >= 2 and best_hits / len(toks) >= 0.5 else ""
+    scored = [(sum(1 for t in toks if t in (c.title or "").lower()), c) for c in candidates]
+    best_hits = max((h for h, _ in scored), default=0)
+    if best_hits < 2 or best_hits / len(toks) < 0.5:
+        return ""
+    tied = [c for h, c in scored if h == best_hits]
+    priced = [c for c in tied if getattr(c, "price", None) and c.price > 0]
+    if priced:
+        med = statistics.median([c.price for c in priced])
+        return min(priced, key=lambda c: abs(c.price - med)).parent_asin
+    return tied[0].parent_asin
 
 # Singleton state (rempli au lifespan startup, consommé par les endpoints)
 APP_STATE: dict[str, Any] = {
