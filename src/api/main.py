@@ -33,6 +33,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 import time
 from contextlib import asynccontextmanager
 from typing import Any
@@ -77,6 +78,36 @@ log = logging.getLogger(__name__)
 # Logger structuré (structlog) pour les événements MÉTIER inspectables (issue réelle + timings LLM),
 # au-delà des métriques HTTP Prometheus (C14.2) : on veut LIRE ce que fait chaque requête.
 obs_log = get_logger("rakuten.api")
+
+# Mots non discriminants du texte vendeur (état/couleur/génériques) → exclus du match d'autorité.
+_SELLER_STOPWORDS = frozenset({
+    "neuf", "occasion", "tres", "bon", "etat", "avec", "sans", "pour", "the", "and", "les", "des",
+    "noir", "noire", "blanc", "blanche", "gris", "grise", "rouge", "bleu", "bleue", "vert",
+    "comme", "parfait", "tbe", "complet", "complete", "vends", "vendre",
+})
+
+
+def _seller_text_best_match(text: str, candidates: list) -> str:
+    """Texte vendeur AUTORITAIRE : s'il nomme un produit présent dans les candidats, renvoie son
+    parent_asin (déterministe, indépendant du LLM qui ignore parfois la consigne).
+
+    Match fort exigé : ≥ 2 tokens discriminants du texte présents dans le titre candidat ET ≥ 50 %
+    des tokens du texte couverts. Renvoie "" si pas de texte exploitable / pas de match fort.
+    """
+    toks = {
+        t
+        for t in re.split(r"[^a-z0-9]+", (text or "").lower())
+        if len(t) >= 2 and t not in _SELLER_STOPWORDS
+    }
+    if len(toks) < 2:
+        return ""
+    best_asin, best_hits = "", 0
+    for c in candidates:
+        title = (c.title or "").lower()
+        hits = sum(1 for t in toks if t in title)
+        if hits > best_hits:
+            best_asin, best_hits = c.parent_asin, hits
+    return best_asin if best_hits >= 2 and best_hits / len(toks) >= 0.5 else ""
 
 # Singleton state (rempli au lifespan startup, consommé par les endpoints)
 APP_STATE: dict[str, Any] = {
@@ -317,10 +348,13 @@ async def identify(
             reason_identify, r_paths, candidates[:15], observed, req.text_hint
         )
         reason_ms = round((time.perf_counter() - _t0) * 1000, 1)
-    if ri is not None and ri.chosen_parent_asin:
-        idx = next(
-            (i for i, c in enumerate(candidates) if c.parent_asin == ri.chosen_parent_asin), -1
-        )
+    # Le texte vendeur fait FOI s'il nomme un produit présent dans les candidats (déterministe,
+    # indépendant du LLM rapide qui ignore parfois la consigne) ; sinon on suit le choix de la passe
+    # raisonnée. Le candidat retenu remonte en tête → fiche/prix/validation portent dessus.
+    seller_asin = _seller_text_best_match(req.text_hint, candidates)
+    final_asin = seller_asin or (ri.chosen_parent_asin if ri is not None else "")
+    if final_asin:
+        idx = next((i for i, c in enumerate(candidates) if c.parent_asin == final_asin), -1)
         if idx > 0:
             candidates = [candidates[idx], *candidates[:idx], *candidates[idx + 1 :]]
 
@@ -406,45 +440,58 @@ async def identify(
             }
             relevant = [f for f in expected if f in present]
             expected = relevant or expected  # garde-fou : si rien ne matche, on garde le schéma macro
-        # Fiabilité : score retrieval élevé OU candidat choisi par la passe raisonnée (confiant).
-        # En catalog-miss, le candidat catalogue n'EST PAS le produit → ses specs ne sont pas des
-        # faits (on s'appuie sur l'observé + le typique, pas sur le mauvais catalogue).
-        catalog_miss = ri is not None and ri.catalog_miss
-        # family_confidence = confiance dans la FAMILLE, pas dans la variante exacte. Si l'IA pose
-        # une question discriminante (ask_question), la variante est incertaine → on ne traite pas
-        # les specs catalogue comme des faits sûrs (elles resteront « typique-à-vérifier ».)
-        match_reliable = not catalog_miss and (
-            top1.score >= 0.60
-            or (
-                ri is not None
-                and ri.chosen_parent_asin == top1.parent_asin
-                and ri.family_confidence >= 0.70
-                and not ri.ask_question
+        # OVERRIDE VENDEUR : le vendeur a nommé ce produit (≠ perception VLM/raisonné, souvent
+        # mal perçu) → on bâtit la fiche sur SA fiche catalogue (fiable), en IGNORANT l'extraction
+        # et le raisonné qui portaient sur un autre produit. Sinon : logique normale.
+        seller_override = bool(
+            seller_asin
+            and top1.parent_asin == seller_asin
+            and (ri is None or ri.chosen_parent_asin != seller_asin)
+        )
+        if seller_override:
+            catalog_miss = False
+            match_reliable = True  # le vendeur a explicitement confirmé ce produit
+            display_leaf = top1.category_fine or result.predicted_category_fine
+            observed_listing = {}  # l'« observé » VLM concernait le mauvais produit → écarté
+            match_listing = dict(top1.attributes)
+        else:
+            # Fiabilité : score retrieval élevé OU candidat choisi par la passe raisonnée (confiant).
+            # En catalog-miss, le candidat catalogue n'EST PAS le produit → ses specs ne sont pas des
+            # faits (on s'appuie sur l'observé + le typique, pas sur le mauvais catalogue).
+            catalog_miss = ri is not None and ri.catalog_miss
+            # family_confidence = confiance FAMILLE, pas variante. Si l'IA pose une question
+            # discriminante (ask_question), la variante est incertaine → specs « à vérifier ».
+            match_reliable = not catalog_miss and (
+                top1.score >= 0.60
+                or (
+                    ri is not None
+                    and ri.chosen_parent_asin == top1.parent_asin
+                    and ri.family_confidence >= 0.70
+                    and not ri.ask_question
+                )
             )
-        )
-        # « Type de produit » = catégorie du produit IDENTIFIÉ. Si la passe raisonnée a réordonné
-        # sur ce candidat, on prend SA catégorie fine (le vote pondéré peut être pollué par des
-        # accessoires : ex. une coque ferait afficher « Basic Cases » pour un iPhone).
-        reordered = ri is not None and ri.chosen_parent_asin == top1.parent_asin
-        display_leaf = (
-            top1.category_fine
-            if reordered and top1.category_fine
-            else (result.predicted_category_fine or top1.category_fine)
-        )
-        # Enrichit la fiche avec les facettes JUGÉES par l'IA → on génère TOUTES les données
-        # structurées disponibles : source « observed » (lue sur la photo) → observé ; source =
-        # index d'une fiche RÉELLE → catalogue ; « analogy » (estimé, non vérifié) → NON injecté
-        # comme fait (anti-invention).
-        observed_listing = dict(observed)
-        match_listing = dict(top1.attributes)
-        if ri is not None:
-            for f in ri.facets:
-                if not f.value:
-                    continue
-                if f.source == "observed":
-                    observed_listing[f.key] = f.value
-                elif f.source.isdigit():
-                    match_listing.setdefault(f.key, f.value)
+            # « Type de produit » = catégorie du produit IDENTIFIÉ (réordonné), pas le vote pollué.
+            reordered = ri is not None and ri.chosen_parent_asin == top1.parent_asin
+            display_leaf = (
+                top1.category_fine
+                if reordered and top1.category_fine
+                else (result.predicted_category_fine or top1.category_fine)
+            )
+            # Facettes JUGÉES par l'IA → génère TOUTES les données structurées : « observed » (photo)
+            # → observé ; index d'une fiche RÉELLE → catalogue (seulement si la passe concerne CE
+            # produit) ; « analogy » (estimé) → NON injecté comme fait (anti-invention).
+            observed_listing = dict(observed)
+            match_listing = dict(top1.attributes)
+            if ri is not None:
+                reasoned_for_top1 = ri.chosen_parent_asin == top1.parent_asin
+                for f in ri.facets:
+                    if not f.value:
+                        continue
+                    if f.source == "observed":
+                        observed_listing[f.key] = f.value  # lu sur la photo → produit réel, valide
+                    elif f.source.isdigit() and reasoned_for_top1:
+                        # facette d'une fiche RÉELLE : seulement si la passe concerne CE produit
+                        match_listing.setdefault(f.key, f.value)
         assembled = assemble_listing(
             category_leaf=display_leaf,
             category_confidence=result.predicted_category_confidence,

@@ -96,18 +96,15 @@ export function checklistToText(answers: Record<string, string>): string {
  * (ex. carte graphique, audio) → seules les questions universelles s'appliquent. */
 export function kindFromCategory(macro: string, fine: string): ProductKind | null {
   const f = (fine || "").toLowerCase();
-  if (/laptop|notebook/.test(f)) return "laptop";
-  if (/camera|dslr|mirrorless|camcorder/.test(f)) return "camera";
-  if (/phone|tablet|smartphone/.test(f)) return "phone";
-  if (/console/.test(f)) return "console";
-  switch (macro) {
-    case "Cell_Phones_and_Accessories":
-      return "phone";
-    case "Video_Games":
-      return "console";
-    case "Tools_and_Home_Improvement":
-      return "tool";
-    default:
-      return null; // Electronics non spécifique (GPU, audio…) → universel seulement
-  }
+  // Accessoires (chargeur, coque, câble, écouteurs/casque…) → AUCUNE checklist de type dédiée
+  // (ses questions « batterie/écran » n'ont pas de sens) → universel seulement.
+  const accessory = /charger|case|cover|cable|screen protector|adapter|strap|earbud|headphone|accessor/.test(f);
+  // Patterns sur MOT ENTIER (évite « headphones » qui contient « phone », « chargers » sous Cell_Phones).
+  if (/laptop|notebook|macbook/.test(f)) return "laptop";
+  if (/\bcamera\b|dslr|mirrorless|camcorder/.test(f)) return "camera";
+  if (/console|playstation|xbox|nintendo|\bwii\b/.test(f)) return "console";
+  if (!accessory && /\b(smartphones?|cell ?phones?|mobile ?phones?|tablets?)\b/.test(f)) return "phone";
+  if (!accessory && (macro === "Tools_and_Home_Improvement" || /\b(drills?|drivers?|saw|sander|grinder)\b/.test(f)))
+    return "tool";
+  return null; // audio, GPU, etc. → universel seulement (pas de questions de type pertinentes)
 }
