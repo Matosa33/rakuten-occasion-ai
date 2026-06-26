@@ -394,6 +394,18 @@ async def identify(
     informations_cles = None
     if top1 is not None:
         expected = APP_STATE.get("expected_facets", {}).get(top1.category)
+        # Complétude PAR CATÉGORIE FINE : on ne garde du schéma macro que les facettes réellement
+        # pertinentes pour cette catégorie fine (présentes chez ≥1 candidat de même catégorie fine)
+        # → on ne pénalise pas une enceinte pour l'absence de « capacité ».
+        if expected and top1.category_fine:
+            present = {
+                k
+                for c in candidates
+                if c.category_fine == top1.category_fine
+                for k in (c.attributes or {})
+            }
+            relevant = [f for f in expected if f in present]
+            expected = relevant or expected  # garde-fou : si rien ne matche, on garde le schéma macro
         # Fiabilité : score retrieval élevé OU candidat choisi par la passe raisonnée (confiant).
         # En catalog-miss, le candidat catalogue n'EST PAS le produit → ses specs ne sont pas des
         # faits (on s'appuie sur l'observé + le typique, pas sur le mauvais catalogue).
@@ -419,21 +431,28 @@ async def identify(
             if reordered and top1.category_fine
             else (result.predicted_category_fine or top1.category_fine)
         )
-        # Enrichit l'observé avec les facettes JUGÉES par l'IA (source « observed » = lues sur la
-        # photo) → la fiche génère TOUTES les données structurées disponibles (form_factor, etc.).
+        # Enrichit la fiche avec les facettes JUGÉES par l'IA → on génère TOUTES les données
+        # structurées disponibles : source « observed » (lue sur la photo) → observé ; source =
+        # index d'une fiche RÉELLE → catalogue ; « analogy » (estimé, non vérifié) → NON injecté
+        # comme fait (anti-invention).
         observed_listing = dict(observed)
+        match_listing = dict(top1.attributes)
         if ri is not None:
             for f in ri.facets:
-                if f.source == "observed" and f.value:
+                if not f.value:
+                    continue
+                if f.source == "observed":
                     observed_listing[f.key] = f.value
+                elif f.source.isdigit():
+                    match_listing.setdefault(f.key, f.value)
         assembled = assemble_listing(
             category_leaf=display_leaf,
             category_confidence=result.predicted_category_confidence,
             condition_label="",  # l'état (checklist vendeur) est ajouté côté front
-            photo_attributes=observed_listing,  # observé VLM + facettes jugées par l'IA
+            photo_attributes=observed_listing,  # observé VLM + facettes IA lues sur la photo
             seller_metadata=req.text_hint,
             match_brand=top1.brand,
-            match_attributes=top1.attributes,
+            match_attributes=match_listing,  # catalogue top-1 + facettes IA sourcées d'une fiche
             match_reliable=match_reliable,
             expected_facets=expected,
         )
