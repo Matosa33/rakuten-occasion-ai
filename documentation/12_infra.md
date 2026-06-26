@@ -81,10 +81,10 @@ Quatre fichiers de construction (les Dockerfiles) sont rangés dans `infra/docke
 
 | Image | Fichier | Construction exacte |
 |---|---|---|
-| Serveur applicatif (API) | `infra/docker/Dockerfile.api` | Multi-étapes sur la base `python:3.12-slim` : une étape `builder` installe tout dans un environnement virtuel isolé, une étape `runtime` ne reprend que cet environnement plus l'outil `curl`. La version processeur de la bibliothèque de calcul PyTorch est imposée explicitement, pour éviter de télécharger la variante carte graphique (environ 3 Go inutiles sur une machine sans GPU). |
+| Serveur applicatif (API) | `infra/docker/Dockerfile.api` | Multi-étapes sur la base `python:3.12-slim` : une étape `builder` installe tout dans un environnement virtuel isolé, une étape `runtime` ne reprend que cet environnement plus l'outil `curl`. La version processeur de la bibliothèque de calcul PyTorch est imposée explicitement, pour éviter de télécharger la variante carte graphique (environ 3 Go inutiles sur une machine sans GPU). Depuis le durcissement pré-production, l'image finale crée un utilisateur non privilégié (`appuser`, identifiant 1000) qui possède le dossier de travail, et le conteneur tourne sous ce compte (`USER appuser`) au lieu de root. |
 | Frontend (site web) | `infra/docker/Dockerfile.frontend` | Multi-étapes : l'étape `node:20-alpine` compile le site (commande `npm ci` puis `npm run build`), l'étape finale `nginx:1.27-alpine` sert les fichiers produits et redirige les appels vers l'API. |
 | Orchestrateur de ré-entraînement (Airflow) | `infra/docker/Dockerfile.airflow` | Part de l'image officielle `apache/airflow:2.10.5-python3.12`, ajoute `git`, puis installe le code du projet. Cet orchestrateur planifie les tâches de calcul mais n'utilise jamais la carte graphique. |
-| Serveur de suivi des modèles (MLflow) | `infra/docker/Dockerfile.mlflow` | Part de `python:3.12-slim` et installe MLflow en version 3.x, plus les pilotes pour parler à la base PostgreSQL et au stockage de fichiers. La version 3.x est imposée pour rester alignée avec le client : un serveur en version 2.x renverrait une erreur sur la nouvelle façon d'enregistrer les modèles. |
+| Serveur de suivi des modèles (MLflow) | `infra/docker/Dockerfile.mlflow` | Part de `python:3.12-slim` et installe MLflow en version 3.x, plus les pilotes pour parler à la base PostgreSQL et au stockage de fichiers. La version 3.x est imposée pour rester alignée avec le client : un serveur en version 2.x renverrait une erreur sur la nouvelle façon d'enregistrer les modèles. Comme l'image de l'API, cette image crée et utilise un compte non privilégié (`mlflow`, identifiant 1000) plutôt que root. |
 
 Le serveur applicatif et le site web n'embarquent que la version processeur des
 bibliothèques, sans rien de lié à la carte graphique. C'est un choix assumé : la promesse de
@@ -252,17 +252,25 @@ cluster).
 
 ### Limites assumées
 
-- Les conteneurs tournent sous le compte administrateur interne (root). Le passage à un compte
-  non privilégié est une amélioration prévue après cette première version.
+- Le compte non root est désormais appliqué pour les images du serveur applicatif (`appuser`)
+  et du serveur de suivi MLflow (`mlflow`), et l'image d'Airflow tournait déjà sous son compte
+  `airflow` dédié (durcissement pré-production). Reste une exception assumée et différée : le
+  site web (nginx) tourne encore sous root. Le passage du frontend à un compte non privilégié
+  est planifié comme suite de ce durcissement.
 - Le déploiement Kubernetes se fait sur un cluster local kind : il prouve l'architecture, mais
   ce n'est pas un vrai cluster cloud, et l'autoscaler n'a donc pas été éprouvé par de vrais
   tests de charge.
 - Les secrets fournis sont des valeurs de démonstration (par exemple le couple
   `minioadmin`/`minioadmin`), à remplacer impérativement en production. Le garde-fou évoqué
   plus haut empêche déjà un démarrage en production sans secrets réels.
-- Les images ne sont ni signées ni passées au scanner de vulnérabilités. Signer une image
-  prouve son origine, et la scanner détecte les failles connues de ses composants : ces deux
-  étapes restent à ajouter dans la chaîne d'intégration et de livraison automatisée.
+- Les images sont désormais passées au scanner de vulnérabilités, mais pas encore signées.
+  Lors de la publication des images vers l'entrepôt distant (le dépôt d'images GitHub), un
+  scanner épinglé (Trivy en version figée) inspecte chaque image publiée et met en lumière les
+  failles connues de gravité haute et critique. Ce contrôle est pour l'instant volontairement
+  non bloquant : il rend les vulnérabilités visibles avant de durcir la règle (la rendre
+  bloquante reste à faire). La signature des images, qui prouve leur origine, n'est pas encore
+  branchée : c'est l'étape suivante à ajouter dans la chaîne d'intégration et de livraison
+  automatisée.
 
 ---
 

@@ -5,6 +5,15 @@
 > de documenter chaque modèle utilisé. Un modèle dont personne ne peut expliquer le comportement
 > n'est pas acceptable quand il s'adresse à un particulier qui revend un objet.
 
+> Note d'organisation. Ce document couvre **deux niveaux** d'explicabilité, complémentaires et de
+> natures différentes. Le premier, **hors ligne** (sections 1 à 5), produit des rapports une fois
+> pour toutes pour la gouvernance : SHAP, t-SNE et fiches modèle. Le second, **en direct dans la
+> fiche d'annonce** (section 7, ajoutée au Cycle 36), expose au vendeur, requête par requête, la
+> **provenance de chaque champ**, l'**étiquette « estimé par IA »** sur le prix concerné et un
+> **signal de confiance / drapeau** quand le modèle exact reste à confirmer. Cette seconde partie
+> répond exactement à la limite que l'ancienne version de ce document signalait (« pas d'explication
+> par prédiction en direct ») : elle existe désormais et fait partie intégrante de l'interface.
+
 ---
 
 ## 1. La technologie : de quoi parle-t-on ?
@@ -126,8 +135,18 @@ Les quatre modèles externes réutilisés :
 |---|---|---|---|
 | siglip_v1 | SigLIP base ViT-B/16, gelé, 768 dimensions | google/siglip-base-patch16-224 | Transformer une image en embedding (liste de 768 nombres) |
 | arctic_v1 | Snowflake Arctic Embed L v2, gelé, 1024 dimensions, multilingue | Snowflake/snowflake-arctic-embed-l-v2.0 | Transformer un texte en embedding (liste de 1024 nombres) |
-| vlm-validator_v1 | Modèle vision-langage de pointe (Gemini 2.0 Flash via OpenRouter) | google/gemini-2.0-flash-exp | Valider qu'une image vendeur correspond bien à un candidat trouvé |
-| llm-writer_v1 | Grand modèle de langage rédacteur (Gemini Flash via OpenRouter) | google/gemini-2.0-flash-exp | Rédiger un titre et une description d'annonce |
+| vlm-validator_v1 | Modèle vision-langage de pointe via OpenRouter | OpenRouter (source fixée dans la fiche générée) | Valider qu'une image vendeur correspond bien à un candidat trouvé |
+| llm-writer_v1 | Grand modèle de langage rédacteur via OpenRouter | OpenRouter (source fixée dans la fiche générée) | Rédiger un titre et une description d'annonce |
+
+> Avertissement de cohérence à connaître pour la défense. Le générateur de fiches modèle
+> (`src/explain/01_shap_tsne_modelcards.py`) inscrit encore `google/gemini-2.0-flash-exp` comme
+> source pour `vlm-validator_v1` et `llm-writer_v1`. Or le **modèle réellement appelé en production**
+> par le pipeline photo a changé : le VLM par défaut est désormais `qwen/qwen3.5-flash-02-23`
+> (variable d'environnement `PHOTO_VLM_MODEL` dans `src/vlm/photo_extraction.py`, réutilisée par la
+> passe d'identification raisonnée via `PHOTO_VLM_IDENTIFY_MODEL`). Les fiches modèle décrivent donc
+> la **famille** « VLM/LLM de pointe via OpenRouter » correctement, mais la valeur exacte écrite dans
+> la fiche est en retard sur le code d'exécution. Ce point est à corriger dans le générateur de fiches
+> pour que la traçabilité reste exacte ; il est signalé ici en toute transparence.
 
 Précisions sur ces modèles externes :
 
@@ -219,10 +238,13 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
   *représentatif* à base d'arbres, et non directement le modèle de voisinage finalement servi. Ce
   dernier s'explique d'ailleurs naturellement autrement : en montrant ses voisins, ce que fait déjà
   la recherche de produits similaires. Ce point mérite d'être clarifié à l'oral.
-- Pas d'explication par prédiction *en direct*. Le vendeur voit les candidats, leurs scores et le
-  verdict du modèle vision-langage, mais pas une décomposition SHAP au moment de la requête.
-  L'explicabilité est donc produite hors ligne, sous forme de rapports, et n'est pas intégrée à
-  l'interface utilisateur.
+- Pas de décomposition SHAP *en direct*. Le vendeur ne voit pas, au moment de la requête, une
+  attribution chiffrée par variable d'embedding. SHAP reste un livrable hors ligne. **En revanche**,
+  une explicabilité en direct d'une autre nature existe désormais et est pleinement intégrée à
+  l'interface (Cycle 36) : la provenance de chaque champ, l'étiquette « prix neuf estimé par IA » et
+  le drapeau « modèle à confirmer ». Elle est décrite en détail à la section 7. Autrement dit, la
+  décomposition SHAP par prédiction manque toujours, mais l'affirmation « rien n'est expliqué en
+  direct » n'est plus vraie.
 - t-SNE sur un échantillon de 5000 points : suffisant pour visualiser, mais pas exhaustif. UMAP,
   qui préserve mieux la structure d'ensemble, serait un bon complément.
 - La visualisation t-SNE des images n'est pas encore implémentée : seule celle du texte est
@@ -230,7 +252,205 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
 
 ---
 
-## 6. Références
+## 7. Explicabilité en direct dans la fiche d'annonce (Cycle 36)
+
+Cette section décrit la part de l'explicabilité qui n'est **pas** un rapport hors ligne, mais qui
+s'affiche au vendeur, requête par requête, au moment où il prépare son annonce. Elle a été ajoutée
+au Cycle 36 et repose sur un principe simple : **chaque information montrée doit dire d'où elle
+vient, et tout ce qui est deviné par l'IA doit être affiché comme tel, jamais comme un fait**. C'est
+la traduction concrète, côté produit, de la règle « ancré avant génératif » du projet : on s'appuie
+en priorité sur la connaissance réelle (le catalogue, la photo, le texte du vendeur) et on étiquette
+honnêtement ce qui relève d'une estimation.
+
+### 7.1 La provenance par champ : chaque ligne de la fiche dit d'où elle vient
+
+Le cœur de cette explicabilité est la **provenance**, c'est-à-dire l'origine de chaque champ de la
+fiche structurée (« Marque », « Capacité », « Type de produit »…). Le module pur
+`src/serving/listing_fill.py` (fonction `assemble_listing`) attache à chaque champ une étiquette de
+source, et l'interface (`frontend/src/components/MarketplaceListing.tsx`) l'affiche sous forme d'un
+petit badge coloré à côté du nom du champ. Le but est qu'un vendeur particulier comprenne d'un coup
+d'œil ce qui a été **lu sur sa photo**, ce qui vient du **catalogue**, et ce qui n'est qu'une
+valeur **typique à vérifier**.
+
+Il existe exactement **cinq provenances**, définies dans le code comme des constantes lisibles :
+
+| Provenance (libellé affiché) | Constante (code) | Signification | Fiabilité |
+|---|---|---|---|
+| observé | `SRC_OBSERVED` | Lu directement sur la photo du vendeur par le modèle vision-langage | La plus fiable pour *cet* objet précis |
+| catalogue | `SRC_CATALOG` | Spécification du produit catalogue correctement apparié | Fiable **si** le match est correct |
+| typique-à-vérifier | `SRC_TYPICAL` | Valeur imputée à partir des produits voisins, **non affirmée comme certaine** | À confirmer par le vendeur |
+| catégorie | `SRC_CATEGORY` | Déduit de la catégorie votée (par ex. le « Type de produit ») | Indicatif |
+| vendeur | `SRC_SELLER` | Saisi ou choisi par le vendeur lui-même (état, année d'achat) | Donnée fournie par l'humain |
+
+L'ordre de priorité quand plusieurs sources pourraient renseigner un même champ est volontaire et
+documenté dans `value_with_source` : **observé (photo) d'abord, puis catalogue (si le match est
+fiable), puis typique à vérifier**. La logique sous-jacente est qu'une information vue sur l'objet
+réel l'emporte toujours sur une information déduite d'un produit ressemblant. Point crucial pour
+l'anti-invention : si le match catalogue **n'est pas** jugé fiable (score sous le seuil de 0,60),
+une spécification issue du candidat n'est jamais présentée comme « catalogue » mais comme
+« typique-à-vérifier ». On ne fait jamais passer une supposition pour un fait.
+
+Cette discipline est renforcée par le cas du **catalog-miss** (le produit n'est pas, ou mal, présent
+au catalogue). Dans ce cas, le pipeline (`src/api/main.py`, endpoint `/identify`) ne traite **pas**
+les spécifications du candidat le plus proche comme des faits : la fiche est alors bâtie sur
+l'observé (photo) plus la catégorie, et le vendeur voit un bandeau d'avertissement (détaillé plus
+bas). On évite ainsi l'erreur grossière qui consiste à habiller un objet avec les caractéristiques
+d'un sosie d'une autre génération.
+
+Le champ `visible_text` (texte brut lu par OCR, souvent un titre recopié ou un filigrane de type
+« leboncoin ») est **délibérément exclu** de l'affichage : c'est du bruit, pas une caractéristique
+produit.
+
+### 7.2 Les facettes sourcées de la passe d'identification raisonnée
+
+Au-delà des champs venant directement de la photo ou du catalogue, le Cycle 36 introduit une **passe
+d'identification raisonnée** (`src/vlm/reasoned_identification.py`). Le principe de répartition des
+rôles est important pour l'explicabilité : **le retriever apporte la connaissance** (les 15
+candidats catalogue réels les plus proches) et **le modèle vision-langage apporte le jugement** (il
+choisit, à partir des photos du vendeur et des 15 fiches résumées en texte, quel candidat correspond
+le mieux et quelles caractéristiques retenir). Un seul appel à l'API OpenRouter est effectué, en mode
+déterministe (température 0, graine fixe, raisonnement désactivé) pour que le même cas redonne le
+même résultat.
+
+Chaque caractéristique (« facette ») que ce modèle produit **doit obligatoirement citer sa source**,
+sous l'une de trois formes contrôlées par le code (`SourcedFacet`) :
+
+- un **entier** qui est l'index d'une fiche candidate réelle → la facette est rattachée au
+  **catalogue** réel et reste vérifiable (on sait quelle fiche l'a fournie) ;
+- la chaîne **`observed`** → la caractéristique a été **vue sur la photo** du vendeur ;
+- la chaîne **`analogy`** → la caractéristique est **estimée par analogie** avec des produits
+  comparables lorsque le produit exact manque ; elle est traitée comme une **estimation, jamais comme
+  un fait**.
+
+Le garde-fou correspondant est strict et codé dans `_parse` : une facette dont la source est
+invalide (ni `observed`, ni `analogy`, ni un index de candidat valide) est **purement et simplement
+jetée**. Le système refuse donc d'afficher une caractéristique qu'il ne peut pas raccrocher à une
+origine. Quand la fiche finale est assemblée (dans `/identify`), seules les facettes de source
+`observed` (rattachées à l'objet réel) et celles dont l'index pointe une fiche réelle **du produit
+effectivement retenu** sont injectées comme données ; les facettes `analogy` ne sont pas injectées
+comme faits, conformément à l'anti-invention.
+
+### 7.3 L'étiquette « estimé par IA » sur le prix concerné
+
+Le prix suggéré suit une cascade à cinq niveaux (`src/pricing/01_algorithmique.py`,
+détaillée dans la documentation pricing) dont chaque niveau est **transparent** : la décote selon
+l'état et la dépréciation selon l'âge sont **100 % déterministes** (de simples multiplications
+documentées), il n'y a aucun modèle de prix opaque. Le seul élément qui peut être une **estimation
+de l'IA** est, le cas échéant, l'**ancre de prix neuf** du niveau **L1.5**.
+
+C'est précisément ce niveau, et lui seul, qui porte une étiquette honnête. Dans l'interface
+(`MarketplaceListing.tsx`), le libellé de confiance du prix vaut :
+
+- `L1` → « Confiance élevée (prix catalogue) » : le prix part d'un **prix catalogue réel** ;
+- `L1.5` → « **Prix neuf estimé par IA** » : le prix part d'une **ancre estimée par l'IA**, puis
+  décotée de façon déterministe ;
+- `L2` → « Confiance moyenne (produits similaires) » ;
+- `L3` → « Estimation par catégorie » ;
+- `L4` → fiche sans prix calculable, l'interface affiche « **Prix à fixer (saisie manuelle)** » au
+  lieu d'un trompeur « 0,00 € ».
+
+L'idée directrice est qu'on ne masque jamais le fait qu'un prix repose sur une estimation : si l'IA
+a fourni l'ancre, le vendeur le lit en toutes lettres. Et même au niveau L1.5, la part « estimée »
+se limite à l'ancre du prix neuf ; toute la mécanique de décote reste vérifiable à la main, ce qui
+préserve la promesse « pas de pricing ML opaque ». Le texte d'explication renvoyé avec le prix
+indique d'ailleurs explicitement « Prix neuf estimé par IA : … $, dépréciation …/an sur … an(s),
+ajustement … ». Quand le vendeur n'a pas saisi d'année d'achat, l'interface signale aussi en clair
+que l'âge est **supposé à 2 ans** et invite à le préciser pour affiner ; l'hypothèse n'est jamais
+silencieuse.
+
+### 7.4 Le signal de confiance et le drapeau « modèle à confirmer »
+
+Le dernier pilier de l'explicabilité en direct est un **signal de confiance** assorti, si besoin,
+d'un **drapeau actionnable**. Deux mécanismes coexistent et il faut bien les distinguer car ils ne
+mesurent pas la même chose.
+
+**Le pourcentage de confiance affiché** correspond à la part du **vote des k plus proches voisins
+sur la catégorie fine** (le classifieur champion du projet). L'interface ne l'affiche **que s'il est
+net**, c'est-à-dire supérieur ou égal à **60 %** (`idConfident` dans `MarketplaceListing.tsx`). Le
+raisonnement est subtil mais honnête : un pourcentage bas ne veut pas dire « ce n'est sans doute pas
+un casque » ; il reflète le plus souvent une **fragmentation du vote** entre plusieurs modèles très
+proches (la catégorie est sûre, mais le **produit exact** est ambigu, par exemple un casque dont le
+vote se disperse à 34 %). Afficher « 34 % de confiance » serait alors trompeur. On préfère donc, dans
+ce cas, **ne pas montrer un chiffre trompeur** et porter l'incertitude par un bandeau explicite.
+
+**Le drapeau « Modèle à confirmer »** s'affiche quand l'identification du produit exact est jugée
+incertaine, soit parce que le vote est fragmenté (pourcentage sous 60 %), soit parce que la passe
+raisonnée a estimé qu'une **question discriminante** était nécessaire (`ask_question`). Le bandeau
+est **actionnable** : il reprend, si elle existe, la question précise formulée par l'IA
+(`facet_question`, par exemple sur la capacité ou la variante exacte) ; sinon, il invite le vendeur à
+préciser le nom du modèle ou à ajouter une photo de l'étiquette ou de la boîte. C'est de
+l'explicabilité utile : on dit au vendeur **pourquoi** on doute et **comment** lever le doute.
+
+À côté de ce drapeau, le **bandeau catalog-miss** (« Produit *estimé* … — absent du catalogue. Prix
+et caractéristiques à vérifier. ») prévient quand le produit n'a pas été retrouvé au catalogue et que
+la fiche est donc une estimation d'ensemble, pas une recopie de fiche existante.
+
+Enfin, le parcours vendeur tire parti de ces signaux pour décider quoi montrer : si l'IA est sûre
+(statut `identified`), on enchaîne directement vers la fiche ; sinon on présente les candidats. Dans
+tous les cas, un bouton « **Ce n'est pas le bon produit ? Voir les autres résultats** » reste
+disponible sur la fiche : le dernier mot revient toujours à l'humain.
+
+### 7.5 Observabilité métier : on peut relire ce que le pipeline a vraiment fait
+
+L'explicabilité ne s'arrête pas à l'écran du vendeur : côté exploitation, le pipeline émet des
+**logs structurés** (via `structlog`, dans `src/api/main.py`) qui rendent chaque décision
+inspectable a posteriori, en complément des métriques HTTP Prometheus déjà en place. Deux événements
+métier sont journalisés :
+
+- `identify_done` : statut, nombre de candidats, score du top-1, catégorie fine et sa confiance,
+  présence et résultat de la passe raisonnée (`reasoned`, `reordered`, `catalog_miss`,
+  `anchor_usd`, `ask_question`, `family_conf`), complétude de la fiche, et les temps des appels
+  (`extraction_ms`, `reason_ms`) ;
+- `price_done` : niveau de cascade réellement utilisé, méthode, prix suggéré, présence d'une ancre
+  IA (`has_anchor`), catégorie et état.
+
+L'intérêt est concret et non décoratif : on peut **lire** le taux de catalog-miss, la fréquence
+d'usage du niveau L1.5, ou repérer où part la latence, plutôt que de raisonner sur des impressions.
+
+### 7.6 Ce que mesure l'évaluation de qualité de fiche
+
+Pour ne pas se contenter d'anecdotes (doctrine « mesurer sur de vraies sorties »), un protocole
+reproductible (`scripts/mesure_qualite_fiche.py`, sortie dans
+`reports/09_fiche_quality/mesure_fiche.{json,md}`) fait passer le **panel réel** de photos
+(`data/photos_eval/`, où le nom de chaque dossier sert de vérité-terrain) par l'API, **photo seule**,
+sans précisions de texte. Les résultats mesurés confirment que cette explicabilité en direct repose
+sur un socle d'identification solide :
+
+- **Taux d'identification : 90,3 %** (au moins 50 % des tokens clés du nom de produit retrouvés dans
+  la famille jugée par l'IA et le titre du top-1), avec un **rappel moyen de 78 %** ;
+- **Complétude de la fiche : 0,84 en moyenne** et **0,83 en médiane** ;
+- **Passe raisonnée présente : 100 %** ; **catalog-miss : 28 %** ; **question discriminante posée :
+  11 %** ;
+- **Niveaux de prix** sur le panel : **L1 = 42** (prix catalogue réel) et **L1.5 = 51** (ancre
+  estimée par IA).
+
+Les **9 produits non identifiés** sont tous expliqués (limite de perception du modèle sur des
+produits sans marquage visible, catalog-miss légitime, ou nom de dossier ambigu, qui est un artefact
+de mesure). Cette transparence sur les échecs fait partie de l'explicabilité : on documente non
+seulement quand le système réussit, mais aussi **pourquoi** il échoue quand il échoue.
+
+### 7.7 Limites honnêtes de cette explicabilité en direct
+
+Pour ne rien survendre :
+
+- **La photo seule limite la perception du modèle exact** quand l'objet ne porte pas de marquage
+  visible sur les clichés envoyés (par exemple un casque dont le logo est sur l'étui). Le modèle peut
+  alors choisir un sosie avec aplomb. C'est précisément pour cela que le drapeau « modèle à
+  confirmer » et le bouton « ce n'est pas le bon ? » existent : ils transforment une incertitude
+  silencieuse en une action explicite pour le vendeur. Le **texte vendeur** (quand il nomme le
+  produit) fait alors office de garde-fou déterminant : il est traité comme **autoritaire**
+  (`_seller_text_best_match`) et fixe le produit indépendamment du modèle rapide.
+- Le modèle rapide par défaut (`qwen/qwen3.5-flash-02-23`) **sous-déclenche** parfois le catalog-miss
+  (il s'accroche à un sosie d'une autre génération) ; un modèle jugé plus fort ferait mieux et reste
+  configurable par variable d'environnement, mais n'est pas câblé par défaut.
+- Toute cette passe raisonnée est **best-effort et non bloquante** : en cas d'absence de clé API, de
+  modèle indisponible ou de réponse inexploitable, le pipeline retombe simplement sur le classement
+  du retriever et la cascade de prix habituelle, sans jamais planter ni afficher une fiche vide. La
+  robustesse fait elle aussi partie de la confiance que l'on peut accorder au système.
+
+---
+
+## 8. Références
 
 - Lundberg et Lee, *A Unified Approach to Interpreting Model Predictions (SHAP)* :
   https://arxiv.org/abs/1705.07874
@@ -243,7 +463,11 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
 
 ### En une phrase, pour la défense
 
-« Nous expliquons nos modèles sur trois plans : SHAP indique quelles informations poussent vers une
-catégorie, t-SNE permet de voir que les catégories forment des groupes bien séparés (ce qui confirme
-visuellement notre score F1), et 12 fiches modèle documentent chaque brique et ses limites. Le
-principe est simple : un modèle inexplicable n'est pas acceptable face à un particulier. »
+« Nous expliquons nos modèles sur deux niveaux. Hors ligne, pour la gouvernance : SHAP indique
+quelles informations poussent vers une catégorie, t-SNE permet de voir que les catégories forment des
+groupes bien séparés (ce qui confirme visuellement notre score F1), et 12 fiches modèle documentent
+chaque brique et ses limites. En direct, dans la fiche d'annonce : chaque champ porte sa provenance
+parmi cinq sources, le prix qui repose sur une estimation est étiqueté « prix neuf estimé par IA »,
+et un drapeau « modèle à confirmer » dit au vendeur pourquoi on doute et comment lever le doute. Le
+principe est simple : un modèle inexplicable n'est pas acceptable face à un particulier, et tout ce
+qui est deviné doit être affiché comme tel, jamais comme un fait. »

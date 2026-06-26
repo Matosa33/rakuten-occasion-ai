@@ -114,7 +114,83 @@ bricolage (Tools_and_Home_Improvement).
   attendu.
 - **Température** : un réglage de la « créativité » du modèle de langage. Une
   valeur basse rend les réponses factuelles et peu inventives. Le projet utilise
-  la valeur 0,4, qui privilégie la fidélité aux faits.
+  la valeur 0,4 pour la rédaction des annonces, qui privilégie la fidélité aux
+  faits. Les tâches d'extraction et de jugement structuré (identification
+  raisonnée, voir plus bas) utilisent quant à elles la valeur 0, la plus
+  factuelle possible, complétée par une graine fixe (seed) et le raisonnement
+  désactivé pour que la même photo redonne toujours la même réponse.
+
+## Identification raisonnée (le retriever sait, le modèle juge)
+
+> Termes introduits par le cycle 36. L'idée centrale tient en une phrase : le
+> *retriever* (la recherche de produits similaires) apporte la **connaissance**
+> (les vrais produits du catalogue), et le modèle vision-langage apporte le
+> **jugement** (lequel correspond, à quel prix neuf). Le modèle ne peut jamais
+> inventer un produit hors de cette liste, ce qui le garde collé à la réalité.
+
+- **Identification raisonnée** : une étape supplémentaire qui, après la recherche
+  des produits similaires, demande à l'IA de *trancher* parmi les quinze
+  meilleurs candidats. En un seul appel, l'IA reçoit une ou deux photos du
+  vendeur plus les quinze fiches candidates **résumées en texte** (et non les
+  quinze images du catalogue, pour économiser les jetons et donc le coût) ; elle
+  renvoie la famille du produit, le candidat retenu, un éventuel signal d'absence
+  du produit au catalogue, un prix neuf de référence et, au besoin, une question
+  à poser au vendeur. C'est une étape **au mieux** (best-effort) : si la clé
+  d'API manque, si le modèle est indisponible ou si sa réponse est illisible,
+  l'étape renvoie « rien » et le reste du système continue avec le simple
+  classement de la recherche. Elle ne peut donc jamais faire planter l'assistant
+  ni produire une fiche vide.
+- **Grounding (ancrage) avant génération** : le principe selon lequel l'IA doit
+  fonder chaque affirmation sur un fait fourni (une fiche candidate réelle ou ce
+  qui est visible sur la photo) plutôt que sur ses connaissances générales.
+  Concrètement, plusieurs garde-fous appliquent cette règle après coup : si l'IA
+  choisit un produit qui n'est pas dans les quinze candidats, on l'ignore et on
+  retombe sur le premier résultat de la recherche, en remettant la confiance à
+  zéro (l'IA n'a pas réellement validé ce produit) ; une caractéristique dont la
+  source n'est pas vérifiable est jetée ; le prix neuf, lui, est conservé même
+  sans preuve directe, car il est clairement étiqueté comme une *estimation* et
+  non comme un fait.
+- **Réordonnancement (le bon produit en tête)** : une fois le candidat jugé le
+  plus pertinent désigné, il est remonté en première position de la liste. Tout
+  ce qui suit (la fiche, le prix, la vérification visuelle) porte alors sur le
+  **bon** produit. Sans cette correction, le premier résultat brut de la
+  recherche pouvait être un accessoire : par exemple une coque d'iPhone affichée
+  comme s'il s'agissait du téléphone lui-même.
+- **Catalog-miss (produit absent du catalogue)** : le cas où **aucun** des
+  candidats n'est réellement le produit photographié, y compris quand tous sont
+  un modèle, une génération ou une variante différente de ce que l'on voit (on
+  voit une « RTX 4080 » mais tous les candidats sont des « RTX 3080 », ou un
+  « iPhone 14 » alors que tous sont des « iPhone 13 »). Dans ce cas, l'IA décrit
+  le produit qu'elle voit *vraiment* et estime son prix par analogie avec les
+  comparables, sans traiter les caractéristiques du mauvais candidat comme des
+  faits. Côté vendeur, un bandeau signale honnêtement « produit estimé, absent du
+  catalogue ».
+- **Texte vendeur autoritaire** : une règle **déterministe** (sans IA) qui donne
+  le dernier mot au texte saisi par le vendeur. Si ses précisions nomment un
+  produit présent parmi les candidats, ce candidat est retenu, indépendamment du
+  modèle rapide qui ignore parfois cette consigne. Le match est exigeant : au
+  moins deux mots discriminants du texte présents dans le titre du candidat et au
+  moins la moitié des mots couverts, en gardant les numéros de modèle même à un
+  seul chiffre (pour distinguer « Momentum 3 » de « Momentum 2.0 »). En cas
+  d'égalité entre candidats, on retient celui dont le prix est le plus
+  représentatif (le plus proche de la médiane), pour ne pas bâtir la fiche sur
+  une donnée corrompue (un même « Momentum 3 » listé à 9 755 $ par erreur). Sur
+  un texte vide, la règle ne fait rien : aucun risque de régression.
+- **Question discriminante (poser une question, pas inventer)** : quand une seule
+  caractéristique manquante (la capacité, la couleur, la variante exacte) suffit
+  à changer le produit ou son prix, l'IA lève un signal et formule **une** courte
+  question destinée au vendeur, plutôt que de deviner. C'est le pendant écrit du
+  mécanisme Akinator, ici porté par le jugement de l'IA.
+- **Flag « Modèle à confirmer »** : un bandeau actionnable affiché quand
+  l'identification du *modèle exact* reste incertaine. Le pourcentage de
+  confiance montré au vendeur correspond à la part du vote des plus proches
+  voisins sur la catégorie fine ; il n'est affiché que s'il est net (au moins
+  60 %). Un pourcentage bas ne traduit pas un doute sur la *catégorie* mais une
+  *fragmentation* du vote (le produit exact est ambigu, par exemple un casque où
+  le vote se disperse à 34 %). Plutôt que d'afficher ce chiffre trompeur, on
+  invite alors le vendeur à préciser le modèle ou à ajouter une photo de
+  l'étiquette ou de la boîte, en reprenant la question discriminante de l'IA si
+  elle en a posé une.
 
 ## Modèles et mesures de qualité
 
@@ -146,6 +222,86 @@ bricolage (Tools_and_Home_Improvement).
 - **k-NN (k Nearest Neighbors, k plus proches voisins)** : prédire à partir des
   *k* exemples les plus ressemblants, les « comparables ». Pour le prix, le système
   regarde par exemple les dix produits les plus proches et prend leur prix médian.
+
+## Suggestion de prix (la cascade)
+
+> Le prix n'est pas produit par un modèle « boîte noire » mais par une cascade de
+> règles **déterministes** et lisibles, pour que le vendeur comprenne *pourquoi*
+> tel prix lui est suggéré. Le système descend les niveaux du plus fiable au
+> moins fiable et s'arrête au premier qui s'applique.
+
+- **Cascade de pricing (niveaux L1 à L4, plus L1.5)** : la suite ordonnée des
+  sources de prix.
+  - **L1 (confiance haute)** : on connaît le prix catalogue réel du produit
+    identifié. On applique une décote d'état puis une dépréciation liée à l'âge.
+  - **L1.5 (confiance haute-moyenne)** : on ne dispose pas du prix catalogue mais
+    l'IA a estimé un prix neuf de référence (l'« ancre IA », voir plus bas). On
+    applique exactement la **même** décote déterministe. Seule l'ancre est une
+    estimation ; la décote, elle, reste entièrement transparente. Ce niveau est
+    placé **avant** les médianes de voisins parce que celles-ci sont souvent
+    polluées (elles donnaient par exemple 6 € pour une montre qui en vaut 150).
+  - **L2 (confiance moyenne)** : prix médian des dix produits voisins, quand on
+    n'a ni catalogue ni ancre IA.
+  - **L3 (confiance basse)** : on ne connaît que la catégorie ; on prend son prix
+    médian.
+  - **L4 (confiance très basse)** : produit et catégorie inconnus ; aucun prix
+    n'est inventé. L'interface affiche « Prix à fixer (saisie manuelle) » plutôt
+    qu'un trompeur « 0,00 € ».
+- **Ancre IA (prix neuf de référence)** : le prix du produit **neuf**, estimé par
+  l'identification raisonnée à partir des prix neufs propres des candidats réels
+  (les accessoires et lots étant exclus du calcul). C'est cette ancre qui
+  alimente le niveau L1.5. Affichée honnêtement au vendeur comme « Prix neuf
+  estimé par IA », jamais comme un prix catalogue certain.
+- **Décote d'état (multiplicateur)** : le facteur appliqué au prix neuf selon
+  l'état déclaré : neuf 1,00 ; très bon état 0,75 ; bon état 0,55 ; correct
+  0,35 ; pour pièces / hors service 0,15. Ce dernier état (valeur résiduelle d'un
+  appareil HS) a été ajouté au cycle 36.
+- **Dépréciation par âge** : la perte de valeur annuelle selon la catégorie
+  (Electronics -15 %/an, téléphones -20 %/an, jeux vidéo -10 %/an, outillage
+  -5 %/an). Si le vendeur n'a pas renseigné l'année d'achat, un âge de deux ans
+  est supposé, et l'interface le signale.
+- **Garde-fous de pricing (cycle 36)** : trois protections contre les prix
+  absurdes. (a) **Anti sous-évaluation** : une médiane de voisins qui s'effondre
+  bien en dessous du prix neuf attendu décoté est relevée à un plancher. (b)
+  **Cohérence du niveau L1** : si le prix catalogue du premier candidat est
+  dérisoire face à l'ancre IA (signe d'un accessoire mal apparié, comme une coque
+  à 43 $ rangée sous un iPhone à près de 600 $), on l'ignore et on bascule sur
+  L1.5, ce qui évite d'afficher « iPhone à 15 € ». (c) **Prix catalogue
+  aberrant** : un prix catalogue très au-dessus de la médiane des voisins (par
+  exemple 9 755 $ pour un casque, faute de saisie) est traité comme une donnée
+  corrompue et ignoré.
+
+## Génération de la fiche (provenance et complétude)
+
+> Au-delà du prix, l'assistant remplit une fiche produit structurée. Chaque champ
+> porte sa **provenance** pour rester honnête, et la fiche se construit en cascade
+> selon ce que l'on sait réellement, sur le même esprit que la cascade de prix.
+
+- **Provenance d'un champ** : l'origine de chaque information affichée, en cinq
+  catégories. *Observé* : lu sur la photo (le plus fiable pour cet objet précis).
+  *Catalogue* : provient d'un produit du catalogue jugé correctement apparié.
+  *Typique-à-vérifier* : imputé des voisins, donc non affirmé comme certain.
+  *Catégorie* : déduit de la catégorie votée. *Vendeur* : saisi ou choisi par le
+  vendeur (l'état, l'année d'achat). En cas de catalog-miss, les specs du mauvais
+  candidat ne sont jamais présentées comme des faits.
+- **Cascade de complétude (niveaux N1 à N3)** : le niveau de remplissage de la
+  fiche. *N1_catalog* : match catalogue fiable, on dispose des specs du produit
+  réel. *N2_category_photo* : pas de match fiable mais catégorie sûre, on combine
+  photo, schéma de la catégorie et métadonnée vendeur. *N3_observed* : catégorie
+  incertaine, on s'appuie sur le seul observé et le vendeur complète.
+- **Complétude par catégorie fine** : la part des caractéristiques attendues qui
+  sont effectivement remplies. Le dénominateur n'est plus le schéma générique de
+  la macro-catégorie mais seulement les caractéristiques réellement pertinentes
+  pour la **catégorie fine** du produit (présentes chez au moins un candidat de
+  même catégorie fine). Une enceinte n'est ainsi plus pénalisée pour l'absence
+  d'une « capacité » qui n'a pas de sens pour elle. L'état, étant un choix du
+  vendeur toujours disponible, est exclu de ce calcul pour ne pas fausser le
+  score. Sur le panel réel de mesure, la complétude moyenne mesurée est de 0,84
+  (médiane 0,83).
+- **Type de produit (catégorie de l'identifié)** : le type affiché sur la fiche
+  est celui du produit finalement retenu (réordonné par l'identification
+  raisonnée), et non le résultat brut du vote des voisins, qui pouvait être
+  pollué (une coque faisait afficher « Basic Cases » pour un iPhone).
 
 ## MLOps : industrialiser les modèles
 
@@ -201,6 +357,18 @@ bricolage (Tools_and_Home_Improvement).
 - **structlog** : une bibliothèque qui écrit les journaux d'activité dans un
   format lisible par une machine (le format JSON, une structure clé-valeur)
   plutôt qu'en texte libre, ce qui facilite leur recherche et leur tri.
+- **Logs métier (observabilité du pipeline)** : en plus des mesures techniques
+  collectées par Prometheus, le système écrit, à chaque requête, des journaux
+  structurés qui racontent ce que le pipeline a réellement fait. Le journal
+  `identify_done` consigne par exemple l'issue de l'identification, le nombre de
+  candidats, le score du premier, la catégorie fine et sa confiance, le fait que
+  l'identification raisonnée a été utilisée, qu'il y a eu réordonnancement, un
+  catalog-miss, le prix neuf estimé, la question posée, la complétude et les temps
+  des appels d'IA ; le journal `price_done` consigne le niveau de cascade
+  réellement atteint, la méthode, le prix suggéré et la présence d'une ancre IA.
+  On peut ainsi *lire* directement le comportement du système (taux de
+  catalog-miss, usage du niveau L1.5, répartition de la latence) au lieu de s'en
+  remettre à des anecdotes.
 - **request_id (identifiant de requête)** : un identifiant unique attribué à
   chaque requête entrante. Il permet de retrouver tous les journaux d'une même
   requête, du début à la fin, même quand plusieurs requêtes se mêlent.

@@ -41,11 +41,11 @@ différé = volontairement reporté, avec une raison assumée.
 
 | Fonction | Ce qui était promis | État | En une phrase |
 |---|---|---|---|
-| **F0** Identification ancrée | photo vers recherche vers désambiguïsation vers vérification visuelle | conforme | L'entrée par photo est active de bout en bout : la photo est lue par un VLM, transformée en requête, le bon produit est retrouvé, puis une vérification visuelle confirme le résultat. |
+| **F0** Identification ancrée | photo vers recherche vers désambiguïsation vers vérification visuelle | conforme | L'entrée par photo est active de bout en bout : la photo est lue par un VLM, transformée en requête, le bon produit est retrouvé, jugé par une étape d'identification raisonnée, puis une vérification visuelle confirme le résultat (90,3 % d'identification mesurés sur un panel réel de 94 produits). |
 | **F1** Catégorie précise | trouver la sous-catégorie, qualité supérieure à 0,90 | conforme | On affiche la vraie catégorie fine du produit retrouvé, et un banc d'essai de six modèles de classement atteint une qualité de 0,954. |
 | **F2** Caractéristiques et observations dirigées | marque, modèle, couleur, version, plus observations guidées | conforme | Les caractéristiques visibles sont pré-remplies depuis la photo, et l'application demande des observations ciblées quand deux produits se ressemblent trop. |
 | **F3** Génération ancrée | rédaction appuyée sur les données réelles du produit | conforme | Le titre et la description sont rédigés en s'appuyant sur la description réelle du produit dans le catalogue, pas sur la mémoire de l'IA. |
-| **F4** Prix transparent | prix expliqué à partir de produits voisins, état et ancienneté | conforme | Le prix est calculé par une formule lisible, avec un niveau de confiance, une fourchette et une conversion dollar vers euro. |
+| **F4** Prix transparent | prix expliqué à partir de produits voisins, état et ancienneté | conforme | Le prix est calculé par une formule lisible (cascade L1 à L4, plus un niveau L1.5 d'ancre IA), avec un niveau de confiance, une fourchette, des garde-fous anti-aberrations et une conversion dollar vers euro. |
 | **F5** Plusieurs modes d'usage | mode express, mode assisté, mode lot | conforme | Les trois modes existent, dont un mode « déménagement » qui enchaîne les objets à la chaîne. |
 | **F6** Garde-fous contre l'inconnu | seuil de confiance et mode dégradé | conforme | Trois niveaux de confiance ; les candidats sont toujours montrés et c'est l'humain qui valide. |
 | **F7** Entretien automatique du modèle | ré-entraînement, détection de dérive, rechargement | conforme | Une chaîne automatisée ré-entraîne, compare et remplace le modèle en service ; un outil surveille la dérive des données. |
@@ -59,9 +59,12 @@ C'est le cœur du projet. Le parcours d'identification fonctionne en plusieurs �
 l'entrée par photo est pleinement active.
 
 1. **Lecture de la photo par un VLM.** Le vendeur envoie une ou plusieurs photos (jusqu'à
-   quatre passent dans un seul appel pour limiter le coût). Le VLM utilisé est le modèle Gemma,
-   appelé via le service en ligne OpenRouter (une passerelle qui donne accès à plusieurs IA).
-   Il regarde les photos et renvoie un titre de produit probable au format d'une fiche Amazon
+   quatre passent dans un seul appel pour limiter le coût). Le VLM utilisé pour lire la photo est
+   le modèle Qwen (plus précisément qwen3.5-flash, choisi parce qu'il est rapide et peu coûteux
+   pour une tâche de perception visuelle), appelé via le service en ligne OpenRouter (une
+   passerelle qui donne accès à plusieurs IA). Ce choix est réglable sans toucher au code, par une
+   variable d'environnement, ce qui permettrait de brancher un modèle plus puissant si besoin. Le
+   VLM regarde les photos et renvoie un titre de produit probable au format d'une fiche Amazon
    (marque, modèle, caractéristiques visibles, couleur) ainsi qu'une liste d'attributs observés
    (marque, couleur, capacité, texte lisible sur l'étiquette). Pour que le résultat soit
    reproductible, l'appel est réglé en mode déterministe (température fixée à 0, graine fixée à
@@ -81,17 +84,67 @@ l'entrée par photo est pleinement active.
    candidat ont des scores très proches (écart inférieur à 0,05), l'application bascule en mode
    d'observation dirigée, décrit dans la fonction F2.
 
-4. **Vérification visuelle du meilleur candidat.** Une fois le meilleur candidat trouvé, on
+4. **Identification raisonnée : le moteur de recherche apporte la connaissance, l'IA apporte le
+   jugement.** Une étape clé a été ajoutée pour fiabiliser le choix du bon produit. Le moteur de
+   recherche fournit les quinze meilleurs candidats réels du catalogue (la « connaissance »), mais
+   c'est ensuite une IA qui les « juge » (le « jugement »). En un seul appel, on envoie à l'IA une
+   ou deux photos du vendeur plus les quinze fiches candidates résumées en texte (pas leurs images,
+   pour économiser le coût) plus les attributs déjà observés. L'IA renvoie alors la famille de
+   produit, le candidat qu'elle estime le bon, un prix neuf de référence estimé (utile pour le
+   prix, voir F4), d'éventuelles caractéristiques avec leur source, et éventuellement une question
+   à poser au vendeur. Le candidat choisi est remis en tête de liste, pour que la fiche, le prix et
+   la vérification portent ensuite sur le bon produit. C'est cette étape qui corrige un défaut
+   concret : auparavant, le tout premier résultat de la recherche pouvait être un accessoire (par
+   exemple une coque d'iPhone affichée comme s'il s'agissait de l'iPhone lui-même). Des garde-fous
+   stricts empêchent toute invention : si l'IA désigne un produit absent des quinze candidats, on
+   revient au premier résultat de la recherche et on remet sa confiance à zéro ; une
+   caractéristique dont la source n'est pas vérifiable est jetée. Toute cette étape est un bonus
+   non bloquant : si l'IA est indisponible ou échoue, on garde simplement le classement de la
+   recherche, sans jamais planter ni produire de fiche vide.
+
+5. **Le texte du vendeur fait foi quand il nomme un produit présent dans les candidats.** Si le
+   vendeur écrit des précisions qui nomment clairement un produit figurant dans les candidats (au
+   moins deux mots distinctifs en commun, en conservant les numéros de modèle même à un seul
+   chiffre, par exemple distinguer « Momentum 3 » de « Momentum 2 »), ce produit est retenu de
+   façon certaine, indépendamment de l'IA rapide qui ignore parfois cette consigne. Quand plusieurs
+   candidats sont à égalité, on garde celui dont le prix est le plus représentatif (le plus proche
+   de la médiane), pour ne pas bâtir la fiche sur une donnée corrompue (par exemple un même produit
+   listé par erreur à un prix aberrant). Sur un texte vide, cette règle ne fait rien : aucun risque
+   de régression.
+
+6. **Vérification visuelle du meilleur candidat.** Une fois le meilleur candidat trouvé, on
    demande au VLM de comparer les photos du vendeur à l'image officielle de ce candidat dans le
    catalogue, en posant la question : « ces photos montrent-elles le même modèle de produit ? ».
    Le VLM renvoie un verdict (correspondance oui ou non, un niveau de confiance entre 0 et 1, et
    une courte raison). Ce verdict s'affiche comme un badge de confiance dans l'interface ; il ne
    décide jamais à la place de l'humain. Si la vérification est indisponible (pas d'image
-   catalogue, IA en panne), elle est simplement omise : c'est un bonus, jamais un bloqueur.
+   catalogue, IA en panne), elle est simplement omise : c'est un bonus, jamais un bloqueur. Pour
+   gagner du temps, on saute cet appel supplémentaire quand l'identification raisonnée a déjà
+   tranché avec confiance, car elle a déjà jugé la correspondance.
 
-5. **Filet de sécurité quand rien ne correspond.** Si aucun candidat n'est satisfaisant, on
+7. **Filet de sécurité quand rien ne correspond.** Si aucun candidat n'est satisfaisant, on
    bascule honnêtement en mode dégradé « produit non identifié, saisie assistée » plutôt que
    d'afficher une mauvaise correspondance (voir F6).
+
+Mesure réelle de bout en bout. Plutôt que de se fier à des impressions, on a mesuré ce parcours
+sur un panel de 94 vrais produits photographiés (le nom du dossier de chaque produit servant de
+vérité de référence), à partir de la photo seule, sans précisions texte. Le taux d'identification
+atteint 90,3 % (on considère un produit identifié quand au moins la moitié des mots clés de son
+nom se retrouvent dans la famille jugée par l'IA et dans le titre du premier candidat), avec un
+rappel moyen de 78 %. L'étape d'identification raisonnée s'est déclenchée dans 100 % des cas. Les
+9 produits non identifiés sont tous expliqués : soit une limite de perception du modèle (par
+exemple une carte graphique RTX 4080 Super prise pour une 3080, ou un casque Sennheiser pris pour
+un Philips), soit un produit réellement absent du catalogue, soit un nom de dossier ambigu (un
+artefact de la mesure elle-même, pas une vraie erreur). Cette mesure est reproductible et
+remplace les anecdotes par un chiffre défendable.
+
+Limite honnête à connaître. À partir de la photo seule, la perception du modèle exact reste
+limitée pour les produits dont le marquage n'est pas visible sur les photos envoyées (par exemple
+un casque dont le logo se trouve sur l'étui). L'IA peut alors choisir un produit sosie avec
+assurance. Trois mécanismes atténuent ce risque : le texte du vendeur qui fait foi (la précision
+écrite fixe le produit quand il est au catalogue), le drapeau « modèle à confirmer » qui prévient
+honnêtement le vendeur, et le bouton « ce n'est pas le bon produit ? ». Un modèle de vision plus
+puissant ferait mieux ; c'est une option ouverte, non activée par défaut faute de besoin prouvé.
 
 Reste à faire : l'indexation visuelle directe du catalogue, c'est-à-dire comparer la photo du
 vendeur directement aux photos du catalogue (image contre image), et non plus en passant par le
@@ -137,6 +190,20 @@ technique de chaque produit, et on ne garde que les caractéristiques utiles pou
 produits (couleur, capacité de stockage, taille d'écran, matière, format, et quelques autres),
 en écartant le bruit inutile.
 
+La fiche produite est volontairement la plus complète possible. Au-delà des caractéristiques du
+schéma de la catégorie, on affiche aussi les attributs riches lus sur la photo ou trouvés au
+catalogue (format, fonctionnalités, certifications, tension, puissance, connectivité, et autres),
+les valeurs trop longues étant raccourcies pour rester lisibles. On y fusionne en plus les
+caractéristiques jugées par l'IA lors de l'identification raisonnée, chacune avec sa provenance.
+Cinq provenances coexistent et sont affichées telles quelles, pour que le vendeur sache d'où vient
+chaque information : observée sur la photo, issue du catalogue d'un produit bien apparié, typique de
+la catégorie et donc à vérifier, déduite de la catégorie, ou saisie par le vendeur. Quand le
+produit est absent du catalogue, les caractéristiques d'un mauvais candidat ne sont jamais
+présentées comme des faits. La complétude de la fiche est mesurée intelligemment, par catégorie
+fine : on ne pénalise pas une enceinte pour l'absence d'une « capacité » qui n'a de sens que pour
+un produit de stockage. Sur le panel réel de 94 produits, la complétude moyenne mesurée est de 0,84
+(médiane 0,83).
+
 La partie la plus originale est la levée d'ambiguïté, surnommée le mode « Akinator » par analogie
 avec le jeu de devinettes. Quand deux candidats se ressemblent trop (écart de score inférieur à
 0,05), l'application cherche, parmi au plus cinq candidats, l'attribut qui les distingue le mieux.
@@ -152,7 +219,13 @@ observation visuelle. Sur un banc d'essai de 2 000 requêtes, environ 75 % des c
 ambigus, et pour 1 492 d'entre eux le système trouve au moins une observation à proposer.
 
 À cela s'ajoute une checklist d'état adaptée au type d'objet, pour que le vendeur décrive
-facilement l'état réel de son article.
+facilement l'état réel de son article. Le « type d'objet » n'est plus choisi manuellement par le
+vendeur : il est désormais déduit automatiquement de la catégorie identifiée, ce qui évite des
+erreurs de classement (un casque qui contient le mot « phone » dans sa catégorie anglaise, ou un
+chargeur, ne sont plus rangés comme des téléphones). La checklist d'état spécifique au type
+(batterie et écran pour un téléphone, clavier pour un ordinateur portable, manettes pour une
+console, et ainsi de suite) s'affiche après l'identification, c'est-à-dire au bon moment, une fois
+qu'on sait de quel type d'objet il s'agit.
 
 ### F3 : rédiger un titre et une description ancrés sur la réalité
 
@@ -179,26 +252,48 @@ La promesse était un prix indicatif calculé par une formule claire, et non par
 historique réel de ventes, un prix appris par apprentissage automatique serait un leurre, et le
 vendeur particulier doit comprendre pourquoi tel prix lui est suggéré.
 
-Le calcul descend une cascade à quatre niveaux de confiance, du plus sûr au moins sûr :
+Le calcul descend une cascade de niveaux de confiance, du plus sûr au moins sûr :
 
-- **Niveau le plus haut** : le produit identifié a un prix dans sa fiche catalogue. On part de ce
-  prix neuf et on applique l'ancienneté puis l'état (confiance affichée à 0,90).
-- **Niveau moyen** : pas de prix direct, mais au moins trois produits voisins valides ont un
-  prix. On prend le prix médian de ces voisins, puis on applique l'ancienneté et l'état (confiance
-  entre 0,50 et 0,80 selon la dispersion des prix voisins).
-- **Niveau bas** : on ne connaît que la catégorie. On part du prix médian de la catégorie, ajusté
-  par l'état (confiance 0,30).
-- **Niveau très bas** : produit et catégorie inconnus. On bascule en saisie manuelle.
+- **Niveau le plus haut (L1)** : le produit identifié a un prix dans sa fiche catalogue. On part de
+  ce prix neuf et on applique l'ancienneté puis l'état (confiance affichée à 0,90).
+- **Niveau haut-moyen (L1.5, ajouté avec l'identification raisonnée)** : pas de prix catalogue
+  direct, mais l'IA a estimé un prix neuf de référence lors de l'étape d'identification raisonnée
+  (voir F0). On applique à cette ancre exactement la même décote déterministe d'ancienneté et
+  d'état. Point important pour la transparence : seule l'ancre, c'est-à-dire le point de départ,
+  est une estimation de l'IA ; la décote, elle, reste entièrement calculée par une formule lisible.
+  La promesse « pas de prix boîte noire » tient donc toujours. Ce niveau est volontairement placé
+  avant les médianes de voisins, car celles-ci sont souvent polluées : un casque à 150 € pouvait se
+  retrouver suggéré à quelques euros parce que ses voisins étaient des accessoires ou des coques.
+- **Niveau moyen (L2)** : pas de prix direct ni d'ancre IA, mais au moins trois produits voisins
+  valides ont un prix. On prend le prix médian de ces voisins, puis on applique l'ancienneté et
+  l'état (confiance entre 0,50 et 0,80 selon la dispersion des prix voisins).
+- **Niveau bas (L3)** : on ne connaît que la catégorie. On part du prix médian de la catégorie,
+  ajusté par l'état (confiance 0,30).
+- **Niveau très bas (L4)** : produit et catégorie inconnus. On bascule en saisie manuelle, et
+  l'interface n'affiche plus jamais « 0,00 € » comme s'il s'agissait d'une suggestion, mais
+  « prix à fixer ».
+
+Trois garde-fous, ajoutés pour fiabiliser le chiffre, méritent d'être cités car ils corrigent des
+cas réels. D'abord, un garde-fou contre la sous-évaluation : une médiane de voisins absurdement
+basse au regard du prix neuf attendu décoté est relevée à un plancher (c'est surtout une protection
+défensive, le vrai travail étant fait par le niveau L1.5 d'ancre IA). Ensuite, un garde-fou de
+cohérence : si le prix catalogue du premier candidat est dérisoire face à l'estimation IA (par
+exemple une coque à 43 $ alors que l'iPhone vaut bien plus), c'est le signe que ce premier candidat
+est un accessoire mal apparié, et on bascule sur l'ancre IA pour éviter d'afficher « iPhone à
+15 € ». Enfin, un garde-fou contre les données corrompues : un prix catalogue très au-dessus de la
+médiane des voisins (par exemple une saisie erronée à 9 755 $) est ignoré au profit des voisins.
 
 Deux réglages chiffrés expliquent le résultat. L'état applique un multiplicateur sur le prix
-neuf : neuf vaut 1,00, très bon état 0,75, bon état 0,55, état correct 0,35. L'ancienneté
-applique une dépréciation annuelle propre à chaque famille, car tout ne vieillit pas à la même
-vitesse : moins 15 % par an pour l'électronique, moins 20 % pour les téléphones (très volatils),
-moins 10 % pour les jeux vidéo, moins 5 % pour l'outillage (qui se déprécie lentement). Comme les
-prix du catalogue sont en dollars et que l'interface affiche des euros, une conversion est
-appliquée à la fin avec un taux fixe documenté de 0,92 (la moyenne sur la période 2024 à 2026),
-modifiable sans redéploiement par une variable d'environnement. Chaque prix s'accompagne d'une
-fourchette et d'une explication en français qui détaille le calcul.
+neuf : neuf vaut 1,00, très bon état 0,75, bon état 0,55, état correct 0,35, et l'état « pour
+pièces / hors service » 0,15 (une valeur résiduelle, ajoutée car c'est un cas courant en occasion).
+L'ancienneté applique une dépréciation annuelle propre à chaque famille, car tout ne vieillit pas à
+la même vitesse : moins 15 % par an pour l'électronique, moins 20 % pour les téléphones (très
+volatils), moins 10 % pour les jeux vidéo, moins 5 % pour l'outillage (qui se déprécie lentement).
+Quand l'année d'achat n'est pas renseignée par le vendeur, on suppose un âge de deux ans, et on le
+signale. Comme les prix du catalogue sont en dollars et que l'interface affiche des euros, une
+conversion est appliquée à la fin avec un taux fixe documenté de 0,92 (la moyenne sur la période
+2024 à 2026), modifiable sans redéploiement par une variable d'environnement. Chaque prix
+s'accompagne d'une fourchette et d'une explication en français qui détaille le calcul.
 
 ### F5 : trois modes d'usage selon le besoin
 
@@ -230,6 +325,20 @@ niveau de confiance à trois paliers, calculé sur le score du meilleur candidat
 - score supérieur ou égal à 0,60 : produit *identifié* ;
 - score entre 0,45 inclus et 0,60 exclu : produit *à confirmer* par le vendeur ;
 - score inférieur à 0,45 : correspondance *incertaine*, à vérifier ou à saisir à la main.
+
+Deux affichages honnêtes ont été ajoutés pour mieux dire le doute au bon endroit. D'abord, quand
+l'identification raisonnée conclut que le produit n'est pas au catalogue, un bandeau « produit
+estimé, absent du catalogue » prévient que la fiche et le prix sont à vérifier. Ensuite, un drapeau
+« modèle à confirmer » distingue deux types de doute qui étaient confondus. La confiance affichée
+sous forme de pourcentage correspond à la part du vote des voisins en faveur de la catégorie fine ;
+on ne l'affiche que lorsqu'elle est nette (au moins 60 %). Un pourcentage bas ne veut pas dire qu'on
+doute de la catégorie : il reflète le plus souvent une hésitation sur le modèle exact (par exemple,
+pour un casque, le vote peut se fragmenter à 34 % entre plusieurs références très proches). Dans ce
+cas, plutôt qu'un pourcentage trompeur, on affiche un bandeau actionnable « modèle à confirmer :
+précisez le modèle ou ajoutez une photo de l'étiquette ou de la boîte », qui reprend la question
+discriminante proposée par l'IA quand elle en a une. Enfin, l'interface auto-confirme la fiche
+directement quand l'IA est sûre, tout en gardant toujours un bouton « ce n'est pas le bon
+produit ? » pour revenir aux autres candidats : la décision finale reste à l'humain.
 
 ### F7 : entretenir le modèle tout seul
 

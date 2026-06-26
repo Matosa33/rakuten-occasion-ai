@@ -10,6 +10,17 @@ l'image, le système identifie le produit, propose une catégorie précise, pré
 caractéristiques, rédige un titre et une description, et suggère un prix avec une fourchette. Tout le
 reste de ce document décrit comment chaque brique technique a été construite, vérifiée et mesurée.
 
+Une mise à jour importante de l'identification (cycle 36) mérite d'être posée dès l'introduction,
+car elle conditionne la qualité de toute la fiche. Le principe retenu sépare deux rôles : la
+recherche par similarité (le « retriever ») apporte la *connaissance* (elle ramène les quinze fiches
+catalogue les plus proches de la photo), tandis qu'un modèle de langage apporte le *jugement* (il
+choisit, parmi ces quinze candidats réels, lequel correspond vraiment à l'objet photographié). Ce
+découpage corrige un défaut concret : auparavant, le tout premier résultat de la recherche pouvait
+être un accessoire (par exemple une coque d'iPhone affichée à la place de l'iPhone lui-même), et la
+fiche, le prix et la validation se construisaient alors sur le mauvais produit. Désormais, le
+candidat jugé correct est remonté en tête, et toute la suite porte sur le bon objet. Ce mécanisme,
+ses garde-fous contre l'invention de données, et sa mesure chiffrée sont détaillés en section 6.
+
 Un mot de vocabulaire utile pour la suite : « MLOps » désigne l'ensemble des pratiques qui permettent
 de faire vivre un modèle d'intelligence artificielle en production de façon fiable (le suivre,
 le versionner, le ré-entraîner automatiquement, le surveiller et le remplacer sans interruption).
@@ -141,9 +152,9 @@ confiance de 90 % devrait correspondre à 90 % de bonnes réponses).
 | Classifieur TF-IDF (celui réellement mis en service) | Score F1, honnêteté de la confiance (ECE) | MLflow | ré-entraînement |
 | Modèle de fusion combinant plusieurs classifieurs | Score F1 de la combinaison | MLflow | réajustement des poids de combinaison |
 | Recherche par similarité FAISS pour retrouver le produit | Taux de bonnes réponses, temps de réponse au 95e centile | Prometheus et Grafana | reconstruction de l'index de recherche |
-| Estimateur de prix | Erreur moyenne en pourcentage par tranche, couverture | Prometheus et Grafana | recalibrage de la dépréciation |
+| Estimateur de prix en cascade (niveaux L1 → L1.5 → L2 → L3 → L4) | Niveau de cascade réellement utilisé, présence d'une ancre d'IA, prix suggéré | journaux métier, Prometheus et Grafana | recalibrage de la dépréciation |
 | Encodeur de texte Arctic | Dérive des représentations produites | Evidently | fixer une nouvelle référence |
-| Validateur visuel (modèle vision-langage) | Taux de réponses correctement interprétables, hallucinations | journaux et MLflow | changer de fournisseur |
+| Modèle vision-langage (triple rôle : extraction depuis la photo, validateur visuel, et passe d'identification raisonnée) | Taux de réponses correctement interprétables, hallucinations, taux de produits hors catalogue détectés | journaux métier et MLflow | changer de fournisseur |
 | Rédacteur de texte (grand modèle de langage) | Qualité de la rédaction | journaux, MLflow et retours d'usage | changer de fournisseur |
 
 Précisions sur les modèles cités, pour le lecteur technique :
@@ -158,6 +169,13 @@ Précisions sur les modèles cités, pour le lecteur technique :
   parce qu'il constitue un vrai modèle versionnable et promouvable, mieux adapté à la chaîne MLOps.
 - L'encodeur de texte est le modèle `Snowflake/snowflake-arctic-embed-l-v2.0`, multilingue, utilisé
   gelé (sans ré-entraînement). Il transforme chaque produit en un vecteur de 1024 nombres.
+- Le modèle vision-langage appelé via l'API externe (par défaut `qwen/qwen3.5-flash-02-23`, réglable
+  par la variable d'environnement `PHOTO_VLM_IDENTIFY_MODEL`) joue désormais trois rôles distincts :
+  extraire les attributs visibles sur la photo, valider visuellement que la photo correspond au
+  meilleur candidat, et conduire la « passe d'identification raisonnée » introduite au cycle 36. Tous
+  ses appels sont rendus reproductibles (température à zéro, graine fixée, raisonnement interne
+  désactivé), ce qui permet de rejouer une décision à l'identique. Le code dédié à la passe raisonnée
+  se trouve dans `src/vlm/reasoned_identification.py`.
 
 ---
 
@@ -166,11 +184,16 @@ Précisions sur les modèles cités, pour le lecteur technique :
 Certaines fonctionnalités ont été écartées en connaissance de cause, et non par oubli. Les écarter est
 un choix d'ingénierie assumé, justifié par la durée du projet (trois mois) ou par son cadre scolaire.
 
-- Pas d'estimation de prix par apprentissage automatique opaque. Le prix est calculé par une méthode
-  algorithmique transparente (on regarde les prix des produits les plus ressemblants, puis on applique
-  une dépréciation selon la catégorie et l'état), pour que le vendeur comprenne d'où vient le chiffre.
-  L'erreur moyenne mesurée est d'environ 62 %, ce qui est assumé : un prix transparent assorti d'une
-  fourchette vaut mieux qu'un nombre faussement précis sorti d'une boîte noire.
+- Pas d'estimation de prix par apprentissage automatique opaque. Le prix est calculé par une cascade
+  algorithmique transparente : on part d'un prix neuf de référence, puis on applique une dépréciation
+  selon la catégorie et l'état, pour que le vendeur comprenne d'où vient le chiffre. Cette ligne reste
+  vraie après le cycle 36 : un nouveau niveau intermédiaire (« L1.5 ») utilise désormais comme point
+  de départ un prix neuf *estimé par l'IA* quand le prix catalogue réel manque, mais seule cette ancre
+  est une estimation. La décote (dépréciation et état) reste à 100 % déterministe et explicable, et le
+  prix obtenu est étiqueté honnêtement « prix neuf estimé par IA » dans l'interface. Le détail de la
+  cascade et de ses garde-fous est donné en section 6. On assume ce parti pris de transparence : un
+  prix expliqué et assorti d'une fourchette vaut mieux qu'un nombre faussement précis sorti d'une
+  boîte noire.
 - Pas de ré-entraînement de l'encodeur d'images. Le modèle de vision SigLIP est utilisé gelé, comme
   simple extracteur de caractéristiques.
 - Pas d'application mobile native. Une interface web qui s'adapte à la taille de l'écran couvre le
@@ -202,6 +225,191 @@ La porte d'entrée du système est protégée par plusieurs mécanismes complém
   contenant une suite de caractères impossible à deviner, de sorte qu'on ne peut accéder qu'aux
   fichiers dont on possède déjà le lien.
 - Traitement non bloquant des requêtes, pour que le service reste réactif sous charge.
+
+Le cycle 36 a ajouté un durcissement supplémentaire, issu d'une revue de sécurité adversariale menée
+sur cinq dimensions (cette revue a relevé sept points jugés importants et huit points jugés moyens,
+tous corrigés) :
+
+- Bornes strictes sur les valeurs reçues. Les champs de prix de l'interface n'acceptent plus que des
+  nombres strictement positifs, plafonnés à un million, et refusent les valeurs aberrantes comme
+  l'infini ou « pas un nombre ». Les indices textuels et les listes envoyées sont également bornés en
+  taille, ce qui ferme une porte aux attaques par déni de service (saturer le service avec une entrée
+  démesurée).
+- Protection contre l'injection de consignes (« prompt injection »). Le texte libre saisi par le
+  vendeur est inséré dans la requête envoyée au modèle de langage en étant explicitement délimité et
+  marqué comme une *donnée non fiable, et non une instruction*. Le modèle est ainsi prévenu de ne pas
+  exécuter une consigne qui s'y cacherait (par exemple « ignore les règles précédentes »).
+- Maîtrise de la latence. Quand la passe d'identification raisonnée a déjà tranché avec une confiance
+  suffisante, on n'ajoute pas le troisième appel au modèle de langage (le validateur visuel), puisque
+  la passe raisonnée a déjà rendu un jugement de correspondance. Cela économise un appel réseau
+  séquentiel sans perte d'information utile.
+
+---
+
+## 6. Les fonctionnalités du cycle 36 : identification raisonnée et fiche prête pour la production
+
+Cette section décrit les évolutions du cycle 36, qui visent toutes le même objectif : rendre la fiche
+fiable et défendable, même quand le produit photographié est mal capté par la recherche ou absent du
+catalogue de référence. Le fil conducteur est une règle simple, héritée de la doctrine du projet : on
+ne génère jamais une donnée avant de l'avoir ancrée sur une preuve réelle.
+
+### 6.1 L'identification raisonnée : le retriever connaît, le modèle juge
+
+Le module `src/vlm/reasoned_identification.py` introduit une seule requête supplémentaire au modèle de
+langage, et cette requête est conçue pour rester bon marché. On envoie une ou deux photos du vendeur,
+les quinze fiches candidates *résumées en texte* (et non leurs quinze images catalogue, ce qui
+économise beaucoup de jetons), les attributs déjà observés sur la photo, et le texte du vendeur. Le
+modèle renvoie un jugement structuré : la famille de produit reconnue, sa confiance, le candidat
+choisi, un drapeau « absent du catalogue », un prix neuf de référence estimé avec sa confiance et les
+fiches qui ont servi d'appui, une éventuelle question discriminante à poser, et des caractéristiques
+chacune accompagnée de sa source.
+
+Le point essentiel est l'ensemble des garde-fous contre l'invention de données :
+
+- Un candidat choisi qui ne ferait pas partie des quinze proposés est rejeté : on retombe alors sur le
+  premier résultat de la recherche, et on remet la confiance de famille à zéro (le modèle n'a pas
+  réellement endossé ce candidat, donc la suite ne doit pas le traiter comme un fait certain). Le
+  modèle ne peut donc jamais faire entrer un produit étranger à la liste réelle.
+- Une caractéristique dont la source serait invalide est jetée : aucune affirmation n'est conservée si
+  elle ne pointe pas vers une fiche réelle, vers une observation directe sur la photo, ou vers une
+  analogie explicitement déclarée comme une estimation.
+- L'ancre de prix neuf est conservée même sans preuve associée, mais elle est alors présentée comme
+  une *estimation étiquetée*, jamais comme un fait catalogue. C'est volontaire : une estimation
+  honnête vaut mieux que de retomber sur des médianes de prix polluées.
+- L'ensemble est « au mieux » et non bloquant : en cas d'absence de clé d'accès, de modèle
+  indisponible, de réponse illisible ou d'erreur, la fonction renvoie « rien » et le pipeline garde
+  son classement par recherche et sa cascade de prix habituelle. Il n'y a jamais de plantage ni de
+  fiche vide.
+
+Quand un candidat est jugé correct, il est remonté en tête de liste, de sorte que la fiche, le prix et
+la validation portent sur le bon produit. Cette réorganisation est ce qui empêche désormais une coque
+d'apparaître à la place du téléphone.
+
+### 6.2 Le texte du vendeur fait autorité
+
+La fonction `_seller_text_best_match` (dans `src/api/main.py`) ajoute une règle déterministe : si le
+texte du vendeur nomme un produit présent dans les candidats (au moins deux mots discriminants, au
+moins la moitié des mots couverts, en gardant les numéros de modèle même à un seul chiffre pour
+distinguer un « Momentum 3 » d'un « Momentum 2.0 »), ce candidat est retenu sans passer par le modèle
+de langage. Cela rend l'identification robuste face au modèle rapide qui ignore parfois la consigne du
+texte vendeur. En cas d'égalité entre plusieurs candidats, on choisit celui dont le prix est le plus
+représentatif (le plus proche de la médiane), afin de ne pas bâtir la fiche sur une donnée corrompue
+(par exemple un même produit listé par erreur à un prix absurde). Sur un texte vide, cette règle ne
+fait rien du tout, ce qui garantit zéro régression.
+
+### 6.3 La cascade de prix à cinq niveaux
+
+Le code `src/pricing/01_algorithmique.py` organise le prix en cinq niveaux, du plus fiable au moins
+fiable :
+
+- **L1** : le prix catalogue réel du produit identifié, sur lequel on applique la décote d'état et la
+  dépréciation par âge.
+- **L1.5** (nouveau) : l'ancre de prix neuf estimée par l'IA lors de la passe raisonnée, à laquelle on
+  applique la *même* décote déterministe. Ce niveau est placé avant les médianes parce que celles-ci
+  sont polluées par les accessoires et les lots (elles donnaient par exemple six euros pour une montre
+  qui en vaut cent cinquante).
+- **L2 et L3** : les médianes des voisins puis de la catégorie, rétrogradées pour cette même raison.
+- **L4** : repli en saisie manuelle ; l'interface n'affiche plus « 0,00 € » mais « Prix à fixer ».
+
+Trois garde-fous complètent la cascade : un plancher anti sous-évaluation qui relève une médiane
+tombée bien en dessous du prix neuf attendu décoté ; un contrôle de cohérence qui écarte un prix
+catalogue ridiculement bas par rapport à l'ancre IA (signe que le premier résultat est en réalité un
+accessoire mal apparié, ce qui évitait un « iPhone à 15 € ») ; et un filtre contre les prix catalogue
+aberrants, très au-dessus de la médiane des voisins, qui trahissent une donnée corrompue. L'état
+« pour pièces / hors service » a été ajouté, avec un multiplicateur de 0,15 ; les multiplicateurs sont
+1,00 pour neuf, 0,75 pour très bon état, 0,55 pour bon état, 0,35 pour correct et 0,15 pour pièces. La
+conversion des dollars vers les euros se fait à un taux fixe documenté (environ 0,92, réglable par la
+variable `PRICE_USD_EUR_RATE`).
+
+### 6.4 La fiche exhaustive et la complétude par catégorie fine
+
+L'assemblage de la fiche (`src/serving/listing_fill.py` et l'endpoint `/identify` de
+`src/api/main.py`) génère toutes les données structurées utiles : les caractéristiques attendues par
+le schéma de la catégorie, mais aussi des attributs plus riches hors schéma (format, fonctionnalités,
+certification, tension, puissance, connectivité…), valeurs longues tronquées pour éviter le bruit.
+Chaque champ porte l'une des cinq provenances : observé sur la photo, issu du catalogue (match
+fiable), typique et donc à vérifier, déduit de la catégorie, ou saisi par le vendeur. Les
+caractéristiques jugées par l'IA sont fusionnées en respectant leur source : ce qui est vu sur la
+photo devient « observé », ce qui pointe vers une fiche réelle devient « catalogue » (seulement si la
+passe concerne bien ce produit), et ce qui n'est qu'une analogie n'est jamais affirmé comme un fait.
+Le texte brut lu par reconnaissance optique (souvent un filigrane) est exclu.
+
+Le « type de produit » affiché correspond désormais à la catégorie du produit réellement identifié, et
+non plus au vote brouillé par un accessoire. La complétude de la fiche est calculée par catégorie
+*fine* : on ne garde du schéma que les caractéristiques réellement présentes chez au moins un candidat
+de même catégorie fine, de sorte qu'une enceinte n'est plus pénalisée pour l'absence d'une « capacité
+de stockage ». L'état, qui est un choix du vendeur toujours disponible, est exclu du dénominateur pour
+ne pas fausser la mesure.
+
+### 6.5 Le parcours vendeur refondu et les signaux honnêtes
+
+Côté interface (`frontend/src`), le choix manuel du type d'objet a été supprimé : le type est dérivé
+de la catégorie identifiée (`condition.ts`, fonction `kindFromCategory`), avec une reconnaissance par
+mot entier et une exclusion des accessoires, pour qu'un casque (« headphones », qui contient le mot
+« phone ») ou un chargeur ne soit plus rangé parmi les téléphones. La liste de vérification de l'état
+spécifique au produit (batterie et écran pour un téléphone, clavier pour un ordinateur, manettes pour
+une console…) s'affiche au bon moment, après l'identification. Un état « pour pièces / hors service »
+et un champ optionnel « année d'achat » ont été ajoutés ; sans année saisie, l'âge est supposé être de
+deux ans, ce qui est signalé à l'écran.
+
+Le parcours s'auto-confirme : si l'IA est sûre, la fiche s'affiche directement ; sinon, les candidats
+sont proposés, et un bouton « Ce n'est pas le bon produit ? Voir les autres résultats » reste
+disponible sur la fiche. Deux signaux d'honnêteté complètent l'affichage. Le pourcentage de confiance
+montré correspond à la part du vote des plus proches voisins sur la catégorie fine, et il n'est
+affiché que s'il est net (au moins 60 %). Un pourcentage bas reflète une fragmentation du vote (le
+modèle exact est ambigu), et non un doute sur la catégorie ; dans ce cas, plutôt qu'un chiffre
+trompeur, on affiche un bandeau actionnable « Modèle à confirmer » qui reprend, si elle existe, la
+question discriminante de l'IA. Un autre bandeau signale les produits estimés et absents du catalogue,
+et l'étiquette « prix neuf estimé par IA » accompagne explicitement le niveau L1.5.
+
+### 6.6 L'observabilité métier
+
+Au-delà des mesures techniques exposées à Prometheus, le cycle 36 ajoute des journaux structurés
+(`structlog`) inspectables par requête, dans `src/api/main.py`. Deux événements résument ce que fait
+le pipeline : `identify_done` (statut, nombre de candidats, score du premier, catégorie fine et sa
+confiance, présence et résultat de la passe raisonnée, réorganisation effectuée, produit hors
+catalogue, ancre de prix, question posée, confiance de famille, complétude, et durées des appels
+d'extraction et de raisonnement) et `price_done` (niveau de cascade, méthode, prix suggéré, présence
+d'une ancre, catégorie et état). On peut ainsi lire concrètement le taux de produits hors catalogue,
+l'usage du niveau L1.5, ou l'endroit où part la latence.
+
+### 6.7 La mesure chiffrée de la qualité de fiche
+
+Pour remplacer les anecdotes par un chiffre défendable, le script `scripts/mesure_qualite_fiche.py`
+applique un protocole reproductible sur le panel réel `data/photos_eval` (94 produits, dont le nom de
+dossier sert de vérité-terrain), à partir de la photo seule, sans précisions textuelles. Les résultats
+sont écrits dans `reports/09_fiche_quality/mesure_fiche.json` et son équivalent lisible. Les valeurs
+mesurées sont les suivantes :
+
+- Identification correcte (au moins la moitié des mots-clés du nom retrouvés dans la famille proposée
+  par l'IA et le titre du premier candidat) : 90,3 %, avec un rappel moyen de 78 % des mots-clés.
+- Complétude de la fiche : 0,84 en moyenne, 0,83 en médiane.
+- Passe raisonnée déclenchée : 100 % des cas. Produit jugé absent du catalogue : 28 %. Question
+  discriminante posée : environ 11 %. Répartition des niveaux de prix : 42 fiches en L1 et 51 en L1.5.
+- Neuf produits n'ont pas été identifiés, et tous les cas sont expliqués : une perception imparfaite du
+  modèle exact (une carte graphique RTX 4080 Super prise pour une 3080, une Xbox Series S, un casque
+  Sennheiser Momentum confondu), un produit réellement absent du catalogue (un disque SSD, une station
+  d'accueil), ou un nom de dossier ambigu (artefact de mesure).
+
+### 6.8 Les limites assumées, sans survente
+
+Trois limites sont documentées telles quelles. D'abord, avec la photo seule, la perception du modèle
+exact reste difficile pour des produits sans marquage visible sur les images envoyées (par exemple un
+Sennheiser Momentum 3 dont le logo se trouve sur l'étui) : le modèle peut alors choisir un sosie avec
+assurance. Ce risque est atténué de trois façons : le texte du vendeur qui fait autorité (la
+métadonnée fixe le produit quand il est bien au catalogue), le bandeau « Modèle à confirmer », et le
+bouton « Ce n'est pas le bon ? ». Ensuite, le modèle rapide utilisé par défaut sous-déclenche la
+détection « absent du catalogue » (il colle parfois à un sosie d'une autre génération, par exemple un
+iPhone 14 pris pour un 13) ; un modèle jugé plus fort ferait mieux, mais cette option n'est pas câblée
+par défaut. Enfin, le garde-fou anti sous-évaluation est surtout défensif : c'est bien le niveau L1.5,
+l'ancre estimée par l'IA, qui fait le vrai travail de remise à niveau du prix.
+
+### 6.9 Statut de livraison
+
+Ces fonctionnalités du cycle 36 ont été implémentées et vérifiées en direct sur de vraies photos.
+Elles vivent sur une branche de travail (`feat/cycle34-listing-quality-bench`) et ne sont pas encore
+fusionnées sur la branche principale ; cette précision est utile pour qu'un examinateur sache où
+trouver le code.
 
 ---
 

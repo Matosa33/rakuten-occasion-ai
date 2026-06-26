@@ -27,7 +27,13 @@ familles d'informations.
   paires « nom : valeur », par exemple `"status": 200`), plutôt qu'en texte libre désorganisé.
   Chaque ligne porte un identifiant de demande (un `request_id`, c'est-à-dire un numéro unique
   attribué à chaque demande entrante) qui permet de regrouper tous les événements d'une même
-  demande, du début à la fin.
+  demande, du début à la fin. On distingue deux usages de ces journaux : les journaux
+  *techniques* (la demande HTTP est arrivée, a duré tant de millisecondes, a renvoyé tel code) et
+  les journaux *métier*, qui racontent ce que le pipeline a réellement décidé pour cette demande
+  (quel produit identifié, avec quelle confiance, à quel niveau de prix). Cette seconde famille,
+  ajoutée au Cycle 36, est ce qui permet de répondre à des questions de fond comme « combien de fois
+  le produit n'était-il pas au catalogue ? » ou « le niveau de prix estimé par l'IA sert-il
+  souvent ? », sans rejouer manuellement les demandes.
 
 - Les métriques. Ce sont des chiffres mesurés en continu : nombre de demandes par seconde, temps
   de réponse, nombre d'erreurs. Ces chiffres sont collectés par Prometheus, un logiciel libre
@@ -97,6 +103,7 @@ ensuite les y récupérer.
 |---|---|---|
 | Journaux structurés | `src/observability/logging.py` | structlog au format JSON, horodatage normalisé (format ISO, en temps universel UTC), niveau de gravité, pile d'erreur en cas d'exception, contexte par demande |
 | Corrélation | `src/api/middleware.py` | attribue un `request_id` à chaque demande, intercepteur ajouté en tout premier pour que l'identifiant soit présent dans tous les journaux suivants |
+| Journaux métier | `src/api/main.py` (logger `rakuten.api`) | deux événements inspectables par demande, `identify_done` et `price_done`, qui consignent la décision réelle du pipeline et les temps des appels au modèle de langage (Cycle 36) |
 | Métriques du service | bibliothèque `prometheus_fastapi_instrumentator`, branchée dans `src/api/main.py` | latence (histogramme), nombre de requêtes (compteur) et demandes en cours (jauge, qui mesure la saturation) |
 | Métriques des traitements par lots | `src/monitoring/push_metrics.py` | pousse vers le Pushgateway les mesures des calculs ponctuels (dérive des données et décision de promotion de modèle) |
 | Tableaux de bord | `monitoring/grafana/dashboards/` | trois tableaux : `golden_signals`, `evidently_drift`, `mlops_promote_gate` |
@@ -124,6 +131,78 @@ l'en-tête de réponse. Réutiliser un identifiant fourni par le client permet d
 demande à travers plusieurs maillons (le client, la passerelle d'entrée, l'application). Le
 contexte est systématiquement nettoyé à la fin, pour qu'un identifiant ne « déborde » pas sur la
 demande suivante.
+
+### Les journaux métier : lire ce que le pipeline a vraiment décidé (Cycle 36)
+
+Les métriques Prometheus décrites plus bas répondent à des questions techniques (combien de
+demandes, à quelle vitesse, avec combien d'erreurs), mais elles ne disent rien du *contenu* d'une
+demande : elles ne savent pas si le produit a été correctement identifié, si l'IA a dû avouer que le
+produit était absent du catalogue, ou à quel niveau de prix on a abouti. Pour combler ce manque, le
+fichier `src/api/main.py` émet, en plus des métriques HTTP, deux événements de journal structurés et
+volontairement riches, l'un à la fin de l'identification et l'autre à la fin du calcul de prix. Ils
+passent par le même logger structlog que le reste (`get_logger("rakuten.api")`), ce qui veut dire
+qu'ils héritent automatiquement du `request_id` de la demande en cours : on peut donc relier
+l'événement métier d'une demande à sa ligne HTTP technique et à toute erreur survenue, en filtrant
+sur le même identifiant. L'intérêt direct est qu'on « lit » le comportement du pipeline en
+production (taux de produits hors catalogue, fréquence d'usage du prix estimé par IA, endroit où part
+la latence) sans avoir à rejouer les demandes à la main. Rien n'est décoratif : chaque champ sert à
+répondre à une question concrète.
+
+L'événement `identify_done`, écrit une fois que l'identification est entièrement résolue (y compris
+le réordonnancement des candidats par la passe raisonnée), consigne les champs suivants :
+
+- `status` : l'issue de l'identification (par exemple un produit clairement identifié ou une liste de
+  candidats à départager).
+- `n_candidates` : le nombre de candidats remontés par la recherche par similarité.
+- `top1_score` : le score de similarité du meilleur candidat (arrondi à 4 décimales), c'est-à-dire à
+  quel point le produit le mieux classé ressemble à la photo. Vaut une valeur vide s'il n'y a aucun
+  candidat.
+- `category_fine` et `category_conf` : la catégorie fine prédite et la confiance associée (la part du
+  vote des plus proches voisins sur cette catégorie fine, arrondie à 4 décimales).
+- `reasoned` : un drapeau vrai/faux indiquant si la passe d'identification raisonnée (l'appel au
+  modèle de langage qui juge le top-15) a bien tourné pour cette demande, ou si elle a été sautée ou
+  a échoué en silence.
+- `reordered` : vrai si la passe raisonnée a fait remonter en tête un candidat différent du premier
+  résultat brut de la recherche. C'est l'indicateur qui dit si le « jugement » de l'IA a effectivement
+  corrigé le classement (par exemple écarter une coque de téléphone affichée à tort comme produit
+  principal).
+- `catalog_miss` : vrai si l'IA a estimé que le produit réel n'est dans aucune des fiches candidates
+  (produit absent du catalogue). Vaut une valeur vide si la passe raisonnée n'a pas tourné.
+- `anchor_usd` : le prix neuf de référence estimé par l'IA, en dollars, qui servira d'ancre au calcul
+  de prix. Vaut une valeur vide si la passe raisonnée n'a pas tourné.
+- `ask_question` : vrai si l'IA juge qu'une question discriminante (par exemple la capacité ou la
+  variante exacte) est nécessaire pour lever une ambiguïté.
+- `family_conf` : la confiance de l'IA sur la *famille* de produit (arrondie à 3 décimales), à
+  distinguer de la confiance sur la variante exacte.
+- `completeness` : le taux de complétude de la fiche assemblée (la proportion de champs attendus
+  effectivement renseignés). Vaut une valeur vide si aucune fiche n'a pu être bâtie.
+- `extraction_ms` et `reason_ms` : les deux temps qui dominent la latence de l'identification, en
+  millisecondes (arrondis au dixième). Le premier est la durée de l'extraction des photos par le
+  modèle de vision (lecture de la photo pour en tirer un titre probable et des attributs) ; le second
+  est la durée de la passe raisonnée (l'appel qui juge le top-15). Mesurer ces deux temps séparément
+  permet de savoir précisément lequel des appels au modèle de langage coûte cher quand une demande
+  est lente. Ils valent zéro lorsque l'appel correspondant n'a pas eu lieu (par exemple une demande
+  en texte seul, sans photo).
+
+L'événement `price_done`, écrit à la fin du calcul de prix, consigne :
+
+- `level` : le niveau de la cascade de prix réellement atteint, parmi `L1`, `L1.5`, `L2`, `L3` et
+  `L4`. C'est cet indicateur qui permet de mesurer, sur le trafic réel, à quel point on s'appuie sur
+  le prix catalogue (L1), sur le prix neuf estimé par IA (L1.5), sur les médianes de voisins ou de
+  catégorie (L2/L3), ou sur la saisie manuelle de repli (L4).
+- `method` : la méthode de calcul correspondante (par exemple `catalog_meta` pour L1, `llm_anchor`
+  pour L1.5, `knn_median` pour L2, `category_median` pour L3, `fallback` pour L4).
+- `suggested_eur` : le prix suggéré en euros.
+- `has_anchor` : vrai si une ancre de prix neuf estimée par IA était fournie pour cette demande.
+- `category` et `condition` : la catégorie et l'état déclaré (le choix du vendeur), qui permettent de
+  croiser les niveaux de prix par type de produit et par état.
+
+Un détail utile à connaître : il existe un troisième appel possible au modèle de langage,
+le validateur visuel (« la photo du vendeur montre-t-elle bien le meilleur candidat ? »). Sa durée
+est tracée à part dans un journal technique `vlm_validate_ms`, mais cet appel est volontairement
+sauté quand la passe raisonnée a déjà tranché avec confiance, afin d'économiser un aller-retour
+réseau et donc de la latence. C'est pour cela qu'il n'apparaît pas systématiquement dans les
+journaux d'une demande.
 
 ### Les métriques du service web et le choix « opt-in »
 
@@ -219,6 +298,12 @@ calcul de dérive de celui de promotion de modèle dans les graphiques.
   commande `docker compose logs api` affiche des lignes JSON corrélées, où l'on retrouve toutes les
   étapes d'une même demande en filtrant sur son `request_id`.
 
+- Journaux métier `identify_done` et `price_done` : en plus des métriques HTTP, on lit pour chaque
+  demande la décision réelle du pipeline (produit identifié, confiance, produit hors catalogue ou
+  non, niveau de prix atteint) et la répartition de la latence entre les appels au modèle de langage
+  (`extraction_ms`, `reason_ms`). Comme ils portent le même `request_id`, on relie sans effort la
+  décision métier à la ligne HTTP technique de la même demande.
+
 - Les quatre signaux fondamentaux sont instrumentés et visibles dans le tableau `golden_signals`.
 
 - Trois tableaux de bord Grafana sont opérationnels : le service web, la dérive des données, et la
@@ -236,10 +321,12 @@ calcul de dérive de celui de promotion de modèle dans les graphiques.
   (sans planter) quand le Pushgateway est injoignable.
 
 > Chiffres à mettre en avant sur une diapositive : « quatre signaux fondamentaux (latence p95,
-> trafic, erreurs, saturation) », « journaux JSON corrélés par `request_id` », « trois tableaux de
-> bord Grafana couvrant à la fois l'application et les traitements de cycle de vie du modèle ».
+> trafic, erreurs, saturation) », « journaux JSON corrélés par `request_id` », « journaux métier
+> `identify_done` / `price_done` avec les temps des appels au modèle de langage », « trois tableaux
+> de bord Grafana couvrant à la fois l'application et les traitements de cycle de vie du modèle ».
 > Capture d'écran recommandée : le tableau `golden_signals` rempli pendant une démonstration, à
-> côté d'un extrait de journaux JSON portant tous le même `request_id`.
+> côté d'un extrait de journaux JSON portant tous le même `request_id` (une ligne `http_request`
+> technique et la ligne `identify_done` métier de la même demande).
 
 ---
 
@@ -252,6 +339,11 @@ calcul de dérive de celui de promotion de modèle dans les graphiques.
 
 - Des journaux structurés en JSON avec un `request_id` propagé automatiquement : la corrélation de
   bout en bout d'une demande est en place.
+
+- Des journaux métier dédiés (`identify_done`, `price_done`) au-delà des seules métriques techniques :
+  on observe le contenu des décisions du pipeline (identification, produit hors catalogue, niveau de
+  prix) et la répartition fine de la latence entre les appels au modèle de langage, ce qui rend le
+  comportement réel du système lisible en production.
 
 - Le Pushgateway pour les traitements par lots : on observe aussi le cycle de vie du modèle (dérive
   des données, décisions de promotion), pas seulement le service web.
@@ -287,7 +379,8 @@ calcul de dérive de celui de promotion de modèle dans les graphiques.
 ### En une phrase (pour la défense)
 
 « On observe l'application via les quatre signaux fondamentaux (latence p95, trafic, erreurs,
-saturation) affichés dans Prometheus et Grafana, et des journaux JSON corrélés par un identifiant de
-demande (`request_id`) permettent de suivre chaque demande de bout en bout, y compris les
-traitements de cycle de vie du modèle (dérive des données et décisions de promotion) remontés via le
-Pushgateway. »
+saturation) affichés dans Prometheus et Grafana, complétés par des journaux métier (`identify_done`,
+`price_done`) qui consignent la décision réelle du pipeline et les temps des appels au modèle de
+langage ; des journaux JSON corrélés par un identifiant de demande (`request_id`) permettent de
+suivre chaque demande de bout en bout, y compris les traitements de cycle de vie du modèle (dérive
+des données et décisions de promotion) remontés via le Pushgateway. »

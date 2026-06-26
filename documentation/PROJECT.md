@@ -1,6 +1,6 @@
 # Rakuten AI : document de cadrage
 
-> Version 3.0 (2026-06-11). Auteur : Mathieu Klopp. Statut : actif.
+> Version 3.1 (2026-06-26). Auteur : Mathieu Klopp. Statut : actif.
 >
 > Ce document définit ce que le projet cherche à faire, pour qui, pourquoi, et
 > ce qui est explicitement laissé de côté. Il se lit seul, sans connaissance
@@ -87,7 +87,9 @@ que l'utilisateur doit croire sur parole.
   montre quelle part des informations utiles est déjà renseignée) et un score
   de confiance d'identification devrait améliorer la qualité moyenne des
   fiches. Mesure visée : un taux de complétude (nombre de champs remplis divisé
-  par le nombre de champs possibles) supérieur à 75 %.
+  par le nombre de champs possibles) supérieur à 75 %. Première mesure (Cycle
+  36, voir section 4 bis) : 0,84 en moyenne sur le panel réel, au-dessus du seuil,
+  à consolider et à compléter par un test utilisateur sur la qualité perçue.
 - **H3** : un prix transparent et décomposé devrait être mieux accepté qu'un
   prix produit par un modèle opaque. Mesure visée : plus de 60 % des vendeurs
   valident le prix suggéré.
@@ -162,8 +164,13 @@ que l'utilisateur doit croire sur parole.
   voisins proches, une dépréciation par catégorie qui dépend de l'âge, une
   pénalité liée à l'état et un ajustement selon la quantité d'informations
   disponibles. Le résultat est accompagné d'un niveau de confiance et d'une
-  fourchette expliquée. Aucun modèle opaque n'est utilisé pour le prix (voir la
-  section 6, hors-périmètre).
+  fourchette expliquée. La règle est organisée en cascade de cinq niveaux, du
+  plus fiable au moins fiable : prix catalogue du produit exact ; prix neuf de
+  référence estimé par le modèle puis décoté (niveau L1.5 ajouté au Cycle 36, voir
+  section 4 bis) ; médiane des voisins ; médiane de la catégorie ; saisie manuelle
+  en dernier recours. Seule l'ancre de départ du niveau L1.5 est estimée : la
+  décote reste entièrement déterministe, donc aucun modèle opaque n'est utilisé
+  pour le prix (voir la section 6, hors-périmètre).
 - **F5, interface progressive à plusieurs modes** : un mode express (environ 30
   secondes, photo seule plus une courte liste de cases à cocher sur l'état) ;
   un mode assisté (observations ciblées via le mode de questions, plus un
@@ -188,19 +195,142 @@ que l'utilisateur doit croire sur parole.
   mémoire. Cette option n'est pas déclenchée à ce jour, faute de bénéfice
   démontré.
 
+## 4 bis. Statut d'avancement (Cycle 36, mesuré le 2026-06-26)
+
+> Cette section donne l'état réel de l'implémentation à la date indiquée. Elle
+> distingue ce qui est codé et mesuré de ce qui reste un pari. Le travail décrit
+> ici vit pour l'instant sur une branche de travail
+> (`feat/cycle34-listing-quality-bench`) et n'est pas encore fusionné dans la
+> branche principale. Il a toutefois été exécuté en direct sur de vraies photos
+> et mesuré sur le panel réel décrit plus bas.
+
+**Ce qui change avec le Cycle 36, en une phrase.** Le parcours d'identification
+ne se contente plus de classer des candidats par ressemblance : un modèle qui
+voit et raisonne (le modèle de vision-langage) examine les quinze meilleurs
+candidats réels proposés par le moteur de recherche et rend un jugement motivé.
+Le moteur de recherche apporte la connaissance (quinze fiches réelles du
+catalogue), le modèle apporte le jugement (lequel correspond, à quel prix neuf,
+quelle question poser en cas de doute). C'est la mise en pratique concrète du
+principe "ancrer avant de générer" de la section 7 : le modèle ne peut jamais
+choisir un produit absent de ces quinze candidats.
+
+- **Identification raisonnée (nouveau cœur du parcours).** Un seul appel au
+  service externe envoie une ou deux photos du vendeur, plus les quinze fiches
+  candidates résumées en texte (et non leurs images, pour économiser le coût),
+  plus les attributs déjà lus sur la photo et le texte facultatif du vendeur. Le
+  modèle renvoie la famille du produit, un niveau de confiance, le candidat
+  choisi, un éventuel signalement "produit absent du catalogue", un prix neuf de
+  référence estimé, une éventuelle question discriminante, et des attributs dont
+  chacun cite sa source (vu sur la photo, tiré d'une fiche précise, ou estimé
+  par analogie). Plusieurs garde-fous anti-invention encadrent cette sortie : un
+  candidat choisi hors des quinze est ignoré (on retombe sur le premier candidat
+  du moteur de recherche et on remet la confiance à zéro, car le modèle n'a pas
+  endossé ce choix) ; une donnée dont la source est invalide est jetée ; et toute
+  défaillance (pas de clé d'accès, service indisponible, réponse illisible)
+  renvoie un résultat vide qui laisse le parcours fonctionner sur le seul
+  classement du moteur de recherche, sans jamais planter ni produire de fiche
+  vide.
+- **Le bon produit porte la fiche.** Le candidat retenu (par le jugement du
+  modèle ou par le texte du vendeur) remonte en tête de liste. Avant, le premier
+  candidat du moteur de recherche pouvait être un accessoire (une coque
+  d'iPhone présentée comme le produit lui-même) ; désormais la fiche, le prix et
+  la vérification portent sur le bon objet.
+- **Le texte du vendeur fait foi.** Si le vendeur nomme un produit présent dans
+  les candidats (avec assez de mots distinctifs, en gardant les numéros de
+  modèle pour séparer les variantes), ce candidat est retenu de façon
+  déterministe, indépendamment du modèle rapide qui ignore parfois cette
+  consigne. La métadonnée du vendeur "sauve" l'identification quand le produit
+  exact est mal perçu sur la photo mais présent au catalogue.
+- **Prix transparent, désormais à cinq niveaux.** La règle de prix de la section
+  4 (F4) gagne un niveau intermédiaire L1.5 : quand le prix catalogue du produit
+  exact n'est pas disponible, on part du prix neuf estimé par le modèle, puis on
+  applique exactement la même décote déterministe (état, âge). Seule l'ancre de
+  départ est estimée ; la décote reste entièrement transparente et reproductible,
+  donc la promesse "pas de prix par modèle opaque" tient toujours. Ce niveau est
+  placé avant les médianes de voisins, car celles-ci, polluées par des
+  accessoires et des lots, donnaient des prix absurdes (de l'ordre de quelques
+  euros pour une montre à cent cinquante euros). Des garde-fous écartent une
+  médiane manifestement sous-évaluée, un premier candidat qui serait un
+  accessoire mal apparié, et un prix catalogue aberrant (donnée corrompue). Un
+  état "pour pièces / hors service" a été ajouté à la grille d'état.
+- **Fiche plus complète et plus honnête.** La fiche structurée liste désormais
+  toutes les données pertinentes (les attributs attendus pour la catégorie, plus
+  des attributs riches hors schéma), chaque champ portant sa provenance parmi
+  cinq possibles : observé sur la photo, tiré d'une fiche catalogue fiable,
+  typique mais à vérifier, déduit de la catégorie, ou saisi par le vendeur. La
+  complétude se mesure par catégorie fine, pour ne pas pénaliser une enceinte qui
+  n'a pas de "capacité".
+- **Parcours vendeur revu.** Le choix manuel du type d'objet a disparu : il est
+  déduit de la catégorie identifiée. La liste de vérification de l'état
+  spécifique au type de produit s'affiche après l'identification, au bon moment.
+  Quand le modèle est sûr, la fiche s'affiche directement ; sinon les candidats
+  sont proposés, avec toujours un bouton "ce n'est pas le bon produit ?". Le
+  pourcentage de confiance n'est affiché que s'il est net (au moins 60 %) ;
+  sinon un bandeau actionnable "modèle à confirmer" invite à préciser le modèle
+  ou à photographier l'étiquette, et un bandeau distinct signale un produit
+  estimé absent du catalogue.
+
+**Mesure de qualité de fiche (protocole reproductible, pas d'anecdotes).** Un
+script dédié fait passer un panel réel de 94 produits (les noms de dossiers
+servent de vérité-terrain) par le parcours complet, à partir de la photo seule,
+sans le texte facultatif du vendeur. Résultats mesurés à la date de cette
+section :
+
+- **Identification : 90,3 %** des produits sont correctement identifiés (au
+  moins la moitié des mots-clés du nom retrouvés dans la famille proposée par le
+  modèle et dans le titre du premier candidat), pour un rappel moyen de 78 %.
+- **Complétude de la fiche : 0,84 en moyenne** (médiane 0,83), au-dessus du seuil
+  visé de 0,75 de l'hypothèse H2.
+- La passe raisonnée s'exécute dans 100 % des cas ; un produit est signalé absent
+  du catalogue dans 28 % des cas ; une question discriminante est posée dans 11 %
+  des cas ; le prix se répartit entre le niveau catalogue (42 produits) et le
+  niveau ancre estimée par le modèle (51 produits).
+- **Neuf produits ne sont pas identifiés, et tous sont expliqués** : limite de
+  perception du modèle (une carte graphique RTX 4080 Super lue comme une 3080,
+  une console Xbox Series S, un casque Sennheiser confondu avec un sosie), produit
+  réellement absent du catalogue (un SSD, une station d'accueil), ou nom de
+  dossier ambigu qui est un artefact de la mesure plus qu'une vraie erreur.
+
+**Limites assumées, sans survente.** Sur photo seule, la perception du modèle
+exact reste limitée pour les produits sans marquage visible sur les clichés
+envoyés (par exemple un casque dont le logo est sur l'étui, pas sur l'objet
+photographié) : le modèle peut alors choisir un sosie avec aplomb. Trois
+mécanismes atténuent ce risque : le texte du vendeur qui fait foi quand le
+produit est au catalogue, le bandeau "modèle à confirmer", et le bouton "ce
+n'est pas le bon produit ?". Le modèle rapide utilisé par défaut sous-déclenche
+le signalement "absent du catalogue" (il s'accroche à un sosie d'une autre
+génération, par exemple un iPhone 14 lu comme un 13) ; un modèle jugé plus
+puissant ferait mieux, mais cette option n'est pas activée par défaut. Enfin, le
+garde-fou anti sous-évaluation reste surtout défensif : c'est le niveau de prix
+L1.5 (l'ancre estimée par le modèle) qui fait l'essentiel du travail.
+
+**Modèles et services mobilisés par le parcours (rappel).** Le moteur
+d'identification en direct est le moteur de recherche par plus proche voisin
+construit dans le projet (sur les représentations textuelles Arctic Embed,
+quinze candidats remontés). Un vote pondéré de ce moteur sur la catégorie fine
+sert de signal de confiance et alimente le bandeau "modèle à confirmer". Un
+classifieur classique enregistré dans le registre dédié reste disponible. La
+règle de prix est déterministe (aucun modèle opaque). Le modèle de vision-langage
+externe assure l'extraction depuis la photo, la vérification visuelle, et la
+nouvelle passe raisonnée ; un modèle rédacteur ancré produit la description.
+
 ## 5. Indicateurs de succès
 
 Le tableau ci-dessous liste les seuils visés. La colonne "statut" indique si la
-mesure est déjà disponible ou reste à faire.
+mesure est déjà disponible ou reste à faire. Les mesures du Cycle 36 (section 4
+bis) portent sur un panel réel, en photo seule, et ne sont pas encore fusionnées
+dans la branche principale ; elles sont donc reportées ici comme premières
+mesures, à consolider.
 
 | Dimension | Indicateur mesuré | Seuil visé | Statut |
 |-----------|-------------------|------------|--------|
 | Identification | Bon produit présent dans les 5 premiers candidats | au moins 0,80 | à mesurer |
-| Identification | Bon produit en première position après vérification visuelle | au moins 0,70 | à mesurer |
+| Identification | Bon produit en première position après vérification visuelle | au moins 0,70 | première mesure : 0,903 sur le panel Cycle 36 (photo seule, branche non fusionnée), à consolider |
 | Identification | Taux d'identifications faussement positives | moins de 5 % | à mesurer |
 | Classification | Score F1 pondéré sur le jeu de test | au moins 0,90 | à mesurer |
 | Génération de texte | Gain de qualité face à une génération sans appui | au moins +5 % | à mesurer |
-| Prix | Quatre niveaux de confiance distincts | mécanisme en place | à coder |
+| Complétude de la fiche | Champs remplis sur champs possibles (hypothèse H2) | au moins 0,75 | première mesure : 0,84 sur le panel Cycle 36, à consolider |
+| Prix | Quatre niveaux de confiance distincts | mécanisme en place | en place : cinq niveaux (L1, L1.5, L2, L3, L4) |
 | Latence | Temps de réponse de l'identification (seuil dépassé dans 95 % des cas) | moins de 5 s | à mesurer |
 | Démonstration | Installation sur une machine virtuelle Ubuntu vierge | démarrée en moins de 15 min | à valider |
 | Tests | Tests automatisés | 100 % passent (hors tests lents ou nécessitant une carte graphique) | maintenu en continu |

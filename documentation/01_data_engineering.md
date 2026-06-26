@@ -189,7 +189,40 @@ servant d'entrée au suivant :
    pas alourdir), la catégorie fine telle qu'affichée sur le site (par exemple « Graphics Cards »),
    le chemin complet de rangement (par exemple « Electronics > Computers > Laptops »), la vraie
    marque du fabricant (plus fiable que le nom de la boutique vendeuse) et quelques caractéristiques
-   distinctives (couleur, capacité, taille, matériau, etc.).
+   distinctives, appelées **facettes** (couleur, capacité, taille, matériau, etc.). Une « facette »
+   est un attribut court et comparable d'un produit, qui sert ensuite à distinguer deux objets
+   proches (par exemple deux cartes graphiques identiques sauf la capacité mémoire) et à remplir
+   automatiquement la fiche de vente. Ces facettes sont extraites du champ structuré `details` de la
+   source (un dictionnaire de spécifications fourni par le catalogue), à partir d'une liste curée de
+   clés discriminantes : couleur, capacité de stockage ou de mémoire, taille d'écran, matière,
+   format, style, caractéristique spéciale, compatibilité. On exclut volontairement le bruit
+   non-discriminant (poids de l'article, date de première mise en vente, classement des
+   meilleures ventes…), inutile pour distinguer deux produits.
+
+   **Limite de cette source et complément depuis le titre (Cycle 36.A).** Le champ `details` du
+   catalogue est souvent vide ou incomplet : une carte « RTX 4080 16GB » pouvait ainsi se retrouver
+   sans facette « capacité », alors que l'information figure noir sur blanc dans son titre. Cette
+   absence cassait à la fois la désambiguïsation entre produits voisins, la complétude de la fiche
+   générée et la pertinence de la recherche. Pour y remédier, on **complète à la volée les facettes
+   manquantes en les lisant dans le titre**, au moment de présenter les candidats à l'interface
+   (fonction `enrich_facets_from_title` dans `src/api/pipeline.py`). Trois facettes sont concernées,
+   chacune détectée par une expression régulière volontairement **prudente** pour éviter les
+   faux positifs :
+   - la **capacité** : seules les unités de stockage explicites sont reconnues (GB, TB, ainsi que
+     leurs équivalents français Go et To, normalisés vers GB et TB). Ce filtrage strict écarte les
+     pièges fréquents des titres techniques, comme un bus mémoire « 256-Bit », une fréquence
+     « 2550 MHz », un type de mémoire « GDDR6X » ou un nombre de pièces « 65 Piece », qui ne sont
+     pas des capacités ;
+   - la **tension**, sous la forme d'un nombre suivi de « V » (par exemple « 18V » pour une
+     visseuse) ;
+   - la **puissance**, sous la forme d'un nombre suivi de « W » (par exemple « 1000W » pour une
+     alimentation).
+
+   Règle de priorité importante : cette extraction **ne remplace jamais** une facette déjà fournie
+   par le catalogue. La valeur issue du champ `details` reste prioritaire ; le titre ne sert qu'à
+   **combler les trous**. Le comportement est verrouillé par des tests automatiques
+   (`tests/test_facets_from_title.py`) qui vérifient à la fois la bonne extraction, l'absence de
+   faux positifs et le respect de la priorité catalogue.
 
 ### d) Le découpage anti-fuite
 

@@ -181,6 +181,12 @@ serait impossible à entraîner proprement, car beaucoup de ces catégories ont 
 Cette catégorie fine résulte d'un **vote pondéré des catégories des produits voisins** retrouvés.
 Autrement dit, c'est l'index de recherche lui-même qui joue le rôle de classifieur fin.
 
+Et ce même vote rend désormais un troisième service, exploité en production : sa **concentration**
+(à quel point les voisins votent pour la même catégorie fine) sert de **signal de confiance
+d'identification**. Quand le vote se fragmente, l'interface n'affiche pas un pourcentage trompeur :
+elle lève un drapeau « Modèle à confirmer ». Ce mécanisme est expliqué en détail à la fin de cette
+section.
+
 On a comparé **quatre façons** d'attribuer cette catégorie fine, toujours sur le même protocole
 (échantillon de test, sans fuite de données : 15 000 requêtes, 200 voisins examinés par requête).
 Et surtout, on mesure la justesse à **chaque niveau du chemin de catégories**, pas seulement tout
@@ -205,11 +211,75 @@ beaucoup plus nombreuses et se ressemblent davantage. Le vote des voisins est le
 
 Le **vote des voisins l'emporte** (gain de 2,3 points par rapport à recopier le premier voisin),
 pour un coût quasi nul, et il fournit en prime une mesure de **confiance** (la part du vote
-remportée par la catégorie gagnante). Résultat honnête à signaler : le filtrage par famille
-**n'aide pas**. Les quatre familles sont déjà bien séparées dans l'espace des vecteurs ; filtrer
-ne fait donc que jeter de bons voisins. À titre indicatif, la recherche retrouve la bonne
-catégorie fine parmi les 200 voisins examinés dans 96,8 % des cas, ce qui est le plafond
+remportée par la catégorie gagnante). Cette mesure de confiance n'est pas restée décorative :
+elle est devenue, en production, un **signal de confiance d'identification** qui décide quand
+l'interface demande une confirmation au vendeur. Ce point est détaillé plus bas
+(« Le vote k-NN comme signal de confiance d'identification »). Résultat honnête à signaler : le
+filtrage par famille **n'aide pas**. Les quatre familles sont déjà bien séparées dans l'espace des
+vecteurs ; filtrer ne fait donc que jeter de bons voisins. À titre indicatif, la recherche retrouve
+la bonne catégorie fine parmi les 200 voisins examinés dans 96,8 % des cas, ce qui est le plafond
 qu'un meilleur vote pourrait viser.
+
+### Le vote k-NN comme signal de confiance d'identification
+
+C'est l'évolution la plus récente, et elle illustre bien l'idée qu'une bonne mesure d'incertitude
+vaut autant qu'une bonne prédiction. Le vote pondéré des voisins ne se contente pas de désigner une
+catégorie fine : il produit, **gratuitement**, un nombre entre 0 et 1 qui dit à quel point les
+voisins sont **d'accord entre eux**. Concrètement, c'est la **part du vote** remportée par la
+catégorie gagnante, c'est-à-dire la somme des ressemblances des voisins qui ont voté pour elle,
+divisée par la somme totale des ressemblances. Si presque tous les voisins pointent vers la même
+catégorie, cette part est élevée (proche de 1) ; s'ils se dispersent entre plusieurs catégories,
+elle s'effondre. Dans le code, cette part est calculée par la fonction `weighted_fine_vote`
+(fichier `src/api/pipeline.py`) et transportée jusqu'à l'interface sous le nom
+`predicted_category_confidence`.
+
+**Pourquoi ce signal est précieux pour l'identification.** Rappelons la distinction du paragraphe
+précédent : en usage réel, identifier un produit ne consiste pas à choisir parmi 2 956 catégories
+avec un classifieur, mais à retrouver les produits voisins puis à voter leur catégorie fine. Or la
+manière dont ce vote se **fragmente** est riche de sens. Quand les voisins retrouvés sont vraiment le
+même produit (ou des variantes très proches), ils partagent la même catégorie fine et le vote est
+net. Quand le moteur ramène un sac de produits **variés** (marques différentes, modèles différents,
+accessoires mêlés au produit principal), le vote se disperse : la part de la catégorie gagnante chute.
+Cette chute n'est donc pas du bruit, c'est une **information** : elle signale que le **modèle exact
+n'est pas cerné**, même si la grande catégorie, elle, ne fait aucun doute.
+
+**Comment l'interface s'en sert (frontend `MarketplaceListing.tsx`).** La règle retenue distingue
+deux choses qu'on confondait auparavant : « est-ce bien un casque ? » (la catégorie) et « est-ce bien
+*ce* casque-là ? » (le modèle exact). Le pourcentage de confiance affiché à côté de la catégorie est
+exactement cette part du vote k-NN sur la catégorie fine. Deux décisions en découlent :
+
+- **On n'affiche le pourcentage que s'il est net**, c'est-à-dire supérieur ou égal à **60 %** (seuil
+  `idConfident` dans le code). En dessous, montrer un chiffre bas serait **trompeur** : il ne traduit
+  pas un doute sur la catégorie (on sait que c'est un casque) mais une **ambiguïté sur le produit
+  exact**. Afficher « 34 % de confiance » sous un casque laisserait croire que l'on doute que ce soit
+  un casque, ce qui est faux.
+- **Quand le vote est fragmenté, on lève un drapeau actionnable « Modèle à confirmer »** plutôt qu'un
+  pourcentage. Ce bandeau invite le vendeur à préciser le nom du modèle (champ Précisions) ou à
+  ajouter une photo de l'étiquette ou de la boîte ; si la passe d'identification raisonnée a formulé
+  une question discriminante, c'est cette question précise qui est reprise. L'incertitude est ainsi
+  **portée par une demande d'action concrète**, pas par un nombre énigmatique.
+
+**Un exemple mesuré.** Sur un casque dont le modèle exact n'est pas lisible sur les photos, le vote
+se partage entre plusieurs références voisines et la part de la catégorie gagnante peut tomber autour
+de **34 %**. Dans ce cas, l'interface masque le pourcentage et affiche le bandeau « Modèle à
+confirmer ». C'est l'inverse d'un produit bien marqué, où le vote dépasse largement 60 % et où la
+fiche s'affiche directement, pourcentage à l'appui.
+
+**Où ce signal s'insère dans la décision globale.** Il ne travaille pas seul. Le drapeau « Modèle à
+confirmer » est levé soit lorsque le vote est fragmenté (part inférieure à 60 %), soit lorsque la
+passe d'identification raisonnée (un appel à un modèle vision-langage qui juge à partir des candidats
+réels du retriever) pose une question discriminante. Et il est **désactivé** dans le cas du
+« produit estimé, absent du catalogue » (catalog-miss), qui a son propre bandeau d'avertissement : il
+serait redondant de réclamer une confirmation de modèle pour un produit dont on dit déjà qu'il
+n'existe pas tel quel au catalogue. Cette articulation est documentée en détail dans les fiches
+consacrées à l'identification raisonnée et au parcours vendeur ; ici, le point à retenir est que la
+**même** quantité issue du benchmark de classification (la part du vote pondéré) sert désormais de
+boussole d'incertitude dans le produit, sans aucun calcul supplémentaire.
+
+> Pour la soutenance : « la confiance affichée n'est pas inventée, c'est la part du vote des voisins
+> mesurée par le benchmark ; un vote fragmenté ne dit pas qu'on doute de la catégorie, il dit qu'on
+> doute du modèle exact, et on transforme ce doute en une demande d'action (Modèle à confirmer)
+> plutôt qu'en un pourcentage trompeur. »
 
 ---
 
