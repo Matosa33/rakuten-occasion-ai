@@ -1,0 +1,1789 @@
+{
+  "aggregate": {
+    "n_total": 94,
+    "n_ok": 93,
+    "n_error": 0,
+    "identification_rate": 0.903,
+    "mean_token_recall": 0.777,
+    "mean_completeness": 0.839,
+    "median_completeness": 0.833,
+    "reasoned_rate": 1.0,
+    "catalog_miss_rate": 0.28,
+    "ask_question_rate": 0.108,
+    "price_levels": {
+      "L1": 42,
+      "L1.5": 51
+    }
+  },
+  "rows": [
+    {
+      "folder": "01_power_supply_1000w_80_gold",
+      "status": "ok",
+      "expected_tokens": [
+        "power",
+        "supply",
+        "1000w",
+        "80",
+        "gold"
+      ],
+      "found": "EVGA 1000 GQ 80+ Gold",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 99.88,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "02_canon_pixma_cli_581_xxl_multipack",
+      "status": "ok",
+      "expected_tokens": [
+        "canon",
+        "pixma",
+        "cli",
+        "581",
+        "xxl",
+        "multipack"
+      ],
+      "found": "Canon CLI-581 XXL Ink Cartridge Multi-Value Pack",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 0.8333,
+      "price_eur": 40.73,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "03_msi_geforce_rtx_4080_super_gaming_x_trio",
+      "status": "ok",
+      "expected_tokens": [
+        "msi",
+        "geforce",
+        "rtx",
+        "4080",
+        "super",
+        "gaming",
+        "trio"
+      ],
+      "found": "MSI Gaming X Trio Graphics Card",
+      "token_recall": 0.429,
+      "identified_ok": false,
+      "completeness": 1.0,
+      "price_eur": 318.43,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "04_nvidia_rtx_3090_founders_edition_24gb",
+      "status": "ok",
+      "expected_tokens": [
+        "nvidia",
+        "rtx",
+        "3090",
+        "founders",
+        "edition",
+        "24gb"
+      ],
+      "found": "NVIDIA GeForce RTX 3090 Founders Edition",
+      "token_recall": 0.833,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 577.35,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "05_razer_headset",
+      "status": "ok",
+      "expected_tokens": [
+        "razer",
+        "headset"
+      ],
+      "found": "Razer Kraken X Ultralight",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 48.57,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "06_samsung_pd_25w_fast_charger_type_c",
+      "status": "ok",
+      "expected_tokens": [
+        "samsung",
+        "pd",
+        "25w",
+        "fast",
+        "charger",
+        "type"
+      ],
+      "found": "Samsung EP-DC977 25W USB-C Wall Charger",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 6.07,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "07_coros_pace_2",
+      "status": "ok",
+      "expected_tokens": [
+        "coros",
+        "pace"
+      ],
+      "found": "Coros PACE 2 Premium GPS Sport Watch",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 70.84,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "08_apple_iphone_13_screen",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "iphone",
+        "13",
+        "screen"
+      ],
+      "found": "iPhone 13 LCD Screen Replacement Assembly",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.625,
+      "price_eur": 22.45,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "09_rockstar_games_grand_theft_auto_v_gta_5",
+      "status": "ok",
+      "expected_tokens": [
+        "rockstar",
+        "games",
+        "grand",
+        "theft",
+        "auto",
+        "gta"
+      ],
+      "found": "Grand Theft Auto V (PS4)",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.5,
+      "price_eur": 9.01,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "10_apple_iphone_13",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "iphone",
+        "13"
+      ],
+      "found": "Apple iPhone 13",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 181.55,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "11_apple_iphone_14_128go",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "iphone",
+        "14",
+        "128go"
+      ],
+      "found": "Apple iPhone 12",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 145.72,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "12_apple_iphone_14_128go",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "iphone",
+        "14",
+        "128go"
+      ],
+      "found": "Apple iPhone 13",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 181.86,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "13_jbl_flip_5",
+      "status": "ok",
+      "expected_tokens": [
+        "jbl",
+        "flip"
+      ],
+      "found": "JBL Flip 5 Portable Bluetooth Speaker",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 31.86,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "14_jbl_flip_6",
+      "status": "ok",
+      "expected_tokens": [
+        "jbl",
+        "flip"
+      ],
+      "found": "JBL Flip 6 Portable Bluetooth Speaker",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 60.18,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "15_gigabyte_geforce_rtx_2060_oc_6gb",
+      "status": "ok",
+      "expected_tokens": [
+        "gigabyte",
+        "geforce",
+        "rtx",
+        "2060",
+        "oc",
+        "6gb"
+      ],
+      "found": "Gigabyte GeForce RTX 2060 Windforce OC 6G",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 177.1,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "16_rockstar_games_red_dead_redemption_2",
+      "status": "ok",
+      "expected_tokens": [
+        "rockstar",
+        "games",
+        "red",
+        "dead",
+        "redemption"
+      ],
+      "found": "Red Dead Redemption II (PS4 Physical Disc)",
+      "token_recall": 0.6,
+      "identified_ok": true,
+      "completeness": 0.375,
+      "price_eur": 11.44,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "17_acer_aspire_3",
+      "status": "ok",
+      "expected_tokens": [
+        "acer",
+        "aspire"
+      ],
+      "found": "Acer Aspire 3 15.6\" Laptop",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 141.68,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "18_xiaomi_redmi_note_10_pro",
+      "status": "ok",
+      "expected_tokens": [
+        "xiaomi",
+        "redmi",
+        "note",
+        "10",
+        "pro"
+      ],
+      "found": "Xiaomi Redmi Note 10 Pro 4G",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 81.9,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "19_t_l_30euros",
+      "status": "ok",
+      "expected_tokens": [
+        "30euros"
+      ],
+      "found": "Linsar LED TV",
+      "token_recall": 0.0,
+      "identified_ok": false,
+      "completeness": 1.0,
+      "price_eur": 63.76,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": true
+    },
+    {
+      "folder": "20_far_tv_led_81_cm",
+      "status": "ok",
+      "expected_tokens": [
+        "far",
+        "tv",
+        "led",
+        "81",
+        "cm"
+      ],
+      "found": "FAR LD32EH244 G LED TV",
+      "token_recall": 0.6,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 51.36,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "21_apple_mac",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "mac"
+      ],
+      "found": "Apple iMac 27-inch Retina 5K (2020) 3.1GHz 6-Core i5 16GB RAM",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 389.21,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "22_apple_macbook_pro_15_2012_complete_scree",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "macbook",
+        "pro",
+        "15",
+        "2012",
+        "scree"
+      ],
+      "found": "MacBook Pro 15-inch (Unibody) A1286",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 0.75,
+      "price_eur": 460.11,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "23_nintendo_wii_accessories_and_games_bundl",
+      "status": "ok",
+      "expected_tokens": [
+        "nintendo",
+        "wii",
+        "accessories",
+        "games",
+        "bundl"
+      ],
+      "found": "Nintendo Wii Fit Balance Board",
+      "token_recall": 0.4,
+      "identified_ok": false,
+      "completeness": 1.0,
+      "price_eur": 30.84,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "24_amazon_fire_tv_cube",
+      "status": "ok",
+      "expected_tokens": [
+        "amazon",
+        "fire",
+        "tv",
+        "cube"
+      ],
+      "found": "Fire TV Cube (3rd Gen)",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 49.58,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "25_amazon_fire_tv_stick_4k_select",
+      "status": "ok",
+      "expected_tokens": [
+        "amazon",
+        "fire",
+        "tv",
+        "stick",
+        "4k",
+        "select"
+      ],
+      "found": "Amazon Fire TV Stick 4K Select",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.8333,
+      "price_eur": 17.71,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "26_apple_watch_se_2021",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "watch",
+        "se",
+        "2021"
+      ],
+      "found": "Apple Watch Series 5 (GPS, 44mm) - Midnight Aluminum Case with Midnight Sport Band",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 141.33,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "27_apple_watch_se_40mm_2021",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "watch",
+        "se",
+        "40mm",
+        "2021"
+      ],
+      "found": "Apple Watch Series 4 (GPS, 40mm) - Midnight Aluminum Case with Midnight Sport Band",
+      "token_recall": 0.8,
+      "identified_ok": true,
+      "completeness": 0.8333,
+      "price_eur": 105.91,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "28_atari_flashback",
+      "status": "ok",
+      "expected_tokens": [
+        "atari",
+        "flashback"
+      ],
+      "found": "Atari Flashback Classic (20 Games)",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.625,
+      "price_eur": 18.22,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "29_nintendo_wii_fit_rechargeable_battery",
+      "status": "ok",
+      "expected_tokens": [
+        "nintendo",
+        "wii",
+        "fit",
+        "rechargeable",
+        "battery"
+      ],
+      "found": "Joytronic TY-1080 Wii Fit Rechargeable Battery",
+      "token_recall": 0.8,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 6.38,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "30_nikon_d800",
+      "status": "ok",
+      "expected_tokens": [
+        "nikon",
+        "d800"
+      ],
+      "found": "Nikon D600 FX-Format Digital SLR Camera",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 425.04,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "31_bose_wave_soundtouch_iv",
+      "status": "ok",
+      "expected_tokens": [
+        "bose",
+        "wave",
+        "soundtouch",
+        "iv"
+      ],
+      "found": "Bose Wave SoundTouch Music System IV",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 301.07,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "32_asus_pce_ac_56",
+      "status": "ok",
+      "expected_tokens": [
+        "asus",
+        "pce",
+        "ac",
+        "56"
+      ],
+      "found": "ASUS PCE-AC56",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 15.94,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "33_atheros_ar5b125_wifi_and_bluetooth_card",
+      "status": "ok",
+      "expected_tokens": [
+        "atheros",
+        "ar5b125",
+        "wifi",
+        "bluetooth",
+        "card"
+      ],
+      "found": "Atheros AR5B125 Half Mini PCI-e Wireless Card",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 5.31,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "34_cartes_wifi",
+      "status": "ok",
+      "expected_tokens": [
+        "cartes",
+        "wifi"
+      ],
+      "found": "Intel AX200NGW WiFi 6 Wireless Card",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 8.14,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "35_sennheiser_momentum_3_wireless_white",
+      "status": "ok",
+      "expected_tokens": [
+        "sennheiser",
+        "momentum",
+        "wireless",
+        "white"
+      ],
+      "found": "Philips Fidelio X2HR",
+      "token_recall": 0.0,
+      "identified_ok": false,
+      "completeness": 1.0,
+      "price_eur": 52.42,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "36_sennheiser_hd_450bt_wireless",
+      "status": "ok",
+      "expected_tokens": [
+        "sennheiser",
+        "hd",
+        "450bt",
+        "wireless"
+      ],
+      "found": "Sennheiser HD 4.40 BT",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 53.13,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "37_logitech_keyboard",
+      "status": "ok",
+      "expected_tokens": [
+        "logitech",
+        "keyboard"
+      ],
+      "found": "Logitech G413 TKL SE",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 20.24,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "38_msi_strike_pro_wireless_keyboard_and_mou",
+      "status": "ok",
+      "expected_tokens": [
+        "msi",
+        "strike",
+        "pro",
+        "wireless",
+        "keyboard",
+        "mou"
+      ],
+      "found": "MSI Strike Pro Wireless Mechanical Gaming Keyboard",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 53.13,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "39_msi_gaming_keyboard_azerty",
+      "status": "ok",
+      "expected_tokens": [
+        "msi",
+        "gaming",
+        "keyboard",
+        "azerty"
+      ],
+      "found": "MSI Vigor GK20 Gaming Keyboard",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 10.12,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "40_microsoft_xbox_one_hard_drive_2tb",
+      "status": "ok",
+      "expected_tokens": [
+        "microsoft",
+        "xbox",
+        "one",
+        "hard",
+        "drive",
+        "2tb"
+      ],
+      "found": "Seagate Game Drive for Xbox 2TB White",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 47.64,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "41_seagate_barracuda_4tb",
+      "status": "ok",
+      "expected_tokens": [
+        "seagate",
+        "barracuda",
+        "4tb"
+      ],
+      "found": "Seagate BarraCuda ST4000DM004",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 24.08,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "42_nvme_ssd_500gb",
+      "status": "ok",
+      "expected_tokens": [
+        "nvme",
+        "ssd",
+        "500gb"
+      ],
+      "found": "Crucial P3 500GB M.2 NVMe SSD",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 29.27,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "43_kingston_and_transcend_ssd_60gb",
+      "status": "ok",
+      "expected_tokens": [
+        "kingston",
+        "transcend",
+        "ssd",
+        "60gb"
+      ],
+      "found": "Inateck FE2009 mSATA Enclosure",
+      "token_recall": 0.25,
+      "identified_ok": false,
+      "completeness": 0.8333,
+      "price_eur": 5.31,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "44_generic_karaoke_bluetooth_speaker_with_m",
+      "status": "ok",
+      "expected_tokens": [
+        "generic",
+        "karaoke",
+        "bluetooth",
+        "speaker"
+      ],
+      "found": "Homday Groone X1 Portable Karaoke Speaker",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.75,
+      "price_eur": 38.96,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "45_devialet_phantom_1_103db_silver",
+      "status": "ok",
+      "expected_tokens": [
+        "devialet",
+        "phantom",
+        "103db",
+        "silver"
+      ],
+      "found": "Devialet Phantom I 100",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 708.05,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "46_devialet_phantom_2",
+      "status": "ok",
+      "expected_tokens": [
+        "devialet",
+        "phantom"
+      ],
+      "found": "Devialet Phantom I",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 708.05,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "47_devialet_phantom_ii_95db",
+      "status": "ok",
+      "expected_tokens": [
+        "devialet",
+        "phantom",
+        "ii",
+        "95db"
+      ],
+      "found": "Devialet Phantom II 95 dB",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.8333,
+      "price_eur": 460.46,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "48_samsung_galaxy_watch_4_classic",
+      "status": "ok",
+      "expected_tokens": [
+        "samsung",
+        "galaxy",
+        "watch",
+        "classic"
+      ],
+      "found": "Samsung Galaxy Watch 4 40mm",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 46.04,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "49_samsung_galaxy_watch_5_44mm_bluetooth",
+      "status": "ok",
+      "expected_tokens": [
+        "samsung",
+        "galaxy",
+        "watch",
+        "44mm",
+        "bluetooth"
+      ],
+      "found": "Samsung Galaxy Watch 5",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 74.02,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "50_bose_lifestyle_v35_5_1",
+      "status": "ok",
+      "expected_tokens": [
+        "bose",
+        "lifestyle",
+        "v35"
+      ],
+      "found": "Bose Lifestyle V35 Home Entertainment System",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 301.07,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "51_lego_pikachu_and_pok_ball_10025",
+      "status": "ok",
+      "expected_tokens": [
+        "lego",
+        "pikachu",
+        "pok",
+        "ball",
+        "10025"
+      ],
+      "found": "LEGO 72152 Pikachu and Poké Ball",
+      "token_recall": 0.8,
+      "identified_ok": true,
+      "completeness": 0.625,
+      "price_eur": 48.57,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "52_leica_m6_2022_version",
+      "status": "ok",
+      "expected_tokens": [
+        "leica",
+        "m6",
+        "2022",
+        "version"
+      ],
+      "found": "Leica M6 35mm Rangefinder Camera",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.75,
+      "price_eur": 991.76,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "53_speedlink_pc_microphone",
+      "status": "ok",
+      "expected_tokens": [
+        "speedlink",
+        "pc",
+        "microphone"
+      ],
+      "found": "Speedlink Volity Ready Streaming Starter Set",
+      "token_recall": 0.333,
+      "identified_ok": false,
+      "completeness": 0.6,
+      "price_eur": 13.66,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "54_ugreen_pc_microphone",
+      "status": "ok",
+      "expected_tokens": [
+        "ugreen",
+        "pc",
+        "microphone"
+      ],
+      "found": "UGREEN USB Desktop Microphone",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.75,
+      "price_eur": 14.16,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "55_logitech_g203",
+      "status": "ok",
+      "expected_tokens": [
+        "logitech",
+        "g203"
+      ],
+      "found": "Logitech G203 LIGHTSYNC Wired Gaming Mouse",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 8.74,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "56_hp_zbook_fury_g8_i5_16gb_500gb",
+      "status": "ok",
+      "expected_tokens": [
+        "hp",
+        "zbook",
+        "fury",
+        "g8",
+        "i5",
+        "16gb",
+        "500gb"
+      ],
+      "found": "HP ZBook 14 G5",
+      "token_recall": 0.286,
+      "identified_ok": false,
+      "completeness": 1.0,
+      "price_eur": 442.75,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "57_pok_mon_pok_ball_2025_figure",
+      "status": "ok",
+      "expected_tokens": [
+        "pok",
+        "mon",
+        "pok",
+        "ball",
+        "2025",
+        "figure"
+      ],
+      "found": "Pokémon Trading Card Game Poké Ball Tin",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 0.5,
+      "price_eur": 4.86,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "58_sony_playstation_4",
+      "status": "ok",
+      "expected_tokens": [
+        "sony",
+        "playstation"
+      ],
+      "found": "Sony PlayStation 4 Slim Console",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 121.04,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "59_sony_playstation_5",
+      "status": "ok",
+      "expected_tokens": [
+        "sony",
+        "playstation"
+      ],
+      "found": "Sony PlayStation 5 Console Disc Version",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.8333,
+      "price_eur": 176.75,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "60_samsung_galaxy_s8_64gb",
+      "status": "ok",
+      "expected_tokens": [
+        "samsung",
+        "galaxy",
+        "s8",
+        "64gb"
+      ],
+      "found": "Samsung Galaxy S8 Plus",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.8571,
+      "price_eur": 258.06,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "61_logitech_g_pro_x_superlight_wireless_lig",
+      "status": "ok",
+      "expected_tokens": [
+        "logitech",
+        "pro",
+        "superlight",
+        "wireless",
+        "lig"
+      ],
+      "found": "Logitech G PRO X Superlight Wireless Gaming Mouse",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 52.62,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "62_dell_wd15_docking_station",
+      "status": "ok",
+      "expected_tokens": [
+        "dell",
+        "wd15",
+        "docking",
+        "station"
+      ],
+      "found": "Dell OptiPlex Micro Desktop",
+      "token_recall": 0.25,
+      "identified_ok": false,
+      "completeness": 0.8,
+      "price_eur": 112.28,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "63_nintendo_switch_oled_black",
+      "status": "ok",
+      "expected_tokens": [
+        "nintendo",
+        "switch",
+        "oled",
+        "black"
+      ],
+      "found": "Nintendo Switch (Neon Blue/Red Joy-Con)",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.6,
+      "price_eur": 114.86,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "64_fotopro_tripod",
+      "status": "ok",
+      "expected_tokens": [
+        "fotopro",
+        "tripod"
+      ],
+      "found": "Fotopro FP-43Q Mini Tripod",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 19.83,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "65_huawei_mate_10_pro_128gb",
+      "status": "ok",
+      "expected_tokens": [
+        "huawei",
+        "mate",
+        "10",
+        "pro",
+        "128gb"
+      ],
+      "found": "Huawei Mate 10 Pro",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 212.52,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "66_microsoft_xbox_one_s",
+      "status": "ok",
+      "expected_tokens": [
+        "microsoft",
+        "xbox",
+        "one"
+      ],
+      "found": "Microsoft Xbox One S 1TB Console",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.625,
+      "price_eur": 101.4,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "67_apple_airpods_pro_2",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "airpods",
+        "pro"
+      ],
+      "found": "Apple AirPods Pro (2nd Generation)",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.6667,
+      "price_eur": 70.84,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "68_apple_watch_se_2nd_gen_44mm_midnight_gps",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "watch",
+        "se",
+        "2nd",
+        "gen",
+        "44mm",
+        "midnight",
+        "gps"
+      ],
+      "found": "Apple Watch Series 4 (GPS, 40mm) - Black Aluminum Case with Black Sport Band",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 55.96,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "69_xiaomi_redmi_note_12_128gb",
+      "status": "ok",
+      "expected_tokens": [
+        "xiaomi",
+        "redmi",
+        "note",
+        "12",
+        "128gb"
+      ],
+      "found": "Xiaomi Redmi Note 12 5G",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 63.76,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "70_bosch_professional_gws_750",
+      "status": "ok",
+      "expected_tokens": [
+        "bosch",
+        "professional",
+        "gws",
+        "750"
+      ],
+      "found": "Bosch GWS 750 Professional Angle Grinder",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.7143,
+      "price_eur": 29.6,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "71_bose_soundlink",
+      "status": "ok",
+      "expected_tokens": [
+        "bose",
+        "soundlink"
+      ],
+      "found": "Bose SoundLink Mini II",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 60.14,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "72_apple_magsafe_charger",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "magsafe",
+        "charger"
+      ],
+      "found": "Apple MagSafe Charger",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.8333,
+      "price_eur": 10.98,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "73_dewalt_dcf887",
+      "status": "ok",
+      "expected_tokens": [
+        "dewalt",
+        "dcf887"
+      ],
+      "found": "DEWALT 18V XR Brushless Impact Driver",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 66.03,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "74_sony_dualshock_4_v2_red_magma",
+      "status": "ok",
+      "expected_tokens": [
+        "sony",
+        "dualshock",
+        "v2",
+        "red",
+        "magma"
+      ],
+      "found": "Sony DualShock 4 Wireless Controller - Magma Red",
+      "token_recall": 0.8,
+      "identified_ok": true,
+      "completeness": 0.625,
+      "price_eur": 40.47,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "75_bosch_heat_gun",
+      "status": "ok",
+      "expected_tokens": [
+        "bosch",
+        "heat",
+        "gun"
+      ],
+      "found": "Bosch PHG 600-2 CE Heat Gun",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.6,
+      "price_eur": 52.37,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "76_apple_ipad_air_10_9",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "ipad",
+        "air",
+        "10"
+      ],
+      "found": "Satechi R1 Aluminum Multi-Angle Foldable Tablet Stand",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.75,
+      "price_eur": 14.16,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "77_apple_ipad_pro_m2_2022_12_9",
+      "status": "ok",
+      "expected_tokens": [
+        "apple",
+        "ipad",
+        "pro",
+        "m2",
+        "2022",
+        "12"
+      ],
+      "found": "Apple iPad Pro 12.9-inch (5th Generation)",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 389.27,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "78_karcher_k2",
+      "status": "ok",
+      "expected_tokens": [
+        "karcher",
+        "k2"
+      ],
+      "found": "Karcher K2 Basic Pressure Washer",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.5714,
+      "price_eur": 50.09,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "79_k_rcher_k3_full_control",
+      "status": "ok",
+      "expected_tokens": [
+        "rcher",
+        "k3",
+        "full",
+        "control"
+      ],
+      "found": "Kärcher K3 Full Control Home Kit High Pressure Washer",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 113.39,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "80_microsoft_xbox_series_controller",
+      "status": "ok",
+      "expected_tokens": [
+        "microsoft",
+        "xbox",
+        "series",
+        "controller"
+      ],
+      "found": "Xbox Wireless Controller (Custom Purple)",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.5,
+      "price_eur": 25.46,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "81_bosch_professional_gll_2_10",
+      "status": "ok",
+      "expected_tokens": [
+        "bosch",
+        "professional",
+        "gll",
+        "10"
+      ],
+      "found": "Bosch GLL 2-10 Cross Line Laser",
+      "token_recall": 0.75,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 40.98,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "82_makita_14_4v_drill_driver_pack",
+      "status": "ok",
+      "expected_tokens": [
+        "makita",
+        "14",
+        "4v",
+        "drill",
+        "driver",
+        "pack"
+      ],
+      "found": "Makita 14.4V Cordless Drill Driver Kit",
+      "token_recall": 0.833,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 50.09,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "83_bosch_professional_gsb_18v_55",
+      "status": "ok",
+      "expected_tokens": [
+        "bosch",
+        "professional",
+        "gsb",
+        "18v",
+        "55"
+      ],
+      "found": "Bosch GSB 18V-60 Brushless",
+      "token_recall": 0.6,
+      "identified_ok": true,
+      "completeness": 0.6,
+      "price_eur": 84.25,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "84_makita_ddf485r_18v",
+      "status": "ok",
+      "expected_tokens": [
+        "makita",
+        "ddf485r",
+        "18v"
+      ],
+      "found": "Makita 18V LXT Brushless Cordless Drill Driver Kit",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 0.6,
+      "price_eur": 127.51,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "85_bosch_pex_400_ae",
+      "status": "ok",
+      "expected_tokens": [
+        "bosch",
+        "pex",
+        "400",
+        "ae"
+      ],
+      "found": "Bosch PEX 400 AE Random Orbit Sander",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.6,
+      "price_eur": 50.09,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "86_sony_playstation_4_pro_1tb",
+      "status": "ok",
+      "expected_tokens": [
+        "sony",
+        "playstation",
+        "pro",
+        "1tb"
+      ],
+      "found": "Sony PlayStation 4 Slim",
+      "token_recall": 0.5,
+      "identified_ok": true,
+      "completeness": 0.8,
+      "price_eur": 97.03,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "87_sony_playstation_4_slim_500gb",
+      "status": "ok",
+      "expected_tokens": [
+        "sony",
+        "playstation",
+        "slim",
+        "500gb"
+      ],
+      "found": "Sony PlayStation 4 Slim 500GB",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 97.03,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "88_samsung_galaxy_s22_plus",
+      "status": "ok",
+      "expected_tokens": [
+        "samsung",
+        "galaxy",
+        "s22",
+        "plus"
+      ],
+      "found": "Samsung Galaxy S22+ 5G",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.7143,
+      "price_eur": 151.8,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": true
+    },
+    {
+      "folder": "89_black_decker_cd601",
+      "status": "ok",
+      "expected_tokens": [
+        "black",
+        "decker",
+        "cd601"
+      ],
+      "found": "Black & Decker 170mm Circular Saw",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 0.6,
+      "price_eur": 38.71,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "90_sony_wh_1000xm5",
+      "status": "ok",
+      "expected_tokens": [
+        "sony",
+        "wh",
+        "1000xm5"
+      ],
+      "found": "Sony WH-1000XM4 Wireless Noise Canceling Over-Ear Headphones",
+      "token_recall": 0.667,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 92.09,
+      "price_level": "L1",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "91_bosch_electric_hedge_trimmer",
+      "status": "ok",
+      "expected_tokens": [
+        "bosch",
+        "electric",
+        "hedge",
+        "trimmer"
+      ],
+      "found": "Bosch AHS 600 Electric Hedge Trimmer",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 1.0,
+      "price_eur": 25.81,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "92_microsoft_xbox_series_s_carbon_black_800",
+      "status": "ok",
+      "expected_tokens": [
+        "microsoft",
+        "xbox",
+        "series",
+        "carbon",
+        "black",
+        "800"
+      ],
+      "found": "Attack Shark X1 Mini PC",
+      "token_recall": 0.167,
+      "identified_ok": false,
+      "completeness": 1.0,
+      "price_eur": 60.32,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": true,
+      "ask_question": false
+    },
+    {
+      "folder": "93_microsoft_xbox_series_s",
+      "status": "ok",
+      "expected_tokens": [
+        "microsoft",
+        "xbox",
+        "series"
+      ],
+      "found": "Microsoft Xbox Series S 512GB",
+      "token_recall": 1.0,
+      "identified_ok": true,
+      "completeness": 0.625,
+      "price_eur": 121.04,
+      "price_level": "L1.5",
+      "reasoned": true,
+      "catalog_miss": false,
+      "ask_question": false
+    },
+    {
+      "folder": "_cache",
+      "status": "no_photo"
+    }
+  ]
+}
