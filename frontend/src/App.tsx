@@ -11,7 +11,7 @@ import {
   priceProduct,
 } from "./api";
 import { clearToken, getToken, subscribe } from "./auth";
-import { checklistToText } from "./condition";
+import { checklistToText, kindFromCategory } from "./condition";
 import { StepBar } from "./components/StepBar";
 import { BatchMode } from "./components/BatchMode";
 import { CandidatePicker } from "./components/CandidatePicker";
@@ -336,6 +336,11 @@ export default function App() {
                 ident?.reasoned &&
                 (ident.reasoned.catalog_miss || ident.reasoned.chosen_parent_asin === chosenAsin)
                   ? ident.reasoned
+                  : null
+              }
+              kind={
+                chosenCategory
+                  ? kindFromCategory(chosenCategory, ident?.predicted_category_fine ?? "")
                   : null
               }
             />

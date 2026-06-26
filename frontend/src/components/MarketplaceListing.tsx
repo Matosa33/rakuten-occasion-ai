@@ -13,6 +13,7 @@ import type {
   ReasonedIdentification,
 } from "../api";
 import { facetLabel } from "../facets";
+import { KIND_CHECKLIST, PRODUCT_KINDS, type ProductKind } from "../condition";
 
 // Couleur du tag de provenance d'un champ (transparence du rangement).
 const SOURCE_STYLE: Record<string, string> = {
@@ -50,6 +51,7 @@ export function MarketplaceListing({
   condition,
   informationsCles,
   reasoned,
+  kind,
 }: {
   photos: UploadedPhoto[];
   chosen: CandidateMeta | null;
@@ -62,19 +64,27 @@ export function MarketplaceListing({
   informationsCles?: AssembledListing | null;
   // Jugement LLM (Cycle 36) : famille + catalog-miss + question discriminante.
   reasoned?: ReasonedIdentification | null;
+  // Type DÉRIVÉ de la catégorie identifiée (Cycle 36) → questions d'état spécifiques au bon moment.
+  kind?: ProductKind | null;
 }) {
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
   const [mainPhoto, setMainPhoto] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  // État spécifique au type (Cycle 36) : questions dérivées de la catégorie identifiée.
+  const [typeAnswers, setTypeAnswers] = useState<Record<string, string>>({});
 
   // Re-synchronise quand une NOUVELLE annonce arrive (anti derived-state bug).
   useEffect(() => {
     setTitle(listing.title);
     setDescription(listing.description);
     setMainPhoto(0);
+    setTypeAnswers({});
   }, [listing]);
+
+  const kindQuestions = kind ? KIND_CHECKLIST[kind] : [];
+  const kindLabel = PRODUCT_KINDS.find((k) => k.value === kind)?.label ?? "";
 
   const conditionLabel = CONDITION_LABELS[condition];
   // Type de produit = catégorie fine VOTÉE (plus robuste) ; repli sur le candidat choisi.
@@ -108,13 +118,23 @@ export function MarketplaceListing({
 
   async function copyAll() {
     const keyInfoText = keyInfo.map((r) => `${r.name} : ${r.value}`).join("\n");
+    // État spécifique vérifié (type dérivé) inclus dans l'annonce copiée.
+    const typeText = kindQuestions
+      .filter((q) => typeAnswers[q.key])
+      .map((q) => `${q.label.replace(/\s*\?$/, "")} : ${typeAnswers[q.key]}`)
+      .join("\n");
+    const priceLine =
+      price.suggested_price_eur > 0
+        ? `Prix : ${price.suggested_price_eur.toFixed(2)} €`
+        : "Prix : à fixer (saisie manuelle)";
     await navigator.clipboard.writeText(
       [
         title,
         "",
-        `Prix : ${price.suggested_price_eur.toFixed(2)} €`,
+        priceLine,
         breadcrumb ? `Catégorie : ${breadcrumb}` : "",
         keyInfoText ? `\nInformations clés :\n${keyInfoText}` : "",
+        typeText ? `\nÉtat vérifié :\n${typeText}` : "",
         "",
         description,
       ]
@@ -293,6 +313,40 @@ export function MarketplaceListing({
           </div>
         </div>
       </div>
+
+      {/* Cycle 36 : checklist d'état SPÉCIFIQUE au type DÉRIVÉ de la catégorie identifiée — affichée
+          au bon moment (après l'identification), plus de « type d'objet » deviné par le vendeur. */}
+      {kindQuestions.length > 0 && (
+        <div className="border-t border-slate-100 p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Points à vérifier{" "}
+            <span className="font-normal normal-case text-slate-500">{kindLabel}</span>
+          </p>
+          <div className="mt-2 space-y-2">
+            {kindQuestions.map((q) => (
+              <div key={q.key} className="flex flex-wrap items-center gap-1.5">
+                <span className="w-44 shrink-0 text-xs text-slate-600">{q.label}</span>
+                {q.options.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() =>
+                      setTypeAnswers((a) => ({ ...a, [q.key]: a[q.key] === opt ? "" : opt }))
+                    }
+                    className={`rounded-full px-2.5 py-1 text-xs transition ${
+                      typeAnswers[q.key] === opt
+                        ? "bg-rose-600 text-white"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Description éditable (IKEA effect) */}
       <div className="border-t border-slate-100 p-5">

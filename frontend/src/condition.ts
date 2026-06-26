@@ -89,3 +89,25 @@ export function checklistToText(answers: Record<string, string>): string {
   const lines = checklistEntries(answers).map(([label, v]) => `- ${label} : ${v}`);
   return lines.length ? `\n\nÉtat détaillé :\n${lines.join("\n")}` : "";
 }
+
+/** Cycle 36 : dérive le type d'objet de la catégorie IDENTIFIÉE (plus de choix manuel vendeur).
+ * Sert à afficher les questions d'état SPÉCIFIQUES au bon moment (après l'identification).
+ * `fine` (catégorie fine votée) prime ; repli sur la macro-catégorie. null = pas de type dédié
+ * (ex. carte graphique, audio) → seules les questions universelles s'appliquent. */
+export function kindFromCategory(macro: string, fine: string): ProductKind | null {
+  const f = (fine || "").toLowerCase();
+  if (/laptop|notebook/.test(f)) return "laptop";
+  if (/camera|dslr|mirrorless|camcorder/.test(f)) return "camera";
+  if (/phone|tablet|smartphone/.test(f)) return "phone";
+  if (/console/.test(f)) return "console";
+  switch (macro) {
+    case "Cell_Phones_and_Accessories":
+      return "phone";
+    case "Video_Games":
+      return "console";
+    case "Tools_and_Home_Improvement":
+      return "tool";
+    default:
+      return null; // Electronics non spécifique (GPU, audio…) → universel seulement
+  }
+}
