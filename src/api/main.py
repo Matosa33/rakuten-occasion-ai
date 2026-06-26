@@ -33,6 +33,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -64,6 +65,7 @@ from src.api.schemas import (
 )
 from src.auth import authenticate, create_access_token, get_current_user
 from src.config import REPO_ROOT
+from src.observability.logging import get_logger
 from src.serving.listing_fill import assemble_listing
 from src.vlm.photo_extraction import PhotoExtractionUnavailable
 from src.vlm.photo_extraction import extract as extract_from_photos
@@ -72,6 +74,9 @@ from src.vlm.validator import validate_top1
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
+# Logger structuré (structlog) pour les événements MÉTIER inspectables (issue réelle + timings LLM),
+# au-delà des métriques HTTP Prometheus (C14.2) : on veut LIRE ce que fait chaque requête.
+obs_log = get_logger("rakuten.api")
 
 # Singleton state (rempli au lifespan startup, consommé par les endpoints)
 APP_STATE: dict[str, Any] = {
@@ -256,10 +261,12 @@ async def identify(
     # vendeur (optionnel) complète la requête.
     query = req.text_hint.strip()
     observed = dict(req.already_observed)
+    extraction_ms = 0.0  # observabilité : temps de l'extraction VLM
     if req.image_ids:
         paths = [p for p in (uploads.get_upload_path(i) for i in req.image_ids) if p]
         if not paths:
             raise HTTPException(422, "Aucune photo valide (image_ids inconnus ou expirés).")
+        _t0 = time.perf_counter()
         try:
             extraction = await asyncio.to_thread(extract_from_photos, paths)
         except PhotoExtractionUnavailable as e:
@@ -275,6 +282,7 @@ async def identify(
                 ) from e
             log.warning("photo extraction échouée, fallback texte seul : %s", e)
             extraction = None
+        extraction_ms = round((time.perf_counter() - _t0) * 1000, 1)
         if extraction is not None:
             query = f"{extraction.title_guess} {query}".strip()
             # Attributs observés par le VLM = observations Akinator pré-remplies.
@@ -302,10 +310,13 @@ async def identify(
         else []
     )
     ri = None
+    reason_ms = 0.0
     if r_paths and candidates:
+        _t0 = time.perf_counter()
         ri = await asyncio.to_thread(
             reason_identify, r_paths, candidates[:15], observed, req.text_hint
         )
+        reason_ms = round((time.perf_counter() - _t0) * 1000, 1)
     if ri is not None and ri.chosen_parent_asin:
         idx = next(
             (i for i, c in enumerate(candidates) if c.parent_asin == ri.chosen_parent_asin), -1
@@ -341,9 +352,12 @@ async def identify(
             cand_attrs = (
                 {"brand": top1.brand, **top1.attributes} if top1.brand else dict(top1.attributes)
             )
+            _t0 = time.perf_counter()
             verdict = await asyncio.to_thread(
                 validate_top1, r_paths, catalog_img, top1.title, cand_attrs
             )
+            validate_ms = round((time.perf_counter() - _t0) * 1000, 1)
+            log.info("vlm_validate_ms=%s", validate_ms)
             if verdict is not None:
                 vlm_validation = {
                     "match": verdict.match,
@@ -410,6 +424,25 @@ async def identify(
             missing=assembled.missing,
         )
 
+    # Observabilité MÉTIER (inspectable) : issue réelle de la requête + timings des appels LLM.
+    obs_log.info(
+        "identify_done",
+        status=result.status,
+        n_candidates=len(candidates),
+        top1_score=round(top1.score, 4) if top1 else None,
+        category_fine=result.predicted_category_fine,
+        category_conf=round(result.predicted_category_confidence, 4),
+        reasoned=ri is not None,
+        reordered=bool(ri and top1 and ri.chosen_parent_asin == top1.parent_asin),
+        catalog_miss=ri.catalog_miss if ri else None,
+        anchor_usd=ri.reference_new_price_usd if ri else None,
+        ask_question=ri.ask_question if ri else None,
+        family_conf=round(ri.family_confidence, 3) if ri else None,
+        completeness=informations_cles.completeness if informations_cles else None,
+        extraction_ms=extraction_ms,
+        reason_ms=reason_ms,
+    )
+
     return IdentifyResponse(
         status=result.status,
         top_candidates=[
@@ -459,6 +492,16 @@ async def price(
         llm_anchor_price=req.reference_new_price_usd,  # L1.5 (Cycle 36)
         llm_anchor_confidence=req.reference_new_confidence,
         expected_order_of_magnitude=req.reference_new_price_usd or req.catalog_price,
+    )
+    # Observabilité métier : niveau de cascade réellement utilisé + présence d'une ancre IA.
+    obs_log.info(
+        "price_done",
+        level=str(result.confidence_level),
+        method=result.method,
+        suggested_eur=result.suggested_price_eur,
+        has_anchor=req.reference_new_price_usd is not None,
+        category=req.category.value,
+        condition=req.condition.value,
     )
     return PriceResponse(
         suggested_price_eur=result.suggested_price_eur,
