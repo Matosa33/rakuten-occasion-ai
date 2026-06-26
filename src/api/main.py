@@ -97,10 +97,12 @@ def _seller_text_best_match(text: str, candidates: list) -> str:
     REPRÉSENTATIF (le plus proche de la médiane) pour éviter une fiche à la donnée corrompue
     (ex. un même « Momentum 3 » listé à 9755 $ par erreur). "" si pas de match fort.
     """
+    # On garde les tokens ≥2 car ET les NUMÉROS de modèle (même 1 chiffre : « Momentum 3 » vs « 2.0 »)
+    # pour départager les variantes.
     toks = {
         t
         for t in re.split(r"[^a-z0-9]+", (text or "").lower())
-        if len(t) >= 2 and t not in _SELLER_STOPWORDS
+        if (len(t) >= 2 or t.isdigit()) and t not in _SELLER_STOPWORDS
     }
     if len(toks) < 2:
         return ""

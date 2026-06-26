@@ -62,3 +62,12 @@ def test_tiebreak_prefers_representative_price() -> None:
     ]
     # médiane des prix = 249.95 → le candidat MID (le plus proche) est retenu, jamais le 9755.
     assert _seller_text_best_match("Sennheiser Momentum 3 Wireless", cands) == "MID"
+
+
+def test_digit_model_disambiguates_variant() -> None:
+    # le token numérique « 3 » départage Momentum 3 vs 2.0 (même prix proche)
+    cands = [
+        C("M2", "Sennheiser Momentum 2.0 Wireless", 239.0),
+        C("M3", "Sennheiser Momentum 3 Wireless", 249.0),
+    ]
+    assert _seller_text_best_match("Sennheiser Momentum 3 Wireless", cands) == "M3"
