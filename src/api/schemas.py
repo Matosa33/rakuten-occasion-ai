@@ -33,6 +33,7 @@ class CategoryEnum(StrEnum):
 
 class ConfidenceLevelEnum(StrEnum):
     L1 = "L1"
+    L15 = "L1.5"  # ancre prix neuf estimée par IA (Cycle 36), entre L1 et L2
     L2 = "L2"
     L3 = "L3"
     L4 = "L4"
@@ -131,6 +132,32 @@ class AssembledListingOut(BaseModel):
     missing: list[str] = Field(default_factory=list, description="facettes attendues non remplies")
 
 
+class ReasonedFacetOut(BaseModel):
+    """Facette jugée par le LLM, avec sa provenance ('observed' | 'analogy' | index de fiche)."""
+
+    key: str
+    value: str
+    source: str
+
+
+class ReasonedIdentificationOut(BaseModel):
+    """Jugement LLM sur le top-15 (Cycle 36) : famille + ancre prix neuf + besoin de question.
+
+    Best-effort : `reasoned` reste None si le LLM est indisponible (le pipeline retombe alors sur
+    le classement retrieval + la cascade pricing). Aucun champ obligatoire ajouté côté contrat.
+    """
+
+    product_family: str = ""
+    family_confidence: float = 0.0
+    chosen_parent_asin: str = ""
+    catalog_miss: bool = False
+    reference_new_price_usd: float | None = None
+    reference_new_confidence: float = 0.0
+    ask_question: bool = False
+    facet_question: str = ""
+    facets: list[ReasonedFacetOut] = Field(default_factory=list)
+
+
 class IdentifyResponse(BaseModel):
     status: str = Field(..., description="identified | to_confirm | uncertain")
     top_candidates: list[CandidateMeta]
@@ -150,6 +177,9 @@ class IdentifyResponse(BaseModel):
     predicted_category_path: str = Field(
         default="", description="Breadcrumb « A > B > C » de la catégorie fine prédite"
     )
+    # Jugement LLM sur le top-15 (Cycle 36) : famille + ancre prix neuf + question discriminante.
+    # None si la passe raisonnée est indisponible (best-effort, non bloquant).
+    reasoned: ReasonedIdentificationOut | None = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -169,6 +199,12 @@ class PriceRequest(BaseModel):
     neighbor_prices: list[float] = Field(
         default_factory=list, description="Prix des candidats voisins FAISS (USD) → L2"
     )
+    # Cycle 36 : ancre prix NEUF estimée par IA (issue de /identify.reasoned, repassée par le front
+    # comme catalog_price/neighbor_prices) → niveau L1.5. None = pas d'ancre (cascade inchangée).
+    reference_new_price_usd: float | None = Field(
+        None, description="Prix neuf de référence estimé par IA (USD) → L1.5"
+    )
+    reference_new_confidence: float = Field(0.0, ge=0.0, le=1.0)
 
 
 class PriceResponse(BaseModel):
@@ -178,7 +214,7 @@ class PriceResponse(BaseModel):
     range_low: float
     range_high: float
     explanation: str
-    method: str  # catalog_meta | knn_median | category_median | fallback
+    method: str  # catalog_meta | llm_anchor | knn_median | category_median | fallback
 
 
 # ─────────────────────────────────────────────────────────────────────────────

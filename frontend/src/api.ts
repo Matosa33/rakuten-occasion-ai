@@ -69,6 +69,25 @@ export interface AssembledListing {
   missing: string[];
 }
 
+export interface ReasonedFacet {
+  key: string;
+  value: string;
+  source: string; // 'observed' | 'analogy' | index de fiche
+}
+
+// Jugement LLM sur le top-15 (Cycle 36) : famille + ancre prix neuf + question discriminante.
+export interface ReasonedIdentification {
+  product_family: string;
+  family_confidence: number;
+  chosen_parent_asin: string;
+  catalog_miss: boolean;
+  reference_new_price_usd: number | null;
+  reference_new_confidence: number;
+  ask_question: boolean;
+  facet_question: string;
+  facets: ReasonedFacet[];
+}
+
 export interface IdentifyResponse {
   status: "identified" | "to_confirm" | "uncertain";
   top_candidates: CandidateMeta[];
@@ -82,11 +101,13 @@ export interface IdentifyResponse {
   predicted_category_path: string;
   // Fiche structurée du top-1 : facettes explicites + provenance + complétude (D-041).
   informations_cles: AssembledListing | null;
+  // Jugement LLM sur le top-15 (Cycle 36) : null si la passe raisonnée est indisponible.
+  reasoned: ReasonedIdentification | null;
 }
 
 export interface PriceResponse {
   suggested_price_eur: number;
-  confidence_level: "L1" | "L2" | "L3" | "L4";
+  confidence_level: "L1" | "L1.5" | "L2" | "L3" | "L4";
   confidence_score: number;
   range_low: number;
   range_high: number;
@@ -182,6 +203,9 @@ export function priceProduct(
     catalogPrice?: number | null;
     neighborPrices?: number[];
     ageYears?: number;
+    // Cycle 36 : ancre prix neuf estimée par IA (issue de /identify.reasoned) → niveau L1.5.
+    referenceNewPriceUsd?: number | null;
+    referenceNewConfidence?: number;
   } = {}
 ) {
   return postJson<PriceResponse>("/price", {
@@ -191,6 +215,8 @@ export function priceProduct(
     age_years: opts.ageYears ?? 2,
     catalog_price: opts.catalogPrice ?? null,
     neighbor_prices: opts.neighborPrices ?? [],
+    reference_new_price_usd: opts.referenceNewPriceUsd ?? null,
+    reference_new_confidence: opts.referenceNewConfidence ?? 0,
   });
 }
 

@@ -57,6 +57,8 @@ from src.api.schemas import (
     ObservationToRequest,
     PriceRequest,
     PriceResponse,
+    ReasonedFacetOut,
+    ReasonedIdentificationOut,
     TokenResponse,
     UploadResponse,
 )
@@ -65,6 +67,7 @@ from src.config import REPO_ROOT
 from src.serving.listing_fill import assemble_listing
 from src.vlm.photo_extraction import PhotoExtractionUnavailable
 from src.vlm.photo_extraction import extract as extract_from_photos
+from src.vlm.reasoned_identification import reason_identify
 from src.vlm.validator import validate_top1
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -286,21 +289,60 @@ async def identify(
         )
 
     result = ident.identify(query, already_observed=observed)
+    candidates = list(result.candidates)
 
-    # Persistence (Cycle 9.5) : trace l'identification
-    top1 = result.candidates[0] if result.candidates else None
+    # Identification raisonnée (Cycle 36) : le LLM JUGE le top-15 → famille + ancre prix neuf +
+    # question discriminante. Best-effort, non bloquant (R15) : None si VLM indispo/échec. Calculée
+    # TÔT car son choix (chosen_parent_asin) fait remonter le BON candidat en tête — fiche, prix et
+    # validation portent alors sur le produit JUGÉ, pas sur le top-1 retrieval qui peut être un
+    # accessoire (ex. coque iPhone). Sans elle, on garde l'ordre retrieval inchangé.
+    r_paths = (
+        [p for p in (uploads.get_upload_path(i) for i in req.image_ids) if p]
+        if req.image_ids
+        else []
+    )
+    ri = None
+    if r_paths and candidates:
+        ri = await asyncio.to_thread(
+            reason_identify, r_paths, candidates[:15], observed, req.text_hint
+        )
+    if ri is not None and ri.chosen_parent_asin:
+        idx = next(
+            (i for i, c in enumerate(candidates) if c.parent_asin == ri.chosen_parent_asin), -1
+        )
+        if idx > 0:
+            candidates = [candidates[idx], *candidates[:idx], *candidates[idx + 1 :]]
 
-    # VLM validateur F0.4 (17.2, D-035) : « la photo du vendeur montre-t-elle le
-    # top-1 ? » → badge de confiance visuelle. Best-effort (None si pas de photos,
-    # pas d'image catalogue, ou VLM down) — jamais bloquant (R15).
+    reasoned_out = None
+    if ri is not None:
+        reasoned_out = ReasonedIdentificationOut(
+            product_family=ri.product_family,
+            family_confidence=ri.family_confidence,
+            chosen_parent_asin=ri.chosen_parent_asin,
+            catalog_miss=ri.catalog_miss,
+            reference_new_price_usd=ri.reference_new_price_usd,
+            reference_new_confidence=ri.reference_new_confidence,
+            ask_question=ri.ask_question,
+            facet_question=ri.facet_question,
+            facets=[
+                ReasonedFacetOut(key=f.key, value=f.value, source=f.source) for f in ri.facets
+            ],
+        )
+
+    # top-1 effectif (réordonné par la passe raisonnée si disponible)
+    top1 = candidates[0] if candidates else None
+
+    # VLM validateur F0.4 (17.2, D-035) : « la photo du vendeur montre-t-elle le top-1 ? » → badge
+    # de confiance visuelle. Best-effort (None si pas de photos/image catalogue/VLM down, R15).
     vlm_validation = None
-    if req.image_ids and top1 is not None:
+    if r_paths and top1 is not None:
         catalog_img = (top1.images[0] if top1.images else "") or top1.image_url
         if catalog_img:
-            paths = [p for p in (uploads.get_upload_path(i) for i in req.image_ids) if p]
-            cand_attrs = {"brand": top1.brand, **top1.attributes} if top1.brand else dict(top1.attributes)
+            cand_attrs = (
+                {"brand": top1.brand, **top1.attributes} if top1.brand else dict(top1.attributes)
+            )
             verdict = await asyncio.to_thread(
-                validate_top1, paths, catalog_img, top1.title, cand_attrs
+                validate_top1, r_paths, catalog_img, top1.title, cand_attrs
             )
             if verdict is not None:
                 vlm_validation = {
@@ -335,6 +377,12 @@ async def identify(
     informations_cles = None
     if top1 is not None:
         expected = APP_STATE.get("expected_facets", {}).get(top1.category)
+        # Fiabilité : score retrieval élevé OU candidat choisi par la passe raisonnée (confiant).
+        match_reliable = top1.score >= 0.60 or (
+            ri is not None
+            and ri.chosen_parent_asin == top1.parent_asin
+            and ri.family_confidence >= 0.70
+        )
         assembled = assemble_listing(
             category_leaf=result.predicted_category_fine or top1.category_fine,
             category_confidence=result.predicted_category_confidence,
@@ -343,7 +391,7 @@ async def identify(
             seller_metadata=req.text_hint,
             match_brand=top1.brand,
             match_attributes=top1.attributes,
-            match_reliable=top1.score >= 0.60,
+            match_reliable=match_reliable,
             expected_facets=expected,
         )
         informations_cles = AssembledListingOut(
@@ -372,7 +420,7 @@ async def identify(
                 category_path=c.category_path,
                 attributes=c.attributes,
             )
-            for c in result.candidates
+            for c in candidates
         ],
         vlm_validation=vlm_validation,  # F0.4 (17.2, D-035) — None si pas de photos
         next_observation=next_obs,
@@ -381,6 +429,7 @@ async def identify(
         predicted_category_confidence=result.predicted_category_confidence,
         predicted_category_path=result.predicted_category_path,
         informations_cles=informations_cles,
+        reasoned=reasoned_out,
     )
 
 
@@ -401,6 +450,9 @@ async def price(
         age_years=req.age_years,
         catalog_price=req.catalog_price,
         knn_neighbors_prices=req.neighbor_prices or None,
+        llm_anchor_price=req.reference_new_price_usd,  # L1.5 (Cycle 36)
+        llm_anchor_confidence=req.reference_new_confidence,
+        expected_order_of_magnitude=req.reference_new_price_usd or req.catalog_price,
     )
     return PriceResponse(
         suggested_price_eur=result.suggested_price_eur,

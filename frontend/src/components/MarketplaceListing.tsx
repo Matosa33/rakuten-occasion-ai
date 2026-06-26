@@ -34,6 +34,7 @@ const CONDITION_LABELS: Record<Condition, string> = {
 
 const CONFIDENCE_LABEL: Record<PriceResponse["confidence_level"], string> = {
   L1: "Confiance élevée (prix catalogue)",
+  "L1.5": "Prix neuf estimé par IA",
   L2: "Confiance moyenne (produits similaires)",
   L3: "Estimation par catégorie",
   L4: "Saisie manuelle conseillée",

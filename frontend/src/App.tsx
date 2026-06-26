@@ -110,6 +110,8 @@ export default function App() {
     const ageYears = purchaseYear
       ? Math.max(0, CURRENT_YEAR - parseInt(purchaseYear, 10))
       : undefined;
+    // Cycle 36 : ancre prix neuf estimée par l'IA (passe raisonnée) → niveau L1.5, tue le 6 €/150 €.
+    const reasoned = identData?.reasoned ?? null;
     try {
       // Hick's Law : on enchaîne prix + description automatiquement (pas de choix superflu)
       const [p, l] = await Promise.all([
@@ -118,6 +120,8 @@ export default function App() {
           catalogPrice: chosen?.price ?? null,
           neighborPrices,
           ageYears,
+          referenceNewPriceUsd: reasoned?.reference_new_price_usd ?? null,
+          referenceNewConfidence: reasoned?.reference_new_confidence ?? 0,
         }),
         describe(asin, condition),
       ]);

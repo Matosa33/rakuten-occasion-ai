@@ -458,11 +458,21 @@ class PricingService:
         age_years: float = 2.0,
         catalog_price: float | None = None,
         knn_neighbors_prices: list[float] | None = None,
+        llm_anchor_price: float | None = None,
+        llm_anchor_confidence: float = 0.0,
+        expected_order_of_magnitude: float | None = None,
     ):
-        """Délègue à la cascade pricing-cascade avec la médiane catégorie chargée."""
+        """Délègue à la cascade pricing-cascade avec la médiane catégorie chargée.
+
+        Cycle 36 : `llm_anchor_price` (prix neuf estimé par IA) → niveau L1.5 ;
+        `expected_order_of_magnitude` (défaut = ancre ou prix catalogue) alimente le garde-fou
+        anti sous-évaluation des médianes L2/L3.
+        """
         if self._config is None:
             raise RuntimeError("PricingService non chargé.")
         cat_median = self._config.get("category_medians_usd", {}).get(category)
+        if expected_order_of_magnitude is None:
+            expected_order_of_magnitude = llm_anchor_price or catalog_price
         return _pricing.suggest_price(
             catalog_price=catalog_price,
             knn_neighbors_prices=knn_neighbors_prices,
@@ -470,6 +480,9 @@ class PricingService:
             condition=condition,
             age_years=age_years,
             category=category,
+            llm_anchor_price=llm_anchor_price,
+            llm_anchor_confidence=llm_anchor_confidence,
+            expected_order_of_magnitude=expected_order_of_magnitude,
         )
 
 

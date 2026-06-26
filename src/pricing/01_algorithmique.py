@@ -5,13 +5,17 @@ Système déterministe (aucun ML opaque) qui retourne un **prix indicatif**
 ML opaque (R19 grounded-avant-génératif) car le vendeur particulier doit
 comprendre POURQUOI le prix lui est suggéré.
 
-4 niveaux de confiance (cascade)
+5 niveaux de confiance (cascade)
 --------------------------------
 - **L1 (haute)** : prix présent dans la fiche meta du produit identifié
   → prix catalogue × pénalité état × dépréciation âge
-- **L2 (moyenne)** : prix médian des KNN top-10 voisins valides
+- **L1.5 (haute-moyenne)** : prix NEUF de référence estimé par IA (passe d'identification
+  raisonnée, Cycle 36) → ancre IA × pénalité état × dépréciation. La décote reste 100 %
+  déterministe ; seule l'ANCRE est une estimation IA. Placée AVANT L2 car les médianes de
+  voisins sont polluées par accessoires/coques/bundles (elles donnaient 6 € pour une montre à 150 €).
+- **L2 (moyenne)** : prix médian des KNN top-10 voisins valides (avec garde-fou anti sous-éval)
   → médiane KNN prix × pénalité état × dépréciation âge
-- **L3 (basse)** : seule la catégorie est connue
+- **L3 (basse)** : seule la catégorie est connue (avec garde-fou anti sous-éval)
   → médiane prix par catégorie × pénalité état
 - **L4 (très basse)** : produit inconnu / catégorie inconnue
   → retourne une fourchette large + mode dégradé "saisie manuelle"
@@ -116,12 +120,12 @@ class PricingResult:
     """Résultat d'une suggestion de prix."""
 
     suggested_price_eur: float
-    confidence_level: str  # L1 | L2 | L3 | L4
+    confidence_level: str  # L1 | L1.5 | L2 | L3 | L4
     confidence_score: float  # 0..1
     range_low: float
     range_high: float
     explanation: str
-    method: str  # "catalog_meta" | "knn_median" | "category_median" | "fallback"
+    method: str  # "catalog_meta" | "llm_anchor" | "knn_median" | "category_median" | "fallback"
 
 
 def _depreciate(price: float, age_years: float, category: str) -> float:
@@ -135,6 +139,42 @@ def _apply_condition(price: float, condition: str) -> float:
     return price * CONDITION_MULTIPLIER.get(condition, 0.55)  # défaut bon_etat
 
 
+# Garde-fou anti sous-évaluation (Cycle 36). Une médiane de voisins (L2/L3) polluée par des
+# accessoires/coques/bundles peut s'effondrer (ex. 6 € pour une montre à 150 €). Si la suggestion
+# tombe sous ce ratio du prix neuf de référence décoté au MÊME état/âge, on la relève à ce plancher.
+UNDERPRICING_FLOOR_RATIO = 0.25
+
+# Garde-fou de cohérence L1 (Cycle 36). Si une ancre IA existe et que le prix catalogue du top-1 est
+# très en-dessous (< ce ratio × ancre), le top-1 est probablement un ACCESSOIRE mal apparié (coque à
+# 43 $ pour un iPhone à 598 $) → on ignore ce prix catalogue pollué et on bascule sur l'ancre L1.5.
+L1_ANCHOR_MIN_RATIO = 0.5
+
+
+def _floor_against_underpricing(
+    suggested_eur: float,
+    condition: str,
+    age_years: float,
+    category: str,
+    expected_order_of_magnitude: float | None,
+) -> tuple[float, bool]:
+    """Relève une suggestion absurde sous un ratio du prix neuf attendu décoté.
+
+    `expected_order_of_magnitude` = prix NEUF de référence (USD : ancre IA ou prix catalogue).
+    Retourne (prix_éventuellement_relevé_eur, was_floored). Inactif si pas d'ordre de grandeur
+    (rétro-compatibilité : aucun appel existant ne le fournit).
+    """
+    if expected_order_of_magnitude is None or expected_order_of_magnitude < MIN_VALID_PRICE_USD:
+        return suggested_eur, False
+    expected_decote_eur = (
+        _apply_condition(_depreciate(expected_order_of_magnitude, age_years, category), condition)
+        * USD_TO_EUR
+    )
+    floor = expected_decote_eur * UNDERPRICING_FLOOR_RATIO
+    if suggested_eur < floor:
+        return round(floor, 2), True
+    return suggested_eur, False
+
+
 def suggest_price(
     catalog_price: float | None,
     knn_neighbors_prices: list[float] | None,
@@ -142,17 +182,35 @@ def suggest_price(
     condition: str = "bon_etat",
     age_years: float = 0.0,
     category: str = "",
+    llm_anchor_price: float | None = None,
+    llm_anchor_confidence: float = 0.0,
+    expected_order_of_magnitude: float | None = None,
 ) -> PricingResult:
-    """Cascade L1→L4 pour suggérer un prix avec niveau de confiance.
+    """Cascade L1→L4 (+ L1.5) pour suggérer un prix avec niveau de confiance.
 
     Entrées en USD (catalogue Amazon) ; sorties en EUR (17.4b, D-036 :
     conversion par taux fixe USD_TO_EUR appliquée APRÈS dépréciation+état).
+
+    Cycle 36 (params optionnels, 100 % rétro-compatibles) :
+    - `llm_anchor_price` : prix NEUF de référence estimé par IA (passe raisonnée) → niveau L1.5,
+      placé AVANT les médianes de voisins (polluées). La décote reste déterministe.
+    - `expected_order_of_magnitude` : prix neuf de référence (USD) pour le garde-fou anti
+      sous-évaluation appliqué aux médianes L2/L3.
     """
     cond_label = CONDITION_LABELS_FR.get(condition, condition)
 
-    # L1 : catalogue meta
-    if catalog_price is not None and catalog_price >= MIN_VALID_PRICE_USD:
-        depreciated = _depreciate(catalog_price, age_years, category)
+    # L1 : catalogue meta (prix RÉEL du produit identifié → prioritaire sur l'ancre IA).
+    # Sauf si le prix catalogue est incohérent avec l'ancre IA (top-1 = accessoire mal apparié) :
+    # on l'ignore alors au profit de L1.5 (évite « iPhone à 15 € » car top-1 = coque à 43 $).
+    _anchor_valid = llm_anchor_price is not None and llm_anchor_price >= MIN_VALID_PRICE_USD
+    _catalog_valid = catalog_price is not None and catalog_price >= MIN_VALID_PRICE_USD
+    _catalog_polluted = (
+        _anchor_valid
+        and _catalog_valid
+        and catalog_price < llm_anchor_price * L1_ANCHOR_MIN_RATIO  # type: ignore[operator]
+    )
+    if _catalog_valid and not _catalog_polluted:
+        depreciated = _depreciate(catalog_price, age_years, category)  # type: ignore[arg-type]
         suggested = _apply_condition(depreciated, condition) * USD_TO_EUR
         return PricingResult(
             suggested_price_eur=round(suggested, 2),
@@ -169,43 +227,79 @@ def suggest_price(
             method="catalog_meta",
         )
 
-    # L2 : KNN voisins valides
+    # L1.5 : ancre prix NEUF estimée par IA (Cycle 36). Décote déterministe ; placée AVANT L2
+    # car les médianes de voisins sont polluées par accessoires/coques/bundles.
+    if llm_anchor_price is not None and llm_anchor_price >= MIN_VALID_PRICE_USD:
+        depreciated = _depreciate(llm_anchor_price, age_years, category)
+        suggested = _apply_condition(depreciated, condition) * USD_TO_EUR
+        conf = max(0.55, min(0.85, 0.60 + 0.25 * float(llm_anchor_confidence)))
+        return PricingResult(
+            suggested_price_eur=round(suggested, 2),
+            confidence_level="L1.5",
+            confidence_score=round(conf, 2),
+            range_low=round(suggested * 0.80, 2),
+            range_high=round(suggested * 1.20, 2),
+            explanation=(
+                f"Prix neuf estimé par IA : {llm_anchor_price:.0f} $ "
+                f"(≈ {llm_anchor_price * USD_TO_EUR:.0f} €), dépréciation "
+                f"{CATEGORY_DEPRECIATION_RATE.get(category, 0.10) * 100:.0f} %/an "
+                f"sur {age_years:.1f} an(s), ajustement « {cond_label} »."
+            ),
+            method="llm_anchor",
+        )
+
+    # L2 : KNN voisins valides (avec garde-fou anti sous-évaluation)
     if knn_neighbors_prices:
         valid_prices = [p for p in knn_neighbors_prices if p >= MIN_VALID_PRICE_USD]
         if len(valid_prices) >= 3:
             knn_median = float(np.median(valid_prices))
             depreciated = _depreciate(knn_median, age_years, category)
             suggested = _apply_condition(depreciated, condition) * USD_TO_EUR
+            suggested, floored = _floor_against_underpricing(
+                suggested, condition, age_years, category, expected_order_of_magnitude
+            )
             spread = float(np.std(valid_prices)) / max(knn_median, 1.0)
             confidence_score = max(0.50, min(0.80, 0.80 - spread))
+            explanation = (
+                f"Basé sur le prix médian de {len(valid_prices)} produits similaires "
+                f"({knn_median:.2f} $ ≈ {knn_median * USD_TO_EUR:.0f} €), "
+                f"dépréciation par âge et ajustement « {cond_label} »."
+            )
+            if floored:
+                explanation += (
+                    " (Prix relevé : la médiane des voisins était incohérente avec le prix "
+                    "neuf attendu — voisins probablement pollués par des accessoires.)"
+                )
             return PricingResult(
                 suggested_price_eur=round(suggested, 2),
                 confidence_level="L2",
                 confidence_score=round(confidence_score, 2),
                 range_low=round(suggested * 0.70, 2),
                 range_high=round(suggested * 1.30, 2),
-                explanation=(
-                    f"Basé sur le prix médian de {len(valid_prices)} produits similaires "
-                    f"({knn_median:.2f} $ ≈ {knn_median * USD_TO_EUR:.0f} €), "
-                    f"dépréciation par âge et ajustement « {cond_label} »."
-                ),
+                explanation=explanation,
                 method="knn_median",
             )
 
-    # L3 : catégorie seule
+    # L3 : catégorie seule (avec garde-fou anti sous-évaluation)
     if category_median_price is not None and category_median_price >= MIN_VALID_PRICE_USD:
         suggested = _apply_condition(category_median_price, condition) * USD_TO_EUR
+        suggested, floored = _floor_against_underpricing(
+            suggested, condition, age_years, category, expected_order_of_magnitude
+        )
+        explanation = (
+            f"Estimation large : prix médian de la catégorie "
+            f"({category_median_price * USD_TO_EUR:.0f} €), ajustement « {cond_label} ». "
+            f"Produit non identifié précisément."
+        )
+        if floored:
+            explanation += " (Prix relevé : incohérent avec le prix neuf attendu.)"
         return PricingResult(
             suggested_price_eur=round(suggested, 2),
             confidence_level="L3",
             confidence_score=0.30,
             range_low=round(suggested * 0.50, 2),
             range_high=round(suggested * 1.50, 2),
-            explanation=(
-                f"Estimation large : prix médian de la catégorie "
-                f"({category_median_price * USD_TO_EUR:.0f} €), ajustement « {cond_label} ». "
-                f"Produit non identifié précisément."
-            ),
+            explanation=explanation,
             method="category_median",
         )
 

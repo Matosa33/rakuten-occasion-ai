@@ -33,9 +33,10 @@ class TestEnums:
         conds = {c.value for c in ConditionEnum}
         assert conds == {"neuf", "tres_bon_etat", "bon_etat", "correct", "pour_pieces"}
 
-    def test_4_confidence_levels(self):
+    def test_confidence_levels(self):
+        # Cycle 36 : ajout de L1.5 (ancre prix neuf estimée par IA, entre L1 et L2).
         levels = {lvl.value for lvl in ConfidenceLevelEnum}
-        assert levels == {"L1", "L2", "L3", "L4"}
+        assert levels == {"L1", "L1.5", "L2", "L3", "L4"}
 
 
 class TestIdentifyRequest:
