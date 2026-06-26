@@ -62,8 +62,12 @@ IDENTIFY_PROMPT = (
     "- Every facet you output MUST cite its source: an integer candidate index, or \"observed\" "
     "(seen on the photo), or \"analogy\" (inferred from comparable candidates when the exact "
     "product is missing).\n"
-    "- For the REFERENCE NEW PRICE you MUST anchor on the new/clean prices (price_usd) of the REAL "
-    "product candidates, and list the candidate indices you used in \"price_anchor_evidence\".\n"
+    "- For the REFERENCE NEW PRICE: ALWAYS output your best estimate of the product-only NEW price "
+    "in USD (reference_new_price_usd) — NEVER null or 0 once you can name the family. Anchor it on "
+    "the new/clean price_usd of the REAL product candidates and list those indices in "
+    "\"price_anchor_evidence\"; if no candidate has a clean price, estimate from the closest "
+    "comparable product and STILL output the price. Asking a question does NOT exempt you from "
+    "giving your best price now.\n"
     "- EXCLUDE from the price anchor any candidate that is an accessory or bundle (title/leaf with: "
     "case, cover, screen protector, charger, cable, strap, band, mount, skin, sleeve, adapter, "
     "bundle, lot, pack, accessory, kit). Their prices are NOT the product price.\n"
@@ -205,9 +209,10 @@ def _parse(raw: str, candidates: list[Candidate]) -> ReasonedIdentification | No
         ref_val = None
     if ref_val is not None and ref_val <= 0:
         ref_val = None
-    # Ancre non groundée (aucune fiche citée hors catalog-miss) → on la rejette.
-    if ref_val is not None and not evidence and not catalog_miss:
-        ref_val = None
+    # On GARDE l'ancre même sans evidence : c'est une ESTIMATION explicitement étiquetée
+    # « prix neuf estimé par IA » (pas un fait catalogue), et c'est nettement mieux que retomber
+    # sur la médiane catégorie polluée (le 11 € pour une montre à 150 €). `price_anchor_evidence`
+    # reste exposée pour l'auditabilité (quelles fiches ont servi).
 
     facets: list[SourcedFacet] = []
     for f in data.get("facets") or []:

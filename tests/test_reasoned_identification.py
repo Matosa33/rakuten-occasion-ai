@@ -102,12 +102,17 @@ def test_parse_rejects_hallucinated_asin() -> None:
     assert out.chosen_parent_asin == "A1"  # retombe sur le top-1 (grounded)
 
 
-def test_parse_drops_anchor_when_no_evidence_and_not_catalog_miss() -> None:
+def test_parse_keeps_estimated_anchor_even_without_evidence() -> None:
+    # Politique Cycle 36 : l'ancre est une ESTIMATION étiquetée (« estimé par IA »), on la garde
+    # même sans evidence — bien mieux que retomber sur la médiane catégorie polluée.
     raw = json.dumps({"chosen_parent_asin": "A1", "reference_new_price_usd": 150,
                       "price_anchor_evidence": [], "catalog_miss": False, "facets": []})
     out = _parse(raw, _cands())
     assert out is not None
-    assert out.reference_new_price_usd is None  # ancre non groundée → jetée
+    assert out.reference_new_price_usd == 150.0
+    # une ancre nulle/négative reste rejetée
+    raw0 = json.dumps({"chosen_parent_asin": "A1", "reference_new_price_usd": 0, "facets": []})
+    assert _parse(raw0, _cands()).reference_new_price_usd is None
 
 
 def test_parse_keeps_anchor_for_catalog_miss_by_analogy() -> None:
