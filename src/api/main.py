@@ -378,10 +378,16 @@ async def identify(
     if top1 is not None:
         expected = APP_STATE.get("expected_facets", {}).get(top1.category)
         # Fiabilité : score retrieval élevé OU candidat choisi par la passe raisonnée (confiant).
-        match_reliable = top1.score >= 0.60 or (
-            ri is not None
-            and ri.chosen_parent_asin == top1.parent_asin
-            and ri.family_confidence >= 0.70
+        # En catalog-miss, le candidat catalogue n'EST PAS le produit → ses specs ne sont pas des
+        # faits (on s'appuie sur l'observé + le typique, pas sur le mauvais catalogue).
+        catalog_miss = ri is not None and ri.catalog_miss
+        match_reliable = not catalog_miss and (
+            top1.score >= 0.60
+            or (
+                ri is not None
+                and ri.chosen_parent_asin == top1.parent_asin
+                and ri.family_confidence >= 0.70
+            )
         )
         assembled = assemble_listing(
             category_leaf=result.predicted_category_fine or top1.category_fine,

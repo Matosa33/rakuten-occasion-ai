@@ -323,6 +323,7 @@ export default function App() {
               listing={listing}
               condition={condition}
               informationsCles={ident?.informations_cles ?? null}
+              reasoned={ident?.reasoned ?? null}
             />
             {ident && ident.top_candidates.length > 1 && (
               <button

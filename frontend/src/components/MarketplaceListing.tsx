@@ -10,6 +10,7 @@ import type {
   Condition,
   DescribeResponse,
   PriceResponse,
+  ReasonedIdentification,
 } from "../api";
 import { facetLabel } from "../facets";
 
@@ -48,6 +49,7 @@ export function MarketplaceListing({
   listing,
   condition,
   informationsCles,
+  reasoned,
 }: {
   photos: UploadedPhoto[];
   chosen: CandidateMeta | null;
@@ -58,6 +60,8 @@ export function MarketplaceListing({
   condition: Condition;
   // Fiche structurée du produit identifié : facettes + provenance + complétude (D-041).
   informationsCles?: AssembledListing | null;
+  // Jugement LLM (Cycle 36) : famille + catalog-miss + question discriminante.
+  reasoned?: ReasonedIdentification | null;
 }) {
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
@@ -137,6 +141,21 @@ export function MarketplaceListing({
             </span>
           ))}
         </nav>
+      )}
+
+      {/* Cycle 36 : catalog-miss → la fiche est une ESTIMATION (produit absent du catalogue). */}
+      {reasoned?.catalog_miss && (
+        <div className="border-b border-amber-200 bg-amber-50 px-5 py-2.5 text-sm text-amber-800">
+          ⚠ Produit <strong>estimé</strong>
+          {reasoned.product_family ? ` « ${reasoned.product_family} »` : ""} — absent du catalogue.
+          Prix et caractéristiques à vérifier.
+        </div>
+      )}
+      {/* Question discriminante proposée par l'IA (capacité, variante…) pour affiner. */}
+      {reasoned?.ask_question && reasoned.facet_question && (
+        <div className="border-b border-sky-200 bg-sky-50 px-5 py-2.5 text-sm text-sky-800">
+          💡 Pour affiner : {reasoned.facet_question}
+        </div>
       )}
 
       <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
