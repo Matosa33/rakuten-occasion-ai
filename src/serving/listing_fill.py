@@ -140,7 +140,8 @@ def assemble_listing(
 
     # Facettes attendues pour la catégorie (schéma) → remplies par photo/catalogue.
     facets = expected_facets or sorted(set(photo) | set(match_attrs))
-    shown_keys = {"brand", "category"}
+    # `visible_text` = OCR brut (souvent le titre ou un watermark « leboncoin ») → bruit, non affiché.
+    shown_keys = {"brand", "category", "visible_text"}
     for key in facets:
         if key in ("brand",):  # déjà traité
             continue
