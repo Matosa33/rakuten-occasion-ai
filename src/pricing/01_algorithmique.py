@@ -86,6 +86,7 @@ CONDITION_MULTIPLIER = {
     "tres_bon_etat": 0.75,
     "bon_etat": 0.55,
     "correct": 0.35,
+    "pour_pieces": 0.15,  # HS / pour pièces : valeur résiduelle (Cycle 36)
 }
 
 # Libellés humains (17.4b) : les codes snake_case ne doivent JAMAIS fuiter
@@ -95,6 +96,7 @@ CONDITION_LABELS_FR = {
     "tres_bon_etat": "Très bon état",
     "bon_etat": "Bon état",
     "correct": "État correct",
+    "pour_pieces": "Pour pièces / HS",
 }
 
 # Dépréciation linéaire par catégorie (taux annuel)

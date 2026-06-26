@@ -28,9 +28,10 @@ class TestEnums:
             "Tools_and_Home_Improvement",
         }
 
-    def test_4_conditions(self):
+    def test_conditions(self):
+        # Cycle 36 : ajout de "pour_pieces" (HS / pour pièces, cas courant occasion).
         conds = {c.value for c in ConditionEnum}
-        assert conds == {"neuf", "tres_bon_etat", "bon_etat", "correct"}
+        assert conds == {"neuf", "tres_bon_etat", "bon_etat", "correct", "pour_pieces"}
 
     def test_4_confidence_levels(self):
         levels = {lvl.value for lvl in ConfidenceLevelEnum}

@@ -29,6 +29,7 @@ const CONDITION_LABELS: Record<Condition, string> = {
   tres_bon_etat: "Très bon état",
   bon_etat: "Bon état",
   correct: "État correct",
+  pour_pieces: "Pour pièces / HS",
 };
 
 const CONFIDENCE_LABEL: Record<PriceResponse["confidence_level"], string> = {

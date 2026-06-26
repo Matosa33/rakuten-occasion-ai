@@ -562,6 +562,7 @@ class DescribeService:
         "tres_bon_etat": "Très bon état",
         "bon_etat": "Bon état",
         "correct": "État correct",
+        "pour_pieces": "Pour pièces / HS",
     }
 
     def describe(self, parent_asin: str, condition: str = "bon état") -> DescribeResult:

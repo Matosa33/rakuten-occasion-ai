@@ -16,7 +16,7 @@ function _netError(e: unknown): Error {
   return new Error("Réseau indisponible — vérifiez votre connexion puis réessayez.");
 }
 
-export type Condition = "neuf" | "tres_bon_etat" | "bon_etat" | "correct";
+export type Condition = "neuf" | "tres_bon_etat" | "bon_etat" | "correct" | "pour_pieces";
 export type Category =
   | "Electronics"
   | "Cell_Phones_and_Accessories"

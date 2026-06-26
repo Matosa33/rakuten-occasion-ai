@@ -11,7 +11,7 @@ import {
   priceProduct,
 } from "./api";
 import { clearToken, getToken, subscribe } from "./auth";
-import { checklistToText, type ProductKind } from "./condition";
+import { checklistToText } from "./condition";
 import { StepBar } from "./components/StepBar";
 import { BatchMode } from "./components/BatchMode";
 import { CandidatePicker } from "./components/CandidatePicker";
@@ -25,7 +25,10 @@ const CONDITIONS: { value: Condition; label: string }[] = [
   { value: "tres_bon_etat", label: "Très bon état" },
   { value: "bon_etat", label: "Bon état" },
   { value: "correct", label: "Correct" },
+  { value: "pour_pieces", label: "Pour pièces / HS" },
 ];
+
+const CURRENT_YEAR = new Date().getFullYear();
 
 export default function App() {
   // Auth D-032 : store externe (localStorage) → re-render auto au login/logout/401.
@@ -36,10 +39,10 @@ export default function App() {
 
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]); // ≥ 1 OBLIGATOIRE (D-035)
-  const [kind, setKind] = useState<ProductKind | null>(null);
   const [checklist, setChecklist] = useState<Record<string, string>>({});
   const [textHint, setTextHint] = useState("");
   const [condition, setCondition] = useState<Condition>("bon_etat");
+  const [purchaseYear, setPurchaseYear] = useState(""); // année d'achat (option) → âge → décote
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +69,15 @@ export default function App() {
         textHint
       );
       setIdent(res);
-      setStep(2);
+      const top1 = res.top_candidates[0];
+      // Plus de sélection forcée : si l'IA est SÛRE (status identified), on enchaîne directement
+      // vers la fiche. Sinon (à confirmer / incertain), on montre les candidats. Dans les deux cas
+      // le vendeur garde la main (« ce n'est pas le bon ? » sur la fiche).
+      if (res.status === "identified" && top1) {
+        await chooseCandidate(top1.parent_asin, top1.category, res);
+      } else {
+        setStep(2);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
@@ -74,7 +85,11 @@ export default function App() {
     }
   }
 
-  async function chooseCandidate(asin: string, category: Category) {
+  async function chooseCandidate(
+    asin: string,
+    category: Category,
+    identData: IdentifyResponse | null = ident
+  ) {
     setChosenAsin(asin);
     setChosenCategory(category);
     setLoading(true);
@@ -82,13 +97,19 @@ export default function App() {
     // Contexte prix (F4) : prix du produit choisi (L1) + prix des voisins (L2).
     // IMPORTANT : on filtre les voisins au MÊME type de produit que le choisi
     // (sinon les coques/accessoires pas chers polluent la médiane → prix absurde).
-    const chosen = ident?.top_candidates.find((c) => c.parent_asin === asin);
+    // `identData` passé explicitement lors de l'auto-confirmation (state pas encore commité).
+    const cands = identData?.top_candidates ?? [];
+    const chosen = cands.find((c) => c.parent_asin === asin);
     const sameType = (c: { category_fine: string; category: Category }) =>
       chosen ? (c.category_fine || c.category) === (chosen.category_fine || chosen.category) : true;
-    const neighborPrices = (ident?.top_candidates ?? [])
+    const neighborPrices = cands
       .filter(sameType)
       .map((c) => c.price)
       .filter((p): p is number => p != null && p > 0);
+    // Année d'achat (option) → âge → dépréciation pricing.
+    const ageYears = purchaseYear
+      ? Math.max(0, CURRENT_YEAR - parseInt(purchaseYear, 10))
+      : undefined;
     try {
       // Hick's Law : on enchaîne prix + description automatiquement (pas de choix superflu)
       const [p, l] = await Promise.all([
@@ -96,6 +117,7 @@ export default function App() {
           parentAsin: asin,
           catalogPrice: chosen?.price ?? null,
           neighborPrices,
+          ageYears,
         }),
         describe(asin, condition),
       ]);
@@ -114,9 +136,9 @@ export default function App() {
   function reset() {
     setStep(1);
     setPhotos([]);
-    setKind(null);
     setChecklist({});
     setTextHint("");
+    setPurchaseYear("");
     setIdent(null);
     setChosenAsin(null);
     setChosenCategory(null);
@@ -192,12 +214,7 @@ export default function App() {
             {/* 17.3 (D-035) : la PHOTO d'abord — preuve acheteur + entrée du pipeline */}
             <PhotoUploader photos={photos} onChange={setPhotos} disabled={loading} />
 
-            <ConditionChecklist
-              kind={kind}
-              onKindChange={setKind}
-              answers={checklist}
-              onAnswersChange={setChecklist}
-            />
+            <ConditionChecklist answers={checklist} onAnswersChange={setChecklist} />
 
             <label className="mt-4 block text-sm font-medium text-slate-700">
               Précisions <span className="font-normal text-slate-400">(facultatif)</span>
@@ -226,6 +243,22 @@ export default function App() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-700">
+                Année d'achat{" "}
+                <span className="font-normal text-slate-400">(facultatif — affine la décote)</span>
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1990}
+                max={CURRENT_YEAR}
+                value={purchaseYear}
+                onChange={(e) => setPurchaseYear(e.target.value)}
+                placeholder={`Ex : ${CURRENT_YEAR - 2}`}
+                className="mt-2 w-36 rounded-xl border border-slate-300 p-2 text-slate-800 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+              />
             </div>
             <button
               onClick={runIdentify}
@@ -287,6 +320,14 @@ export default function App() {
               condition={condition}
               informationsCles={ident?.informations_cles ?? null}
             />
+            {ident && ident.top_candidates.length > 1 && (
+              <button
+                onClick={() => setStep(2)}
+                className="w-full rounded-xl border border-amber-300 bg-amber-50 py-2.5 text-amber-800 transition hover:bg-amber-100"
+              >
+                Ce n'est pas le bon produit ? Voir les autres résultats
+              </button>
+            )}
             <button
               onClick={reset}
               className="w-full rounded-xl border border-slate-300 py-2.5 text-slate-600 transition hover:bg-slate-50"

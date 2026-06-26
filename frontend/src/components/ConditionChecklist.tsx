@@ -1,9 +1,10 @@
-// Cycle 17.3 (D-035) — type de produit (guidage photos) + checklist état rapide.
-// 2-3 taps = les « bābā » d'une annonce parfaite, injectés dans la description.
+// Cycle 17.3 (D-035) — checklist état rapide. 2-3 taps = les « bābā » d'une annonce parfaite.
+// Cycle 36 : plus de « Type d'objet » MANUEL (le vendeur ne sait pas où ranger une carte
+// graphique). Le type est dérivé de la catégorie IDENTIFIÉE → les questions spécifiques
+// (`kind`, optionnel) s'affichent après l'identification ; ici on ne montre que l'universel.
 
 import {
   KIND_CHECKLIST,
-  PRODUCT_KINDS,
   SHOT_GUIDES,
   UNIVERSAL_CHECKLIST,
   type ChecklistQuestion,
@@ -41,13 +42,13 @@ function QuestionChips({
 }
 
 export function ConditionChecklist({
-  kind,
-  onKindChange,
+  kind = null,
   answers,
   onAnswersChange,
 }: {
-  kind: ProductKind | null;
-  onKindChange: (k: ProductKind) => void;
+  // `kind` (optionnel) = type DÉRIVÉ de la catégorie identifiée ; quand fourni, on ajoute
+  // ses questions spécifiques. Plus de sélecteur manuel (Cycle 36).
+  kind?: ProductKind | null;
   answers: Record<string, string>;
   onAnswersChange: (a: Record<string, string>) => void;
 }) {
@@ -57,27 +58,6 @@ export function ConditionChecklist({
 
   return (
     <div className="mt-4 space-y-3">
-      {/* Type de produit → guidage photos + questions spécifiques */}
-      <div>
-        <span className="text-sm font-medium text-slate-700">Type d'objet</span>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {PRODUCT_KINDS.map((k) => (
-            <button
-              key={k.value}
-              type="button"
-              onClick={() => onKindChange(k.value)}
-              className={`rounded-full px-3 py-1.5 text-sm transition ${
-                kind === k.value
-                  ? "bg-slate-800 text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Guidage prises de vue (D-035) — incitatif, pas bloquant */}
       {kind && (
         <div className="rounded-xl bg-sky-50 p-3 text-xs text-sky-800">

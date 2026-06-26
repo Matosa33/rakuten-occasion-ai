@@ -21,6 +21,7 @@ class ConditionEnum(StrEnum):
     TRES_BON_ETAT = "tres_bon_etat"
     BON_ETAT = "bon_etat"
     CORRECT = "correct"
+    POUR_PIECES = "pour_pieces"  # HS / pour pièces (Cycle 36 : cas courant occasion)
 
 
 class CategoryEnum(StrEnum):
