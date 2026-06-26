@@ -99,13 +99,12 @@ export function MarketplaceListing({
   // (couleur, capacité, taille…). C'est la metadata structurée, visible et navigable.
   const keyInfo = useMemo(() => {
     const rows: { name: string; value: string; source: string }[] = [];
-    // État + année = données VENDEUR, toujours pertinentes — en tête de la fiche structurée.
-    rows.push({ name: "État", value: conditionLabel, source: "vendeur" });
+    // Année = donnée VENDEUR pertinente (l'État est déjà le badge sous le prix → pas de doublon ici).
     if (purchaseYear) rows.push({ name: "Année d'achat", value: purchaseYear, source: "vendeur" });
     // Données structurées générées par l'API (facettes + provenance) : type, marque, capacité, etc.
     if (informationsCles && informationsCles.fields.length > 0) {
       for (const f of informationsCles.fields) {
-        if (f.name === "État") continue; // évite un doublon avec la ligne vendeur ci-dessus
+        if (f.name === "État") continue; // l'état général est le badge sous le prix
         rows.push({ name: f.name, value: f.value, source: f.source });
       }
       return rows;
@@ -134,8 +133,8 @@ export function MarketplaceListing({
       .join("\n");
     const priceLine =
       price.suggested_price_eur > 0
-        ? `Prix : ${price.suggested_price_eur.toFixed(2)} €`
-        : "Prix : à fixer (saisie manuelle)";
+        ? `Prix : ${price.suggested_price_eur.toFixed(2)} € (${conditionLabel})`
+        : `Prix : à fixer (saisie manuelle) — ${conditionLabel}`;
     await navigator.clipboard.writeText(
       [
         title,
@@ -274,10 +273,16 @@ export function MarketplaceListing({
               {CONFIDENCE_LABEL[price.confidence_level]}
             </span>
             <span className="text-xs text-slate-400">
-              {(price.confidence_score * 100).toFixed(0)}%
+              fiabilité prix {(price.confidence_score * 100).toFixed(0)}%
             </span>
           </div>
           <p className="mt-2 text-xs leading-relaxed text-slate-500">{price.explanation}</p>
+          {/* Âge supposé par défaut (2 ans) quand le vendeur n'a pas saisi l'année → on l'indique. */}
+          {!purchaseYear && price.suggested_price_eur > 0 && (
+            <p className="mt-1 text-xs italic text-slate-400">
+              Âge supposé : 2 ans — saisis l'année d'achat pour affiner le prix.
+            </p>
+          )}
 
           {/* Informations clés — la metadata structurée à facettes, façon marketplace.
               Chaque champ porte sa provenance (observé / catalogue / typique-à-vérifier),

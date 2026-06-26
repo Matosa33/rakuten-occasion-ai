@@ -364,8 +364,8 @@ export default function App() {
       </AnimatePresence>
 
       <footer className="mt-10 text-center text-xs text-slate-400">
-        Identification ancrée sur catalogue (RAG-grounded) — aucune invention. ASIN:{" "}
-        {chosenAsin ?? "—"} · {chosenCategory ?? ""}
+        Identification ancrée sur catalogue (RAG-grounded) — chaque champ porte sa source, aucune
+        valeur inventée.
       </footer>
         </>
       )}
