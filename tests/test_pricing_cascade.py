@@ -279,3 +279,29 @@ class TestL1AnchorConsistency:
         # pas d'ancre → comportement historique (L1 dès qu'un prix catalogue existe).
         r = suggest_price(43.6, None, None, "bon_etat", 2.0, "Electronics")
         assert r.confidence_level == "L1"
+
+
+class TestCatalogOutlierGuard:
+    """Cycle 36 — un prix catalogue ABERRANT (donnée polluée) ne doit pas être gobé par L1."""
+
+    def test_absurd_catalog_price_ignored_for_neighbors(self):
+        # catalogue 9755 $ (faute de saisie) vs voisins ~240 → on écarte L1, on prend L2.
+        r = suggest_price(
+            catalog_price=9755.0,
+            knn_neighbors_prices=[230.0, 240.0, 250.0, 235.0],
+            category_median_price=None,
+            condition="bon_etat",
+            age_years=2.0,
+            category="Electronics",
+        )
+        assert r.method == "knn_median"
+        assert r.suggested_price_eur < 300
+
+    def test_normal_catalog_price_kept(self):
+        r = suggest_price(250.0, [230.0, 240.0, 260.0], None, "bon_etat", 2.0, "Electronics")
+        assert r.confidence_level == "L1"
+
+    def test_no_neighbors_no_outlier_guard(self):
+        # sans assez de voisins → pas de garde-fou (rétro-compat)
+        r = suggest_price(9755.0, None, None, "bon_etat", 2.0, "Electronics")
+        assert r.confidence_level == "L1"

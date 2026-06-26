@@ -151,6 +151,11 @@ UNDERPRICING_FLOOR_RATIO = 0.25
 # peuvent être légitimement plus bas que l'estimation IA) — on ne l'écarte que s'il est aberrant.
 L1_ANCHOR_MIN_RATIO = 0.2
 
+# Garde-fou data-quality : un prix catalogue très AU-DESSUS de la médiane des voisins est une
+# donnée polluée (ex. 9755 $ pour un casque, faute de saisie/bundle) → on l'ignore au profit des
+# voisins. N'agit que s'il y a assez de voisins pour une médiane fiable.
+CATALOG_OUTLIER_FACTOR = 4.0
+
 
 def _floor_against_underpricing(
     suggested_eur: float,
@@ -211,7 +216,13 @@ def suggest_price(
         and _catalog_valid
         and catalog_price < llm_anchor_price * L1_ANCHOR_MIN_RATIO  # type: ignore[operator]
     )
-    if _catalog_valid and not _catalog_polluted:
+    # Prix catalogue aberrant (>> médiane des voisins) = donnée polluée → on l'écarte.
+    _catalog_outlier = False
+    if _catalog_valid and knn_neighbors_prices:
+        _vp = [p for p in knn_neighbors_prices if p >= MIN_VALID_PRICE_USD]
+        if len(_vp) >= 3 and catalog_price > CATALOG_OUTLIER_FACTOR * float(np.median(_vp)):  # type: ignore[operator]
+            _catalog_outlier = True
+    if _catalog_valid and not _catalog_polluted and not _catalog_outlier:
         depreciated = _depreciate(catalog_price, age_years, category)  # type: ignore[arg-type]
         suggested = _apply_condition(depreciated, condition) * USD_TO_EUR
         return PricingResult(
