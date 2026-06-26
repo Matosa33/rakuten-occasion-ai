@@ -66,7 +66,9 @@ def test_summarize_candidate_truncates_long_title() -> None:
 def test_build_prompt_contains_candidates_and_exclusion_rules() -> None:
     prompt = build_identify_prompt(_cands(), {"brand": "Coros"}, "montre running")
     assert "[0]" in prompt and "[2]" in prompt
-    assert "brand=Coros" in prompt and "seller_text: montre running" in prompt
+    # texte vendeur présent mais délimité comme donnée non fiable (anti-injection)
+    assert "brand=Coros" in prompt
+    assert "montre running" in prompt and "untrusted" in prompt
     # règles d'exclusion accessoires présentes
     for kw in ("strap", "bundle", "charger", "case"):
         assert kw in prompt
@@ -100,6 +102,25 @@ def test_parse_rejects_hallucinated_asin() -> None:
     out = _parse(raw, _cands())
     assert out is not None
     assert out.chosen_parent_asin == "A1"  # retombe sur le top-1 (grounded)
+
+
+def test_parse_resets_confidence_on_hallucinated_asin() -> None:
+    # ASIN invalide SANS catalog_miss → fallback top-1 MAIS family_confidence remis à 0 (le LLM n'a
+    # pas endossé ce candidat → en aval match_reliable ne doit pas l'afficher comme fait certain).
+    raw = json.dumps({"chosen_parent_asin": "ZZZ", "family_confidence": 0.9,
+                      "catalog_miss": False, "facets": []})
+    out = _parse(raw, _cands())
+    assert out.chosen_parent_asin == "A1"
+    assert out.family_confidence == 0.0
+
+
+def test_parse_keeps_confidence_on_legit_catalog_miss() -> None:
+    # catalog_miss légitime (chosen="") → on GARDE la confiance (elle porte sur le produit observé).
+    raw = json.dumps({"chosen_parent_asin": "", "family_confidence": 0.9, "catalog_miss": True,
+                      "reference_new_price_usd": 100, "facets": []})
+    out = _parse(raw, _cands())
+    assert out.chosen_parent_asin == ""
+    assert out.family_confidence == 0.9
 
 
 def test_parse_keeps_estimated_anchor_even_without_evidence() -> None:

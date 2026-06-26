@@ -75,11 +75,12 @@ class IdentifyRequest(BaseModel):
     # L'API accepte photo(s) ET/OU texte (le frontend impose ≥ 1 photo ; l'API
     # reste tolérante pour le text-only legacy + tests). `image_url` historique
     # conservé pour compat schémas (ignoré).
+    # Bornes (sécurité Cycle 36) : évite qu'un texte/liste démesuré gonfle le prompt LLM (coût/DoS).
     image_ids: list[str] = Field(
-        default_factory=list, description="IDs des photos vendeur (POST /upload)"
+        default_factory=list, max_length=8, description="IDs des photos vendeur (POST /upload)"
     )
-    image_url: str = Field(default="", description="(déprécié, ignoré)")
-    text_hint: str = Field(default="", description="Texte vendeur (optionnel si photos)")
+    image_url: str = Field(default="", max_length=2000, description="(déprécié, ignoré)")
+    text_hint: str = Field(default="", max_length=2000, description="Texte vendeur (optionnel)")
     already_observed: dict[str, str] = Field(
         default_factory=dict,
         description="Observations déjà demandées dans la session Akinator (attribut → valeur)",
@@ -191,18 +192,20 @@ class PriceRequest(BaseModel):
     parent_asin: str | None = Field(None, description="ID produit identifié (None si OOD)")
     category: CategoryEnum
     condition: ConditionEnum = ConditionEnum.BON_ETAT
-    age_years: float = Field(default=2.0, ge=0.0, le=50.0)
-    # Contexte produit pour le pricing F4 (fourni par le front depuis /identify) :
+    age_years: float = Field(default=2.0, ge=0.0, le=50.0, allow_inf_nan=False)
+    # Contexte produit pour le pricing F4 (fourni par le front depuis /identify). Bornes (sécurité
+    # Cycle 36) : exclut inf/NaN/valeurs aberrantes qui fausseraient les garde-fous et l'affichage.
     catalog_price: float | None = Field(
-        None, description="Prix catalogue du produit identifié (USD) → L1"
+        None, gt=0, le=1_000_000, allow_inf_nan=False, description="Prix catalogue (USD) → L1"
     )
     neighbor_prices: list[float] = Field(
-        default_factory=list, description="Prix des candidats voisins FAISS (USD) → L2"
+        default_factory=list, max_length=50, description="Prix des candidats voisins (USD) → L2"
     )
-    # Cycle 36 : ancre prix NEUF estimée par IA (issue de /identify.reasoned, repassée par le front
-    # comme catalog_price/neighbor_prices) → niveau L1.5. None = pas d'ancre (cascade inchangée).
+    # Cycle 36 : ancre prix NEUF estimée par IA (issue de /identify.reasoned, repassée par le front)
+    # → niveau L1.5. None = pas d'ancre (cascade inchangée).
     reference_new_price_usd: float | None = Field(
-        None, description="Prix neuf de référence estimé par IA (USD) → L1.5"
+        None, gt=0, le=1_000_000, allow_inf_nan=False,
+        description="Prix neuf de référence estimé par IA (USD) → L1.5",
     )
     reference_new_confidence: float = Field(0.0, ge=0.0, le=1.0)
 

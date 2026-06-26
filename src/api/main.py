@@ -345,8 +345,11 @@ async def identify(
 
     # VLM validateur F0.4 (17.2, D-035) : « la photo du vendeur montre-t-elle le top-1 ? » → badge
     # de confiance visuelle. Best-effort (None si pas de photos/image catalogue/VLM down, R15).
+    # Économie de latence (Cycle 36) : si la passe raisonnée a déjà tranché AVEC confiance, on
+    # n'ajoute PAS ce 3ᵉ appel LLM séquentiel (reason couvre déjà le jugement de correspondance).
+    reason_confident = ri is not None and ri.family_confidence >= 0.70 and not ri.catalog_miss
     vlm_validation = None
-    if r_paths and top1 is not None:
+    if r_paths and top1 is not None and not reason_confident:
         catalog_img = (top1.images[0] if top1.images else "") or top1.image_url
         if catalog_img:
             cand_attrs = (
@@ -395,12 +398,16 @@ async def identify(
         # En catalog-miss, le candidat catalogue n'EST PAS le produit → ses specs ne sont pas des
         # faits (on s'appuie sur l'observé + le typique, pas sur le mauvais catalogue).
         catalog_miss = ri is not None and ri.catalog_miss
+        # family_confidence = confiance dans la FAMILLE, pas dans la variante exacte. Si l'IA pose
+        # une question discriminante (ask_question), la variante est incertaine → on ne traite pas
+        # les specs catalogue comme des faits sûrs (elles resteront « typique-à-vérifier ».)
         match_reliable = not catalog_miss and (
             top1.score >= 0.60
             or (
                 ri is not None
                 and ri.chosen_parent_asin == top1.parent_asin
                 and ri.family_confidence >= 0.70
+                and not ri.ask_question
             )
         )
         assembled = assemble_listing(
@@ -491,7 +498,9 @@ async def price(
         knn_neighbors_prices=req.neighbor_prices or None,
         llm_anchor_price=req.reference_new_price_usd,  # L1.5 (Cycle 36)
         llm_anchor_confidence=req.reference_new_confidence,
-        expected_order_of_magnitude=req.reference_new_price_usd or req.catalog_price,
+        # Garde-fou anti sous-éval ancré sur l'ESTIMATION IA seule (pas le prix catalogue, qui est un
+        # fait déjà géré par L1) → pas de changement de comportement pour un ancien client.
+        expected_order_of_magnitude=req.reference_new_price_usd,
     )
     # Observabilité métier : niveau de cascade réellement utilisé + présence d'une ancre IA.
     obs_log.info(

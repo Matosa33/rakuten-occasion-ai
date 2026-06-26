@@ -223,9 +223,14 @@ export function MarketplaceListing({
           )}
 
           <div className="mt-3 flex flex-wrap items-baseline gap-2">
-            <span className="text-4xl font-bold text-rose-700">
-              {price.suggested_price_eur.toFixed(2)} €
-            </span>
+            {/* L4 / pas de prix exploitable : ne JAMAIS afficher « 0,00 € » comme une suggestion. */}
+            {price.suggested_price_eur > 0 ? (
+              <span className="text-4xl font-bold text-rose-700">
+                {price.suggested_price_eur.toFixed(2)} €
+              </span>
+            ) : (
+              <span className="text-2xl font-bold text-slate-500">Prix à fixer (saisie manuelle)</span>
+            )}
             <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-medium text-white">
               {conditionLabel}
             </span>

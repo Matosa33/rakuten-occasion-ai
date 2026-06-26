@@ -111,17 +111,26 @@ export default function App() {
       ? Math.max(0, CURRENT_YEAR - parseInt(purchaseYear, 10))
       : undefined;
     // Cycle 36 : ancre prix neuf estimée par l'IA (passe raisonnée) → niveau L1.5, tue le 6 €/150 €.
+    // Le jugement IA ne vaut QUE pour le produit qu'il a désigné (ou un catalog-miss) : si le vendeur
+    // choisit un AUTRE candidat (« ce n'est pas le bon »), on n'applique pas une ancre hors-sujet.
     const reasoned = identData?.reasoned ?? null;
+    const reasonedApplies =
+      !!reasoned && (reasoned.catalog_miss || reasoned.chosen_parent_asin === asin);
+    const catalogMiss = reasonedApplies && reasoned!.catalog_miss;
+    // En catalog-miss, le prix catalogue/voisins est celui du MAUVAIS produit → on l'ignore et on
+    // laisse l'ancre IA (L1.5) fixer le prix du produit réellement observé.
+    const catalogPrice = catalogMiss ? null : (chosen?.price ?? null);
+    const usedNeighbors = catalogMiss ? [] : neighborPrices;
     try {
       // Hick's Law : on enchaîne prix + description automatiquement (pas de choix superflu)
       const [p, l] = await Promise.all([
         priceProduct(category, condition, {
           parentAsin: asin,
-          catalogPrice: chosen?.price ?? null,
-          neighborPrices,
+          catalogPrice,
+          neighborPrices: usedNeighbors,
           ageYears,
-          referenceNewPriceUsd: reasoned?.reference_new_price_usd ?? null,
-          referenceNewConfidence: reasoned?.reference_new_confidence ?? 0,
+          referenceNewPriceUsd: reasonedApplies ? (reasoned!.reference_new_price_usd ?? null) : null,
+          referenceNewConfidence: reasonedApplies ? reasoned!.reference_new_confidence : 0,
         }),
         describe(asin, condition),
       ]);
@@ -323,7 +332,12 @@ export default function App() {
               listing={listing}
               condition={condition}
               informationsCles={ident?.informations_cles ?? null}
-              reasoned={ident?.reasoned ?? null}
+              reasoned={
+                ident?.reasoned &&
+                (ident.reasoned.catalog_miss || ident.reasoned.chosen_parent_asin === chosenAsin)
+                  ? ident.reasoned
+                  : null
+              }
             />
             {ident && ident.top_candidates.length > 1 && (
               <button

@@ -145,9 +145,11 @@ def _apply_condition(price: float, condition: str) -> float:
 UNDERPRICING_FLOOR_RATIO = 0.25
 
 # Garde-fou de cohérence L1 (Cycle 36). Si une ancre IA existe et que le prix catalogue du top-1 est
-# très en-dessous (< ce ratio × ancre), le top-1 est probablement un ACCESSOIRE mal apparié (coque à
-# 43 $ pour un iPhone à 598 $) → on ignore ce prix catalogue pollué et on bascule sur l'ancre L1.5.
-L1_ANCHOR_MIN_RATIO = 0.5
+# DRASTIQUEMENT en-dessous (< ce ratio × ancre), le top-1 est probablement un ACCESSOIRE mal apparié
+# (coque à 43 $ pour un iPhone à 598 $) → on ignore ce prix catalogue pollué et on bascule sur L1.5.
+# Ratio volontairement BAS : un prix catalogue est un FAIT (refurb/promo/génération antérieure
+# peuvent être légitimement plus bas que l'estimation IA) — on ne l'écarte que s'il est aberrant.
+L1_ANCHOR_MIN_RATIO = 0.2
 
 
 def _floor_against_underpricing(
