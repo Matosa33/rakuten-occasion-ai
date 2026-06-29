@@ -199,7 +199,7 @@ servant d'entrée au suivant :
    non-discriminant (poids de l'article, date de première mise en vente, classement des
    meilleures ventes…), inutile pour distinguer deux produits.
 
-   **Limite de cette source et complément depuis le titre (Cycle 36.A).** Le champ `details` du
+   **Limite de cette source et complément depuis le titre.** Le champ `details` du
    catalogue est souvent vide ou incomplet : une carte « RTX 4080 16GB » pouvait ainsi se retrouver
    sans facette « capacité », alors que l'information figure noir sur blanc dans son titre. Cette
    absence cassait à la fois la désambiguïsation entre produits voisins, la complétude de la fiche

@@ -1,11 +1,11 @@
-# Rapport sous-todo 2.1 — Embeddings concept + similarity utils
+# Rapport — Embeddings : concepts et utilitaires de similarité
 
 > Version 1.0 — 2026-05-03
-> Statut : `completed`. Aucune donnée externe consommée (concept pédagogique).
+> Statut : terminé. Aucune donnée externe consommée (travail conceptuel et pédagogique).
 
 ## En une phrase
 
-On pose les **briques mathématiques de base** (normalisation L2, cosine similarity, inner product, L2 distance, top-k retrieval) qui seront utilisées par tous les modules ML aval (Cycles 2.2-2.4 encoders, Cycle 3 classifieurs, Cycle 4 FAISS, Cycle 7 pricing KNN).
+On pose les **briques mathématiques de base** (normalisation L2, similarité cosinus, produit scalaire, distance L2, recherche des k plus proches) qui seront utilisées par tous les modules ML aval : les encodeurs, les classifieurs, la recherche vectorielle FAISS et le module de pricing par plus proches voisins.
 
 ## Livrables
 
@@ -17,13 +17,13 @@ On pose les **briques mathématiques de base** (normalisation L2, cosine similar
 
 | Décision | Justification |
 |---|---|
-| Module `similarity_utils.py` sans préfixe numéroté | Module **importable** (R1 réservé aux scripts exécutables avec `main()`) |
-| `eps=1e-12` pour guard normalisation | Tolérance numérique float64 standard ; pour float16 utiliser ~1e-4 |
-| Vecteur nul → vecteur nul (pas NaN) | R11 — pas de NaN propagé silencieusement, à logger en prod si rencontré |
-| Toutes les fonctions stateless | R3 anti-leakage — pas d'état accumulé entre appels |
-| Pas de mutation in-place | Fonctions pures, l'input n'est jamais modifié |
-| Conventions shape : 1D vs 2D | Compatible avec usage retrieval (1 query × M corpus) ET pairwise (B_a × B_b) |
-| `top_k_similar` Python pur (pas FAISS) | Utile pour < 100k vecteurs, évite la dépendance FAISS au Cycle 2 ; FAISS arrive en Cycle 4 |
+| Module `similarity_utils.py` sans préfixe numéroté | Module **importable** (le préfixe numéroté est réservé aux scripts exécutables dotés d'un `main()`) |
+| `eps=1e-12` pour le guard de normalisation | Tolérance numérique float64 standard ; pour float16 utiliser ~1e-4 |
+| Vecteur nul → vecteur nul (pas NaN) | On évite de propager silencieusement un NaN ; un tel cas doit être journalisé en production s'il se présente |
+| Toutes les fonctions sans état | Anti-fuite de données : aucun état accumulé entre les appels |
+| Pas de mutation en place | Fonctions pures, l'entrée n'est jamais modifiée |
+| Conventions de forme : 1D vs 2D | Compatible avec l'usage de recherche (1 requête × M éléments du corpus) ET l'usage par paires (B_a × B_b) |
+| `top_k_similar` en Python pur (pas FAISS) | Utile pour moins de 100k vecteurs, évite d'introduire la dépendance FAISS à ce stade ; FAISS est introduit plus tard pour la recherche vectorielle |
 
 ## Invariants vérifiés (22 tests)
 
@@ -39,13 +39,13 @@ On pose les **briques mathématiques de base** (normalisation L2, cosine similar
 
 ## Pour aller plus loin
 
-- **Cycle 2.2** consommera `l2_normalize` pour pré-normaliser les embeddings SigLIP avant écriture .npy
-- **Cycle 2.3** idem pour Arctic Embed
-- **Cycle 2.4** consommera `top_k_similar` pour le sanity check (vérifier que des produits similaires ont des cosines proches)
-- **Cycle 4** : `top_k_similar` est remplacé par FAISS HNSW dès que le corpus > 100k vecteurs
+- L'encodeur image (SigLIP) consommera `l2_normalize` pour pré-normaliser les embeddings avant écriture `.npy`
+- L'encodeur texte (Arctic Embed) fera de même
+- L'étape de contrôle de cohérence consommera `top_k_similar` pour vérifier que des produits similaires présentent bien des cosinus proches
+- `top_k_similar` est remplacé par FAISS HNSW dès que le corpus dépasse 100k vecteurs
 
 ## Annexes
 
-- Stack : `numpy 1.26+`, `scikit-learn 1.5+` (pour t-SNE dans le notebook)
-- Règles référencées : R3 (anti-leakage), R11 (guard L2), R20 (cleanup)
-- ADR référencées : D-009 (architecture cible RAG-grounded — les encoders sont siglip/arctic frozen)
+- Stack : `numpy 1.26+`, `scikit-learn 1.5+` (pour le t-SNE dans le notebook)
+- Principes appliqués : anti-fuite de données, guard de normalisation L2, nettoyage des ressources
+- Architecture cible : RAG ancré sur des encodeurs gelés (SigLIP pour l'image, Arctic pour le texte)

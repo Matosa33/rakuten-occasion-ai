@@ -11,7 +11,7 @@
 - Source : google/gemini-2.0-flash-exp via OpenRouter
 
 ## Limitations
-- Coût API ~ $0.0001/call. Latence ~ 1-3 s. Stub mock en attendant Cycle 9.
+- Coût API ~ $0.0001/call. Latence ~ 1-3 s. Une version simulée (mock) a été utilisée pendant le développement.
 
 ## Source de vérité métriques
 

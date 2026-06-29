@@ -32,11 +32,11 @@ modèle de langage rédige l'annonce. Quelqu'un doit appeler ces briques dans le
 ordre, faire passer le résultat de l'une vers l'entrée de la suivante, et gérer les
 pannes. Ce travail de coordination est réparti principalement dans deux fichiers :
 `src/api/main.py` (environ 700 lignes, qui définit les points d'entrée de l'API et
-orchestre la passe d'identification raisonnée du Cycle 36) et `src/api/pipeline.py`
+orchestre la passe d'identification raisonnée) et `src/api/pipeline.py`
 (environ 610 lignes, qui contient la logique d'enchaînement des modèles : recherche,
 vote de catégorie, cascade de prix, rédaction). À ces deux fichiers s'ajoutent trois
 modules spécialisés appelés par l'orchestrateur : `src/vlm/reasoned_identification.py`
-(la passe de jugement par le modèle de langage, Cycle 36), `src/serving/listing_fill.py`
+(la passe de jugement par le modèle de langage), `src/serving/listing_fill.py`
 (l'assemblage de la fiche structurée avec provenance) et `src/pricing/01_algorithmique.py`
 (la cascade de prix transparente). Le détail de chacun est donné plus bas.
 
@@ -98,7 +98,7 @@ de connexion est exigé.
 | `GET /uploads/{id}` | public (URL secrète) | Sert une photo enregistrée, afin de l'afficher dans l'annonce. L'accès est protégé par une URL secrète et non devinable, fabriquée à partir d'un identifiant aléatoire (un "uuid4", c'est-à-dire un identifiant universel unique tiré au hasard). |
 | `GET /health` | public | Sonde de santé : indique la version et quels services sont effectivement chargés. |
 | `POST /identify` | jeton requis | Le cœur du système : à partir de photos et d'un texte optionnel, renvoie les meilleurs produits candidats (réordonnés pour mettre le bon produit en tête), une fiche structurée du produit retenu, le jugement raisonné du modèle de langage (famille, ancre de prix neuf, question discriminante), une éventuelle question de précision et une validation visuelle. |
-| `POST /price` | jeton requis | Calcule un prix suggéré par une cascade transparente de cinq niveaux (L1, puis le niveau L1.5 ajouté au Cycle 36, puis L2, L3 et L4). |
+| `POST /price` | jeton requis | Calcule un prix suggéré par une cascade transparente de cinq niveaux, du plus fiable au moins fiable. |
 | `POST /describe` | jeton requis | Rédige un titre et une description ancrés sur les vraies données du catalogue. |
 | `GET /history` | jeton requis | Renvoie les dernières identifications enregistrées, pour la traçabilité. |
 | `POST /identify/stream` | jeton requis | Variante du cœur qui renvoie les étapes du pipeline en temps réel (technique des événements envoyés par le serveur). |
@@ -203,9 +203,9 @@ améliore de 2,4 points la justesse de la catégorie sur un jeu de 15 000 requê
 test. La confiance renvoyée correspond à la part du vote remportée par la catégorie
 gagnante.
 
-#### L'identification raisonnée (Cycle 36, fichier `src/vlm/reasoned_identification.py`)
+#### L'identification raisonnée (fichier `src/vlm/reasoned_identification.py`)
 
-C'est l'ajout le plus important du Cycle 36. L'idée directrice se résume en une phrase :
+C'est l'apport le plus important de la dernière refonte. L'idée directrice se résume en une phrase :
 le moteur de recherche apporte la **connaissance** (les quinze fiches catalogue réelles
 les plus proches), et le modèle de langage apporte le **jugement** (lequel de ces
 quinze produits correspond vraiment à la photo, et à quel prix neuf). On sépare ainsi
@@ -250,8 +250,8 @@ l'hallucination du modèle) :
   Mieux vaut une estimation honnêtement présentée comme telle que de retomber sur une
   médiane polluée (on y revient dans la partie prix).
 
-Toute la passe est en mode "best-effort", c'est-à-dire non bloquante (règle interne
-R15). En cas d'absence de clé d'accès, de modèle injoignable, de JSON inexploitable ou
+Toute la passe est en mode "best-effort", c'est-à-dire non bloquante. En cas d'absence
+de clé d'accès, de modèle injoignable, de JSON inexploitable ou
 d'exception quelconque, `reason_identify` renvoie simplement `None`, et le pipeline
 poursuit avec le classement de recherche brut et la cascade de prix habituelle. La
 passe raisonnée ne peut jamais faire planter l'identification ni produire une fiche
@@ -290,27 +290,27 @@ seule), cette logique ne fait strictement rien : aucune régression possible.
 
 Ce service charge le fichier de configuration du modèle de prix
 (`pricing-cascade_v1.joblib`, un fichier sérialisé contenant notamment les prix médians
-par catégorie) puis délègue le calcul à une cascade de prix transparente, désormais à
-**cinq niveaux** (le Cycle 36 a inséré un niveau intermédiaire L1.5). Le principe de la
-cascade reste le même : on tente d'abord la méthode la plus fiable, et si elle n'est pas
+par catégorie) puis délègue le calcul à une cascade de prix transparente, à
+**cinq niveaux**. Le principe de la
+cascade : on tente d'abord la méthode la plus fiable, et si elle n'est pas
 applicable, on descend vers une méthode de repli. Du plus fiable au moins fiable :
 
 - **L1 (haute)** : le prix catalogue **réel** du produit identifié, auquel on applique
   une décote d'état puis une dépréciation liée à l'âge. C'est un fait, pas une
   estimation.
-- **L1.5 (haute-moyenne, ajouté au Cycle 36)** : l'**ancre de prix neuf estimée par
+- **L1.5 (haute-moyenne)** : l'**ancre de prix neuf estimée par
   l'intelligence artificielle** lors de la passe raisonnée. On lui applique **exactement
-  la même décote déterministe** qu'à L1. Point important pour la défense : seule l'ANCRE
+  la même décote déterministe** qu'à L1. Point important : seule l'ANCRE
   est une estimation de l'IA ; la décote, elle, reste 100 % déterministe et transparente,
   donc l'affirmation "pas de modèle de prix opaque" reste vraie. Ce niveau est placé
   **avant** les médianes de voisins, parce que ces dernières sont polluées (voir
   ci-dessous).
-- **L2 (moyenne)** : la médiane des prix des voisins trouvés par la recherche. Niveau
-  **rétrogradé** au Cycle 36 : ce sont précisément ces médianes, polluées par des
+- **L2 (moyenne)** : la médiane des prix des voisins trouvés par la recherche. Ce sont
+  précisément ces médianes, polluées par des
   accessoires, des coques et des lots, qui donnaient des prix absurdes (de l'ordre de
-  6 euros pour une montre valant 150 euros).
+  6 euros pour une montre valant 150 euros) ; elles sont donc placées après l'ancre IA.
 - **L3 (basse)** : la médiane des prix de la catégorie, quand seule la catégorie est
-  connue. Également rétrogradée pour la même raison.
+  connue. Placée plus bas pour la même raison.
 - **L4 (très basse)** : valeur de repli en saisie manuelle. L'interface n'affiche plus
   "0,00 €" mais "Prix à fixer (saisie manuelle)".
 
@@ -319,14 +319,14 @@ lisible, pour rester transparente.
 
 **Les décotes.** La décote d'état est un multiplicateur appliqué au prix neuf : neuf
 1,00 ; très bon état 0,75 ; bon état 0,55 ; correct 0,35 ; et "pour pièces / HS" 0,15
-(cet état "pour pièces" est nouveau au Cycle 36, car c'est un cas courant en occasion).
+(cet état "pour pièces" couvre un cas courant en occasion).
 La dépréciation est linéaire par catégorie (par exemple −15 %/an pour l'électronique).
 Enfin, les prix du catalogue sont en dollars (données Amazon américaines) alors que
 l'interface affiche des euros : on convertit par un taux fixe documenté (environ 0,92,
 ajustable par la variable d'environnement `PRICE_USD_EUR_RATE`), appliqué après la
 décote et la dépréciation.
 
-**Les garde-fous du Cycle 36.** Trois protections rendent la cascade robuste aux données
+**Les garde-fous de la cascade.** Trois protections la rendent robuste aux données
 sales :
 
 - *Anti sous-évaluation* : si une médiane de voisins tombe nettement sous le prix neuf
@@ -368,7 +368,7 @@ dans le titre généré.
 
 #### La fiche structurée exhaustive (fichier `src/serving/listing_fill.py`, fonction `assemble_listing`)
 
-À partir du Cycle 36, l'endpoint `/identify` ne renvoie plus seulement une liste de
+L'endpoint `/identify` ne renvoie pas seulement une liste de
 candidats : il renvoie aussi une **fiche structurée** du produit retenu, prête à être
 affichée façon marketplace. Cette fiche génère toutes les données structurées
 exploitables : d'abord les facettes du schéma attendu pour la catégorie
@@ -403,7 +403,7 @@ vendeur, toujours disponible) est exclu du dénominateur, pour ne pas fausser le
 
 #### Le parcours vendeur côté interface (dossier `frontend/src`)
 
-Le Cycle 36 a refondu le parcours du vendeur pour qu'il colle au nouveau pipeline. Le
+La dernière refonte a aligné le parcours du vendeur sur le nouveau pipeline. Le
 choix manuel du "type d'objet" a été **supprimé** : le type est désormais dérivé de la
 catégorie identifiée par la fonction `kindFromCategory` (fichier `condition.ts`). Les
 motifs de détection portent sur le **mot entier** et excluent les accessoires, ce qui
@@ -435,8 +435,8 @@ Trois autres ajouts côté interface :
 #### L'observabilité métier (fichier `src/api/main.py`)
 
 Au-delà des mesures HTTP exposées au format Prometheus (latence, nombre de requêtes,
-requêtes en cours), le Cycle 36 ajoute des **journaux structurés** (via la bibliothèque
-structlog) qui rendent chaque requête **inspectable**. Deux événements sont émis :
+requêtes en cours), des **journaux structurés** (via la bibliothèque
+structlog) rendent chaque requête **inspectable**. Deux événements sont émis :
 `identify_done` (avec le statut, le nombre de candidats, le score du premier, la
 catégorie fine et sa confiance, un drapeau "passe raisonnée effectuée", un drapeau
 "réordonné", le "catalog miss", l'ancre de prix, la question éventuelle, la confiance de
@@ -446,9 +446,9 @@ d'une ancre, la catégorie et l'état). Le but est concret : pouvoir **lire** ce
 le pipeline en production (le taux de produits hors catalogue, la part d'usage du niveau
 L1.5, ou l'endroit où part la latence), sans rien de décoratif.
 
-#### Sécurité et durcissement (revue adverse, Cycle 36)
+#### Sécurité et durcissement
 
-Une revue adverse sur cinq dimensions a relevé puis corrigé un ensemble de problèmes
+Une revue de sécurité sur cinq dimensions a relevé puis corrigé un ensemble de problèmes
 (sept jugés "élevés", huit "moyens"). Les contre-mesures notables :
 
 - Des **bornes** sont posées sur les prix dans les schémas (strictement positifs,
@@ -464,7 +464,7 @@ Une revue adverse sur cinq dimensions a relevé puis corrigé un ensemble de pro
   quand la passe raisonnée a déjà tranché avec confiance, puisqu'elle couvre déjà le
   jugement de correspondance.
 
-### Le déroulé d'une requête `/identify`, étape par étape (refondu au Cycle 36)
+### Le déroulé d'une requête `/identify`, étape par étape
 
 ```
  POST /identify {image_ids, text_hint, already_observed}
@@ -485,7 +485,7 @@ Une revue adverse sur cinq dimensions a relevé puis corrigé un ensemble de pro
     vote la catégorie fine, applique les garde-fous de confiance, prépare
     une question si ambiguïté
  ▼
- 5. PASSE RAISONNÉE (Cycle 36) : le modèle de langage juge le top-15
+ 5. PASSE RAISONNÉE : le modèle de langage juge le top-15
     (dans un fil séparé) → famille, candidat choisi, ancre de prix neuf,
     question discriminante, facettes sourcées [best-effort, None si indispo]
  ▼
@@ -531,7 +531,7 @@ Une revue adverse sur cinq dimensions a relevé puis corrigé un ensemble de pro
   casse jamais l'API, car l'opération est protégée par une capture d'erreur.
 - Les contrats de données sont définis dans `src/api/schemas.py` (environ 250 lignes de
   schémas typés Pydantic version 2). Ce fichier est la source unique de vérité décrivant
-  précisément la forme de chaque message d'entrée et de sortie. Le Cycle 36 y a ajouté le
+  précisément la forme de chaque message d'entrée et de sortie. On y trouve notamment le
   niveau de confiance L1.5 (énumération `ConfidenceLevelEnum`), l'état "pour pièces / HS"
   (énumération `ConditionEnum`), les champs d'ancre de prix dans la requête `/price`, les
   schémas de la fiche structurée (`AssembledListingOut`, `ListingFieldOut`) et du
@@ -555,9 +555,9 @@ Une revue adverse sur cinq dimensions a relevé puis corrigé un ensemble de pro
   s'exécutent dans des fils séparés, la boucle d'événements reste libre pour traiter
   les autres requêtes.
 
-### Mesure de qualité de fiche sur panel réel (Cycle 36)
+### Mesure de qualité de fiche sur panel réel
 
-Plutôt que de s'appuyer sur des anecdotes, le Cycle 36 a mis en place un protocole de
+Plutôt que de s'appuyer sur des anecdotes, un protocole de
 mesure reproductible (script `scripts/mesure_qualite_fiche.py`, sorties dans
 `reports/09_fiche_quality/mesure_fiche.json` et `.md`). Il rejoue le pipeline complet
 sur le **panel réel** `data/photos_eval` (94 produits, dont 93 effectivement mesurés ;
@@ -577,12 +577,11 @@ mesurés :
   Philips), produit absent du catalogue (un SSD, une station d'accueil), ou nom de
   dossier ambigu (un simple artefact de mesure, pas une erreur du pipeline).
 
-Cette mesure remplace les anecdotes par un chiffre défendable (doctrine interne R21 :
-mesurer sur de vraies sorties, jamais sur des comptages de lignes ou des pourcentages
-abstraits).
+Cette mesure remplace les anecdotes par un chiffre défendable : on mesure sur de vraies
+sorties, jamais sur des comptages de lignes ou des pourcentages abstraits.
 
 > Pour la présentation orale, chiffres à mettre en avant : neuf points d'entrée, trois
-> services chargés une fois au démarrage, un déroulé `/identify` refondu au Cycle 36
+> services chargés une fois au démarrage, un déroulé `/identify` complet
 > (extraction, recherche, passe raisonnée, réordonnancement, validation, fiche
 > exhaustive, réponse), dégradation gracieuse partout (erreur 503 actionnable ou
 > rédacteur de remplacement), et la mesure de qualité de fiche sur le panel réel
@@ -609,7 +608,7 @@ Points solides :
 - Garde-fous de robustesse construits avec soin : utilisation de l'instruction `raise`
   (qui survit au mode optimisé), et traitement au mieux pour la validation visuelle, la
   passe raisonnée et l'enregistrement, qui ne sont jamais bloquants.
-- Séparation connaissance / jugement (Cycle 36) : la recherche apporte les candidats
+- Séparation connaissance / jugement : la recherche apporte les candidats
   réels, le modèle de langage les juge sans jamais pouvoir introduire un produit hors de
   ces candidats. Le prix reste une cascade déterministe (aucun modèle de prix opaque) :
   seule l'ancre de prix neuf est une estimation, explicitement étiquetée comme telle.
@@ -667,7 +666,7 @@ Limites assumées :
 Le cœur du temps d'exécution, ce sont `main.py` et `pipeline.py` : ils chargent les
 modèles une seule fois au démarrage, puis, pour chaque requête `/identify`, ils
 enchaînent l'extraction par le modèle de vision, la recherche FAISS, la **passe
-raisonnée** où le modèle de langage juge les quinze meilleurs candidats (Cycle 36), le
+raisonnée** où le modèle de langage juge les quinze meilleurs candidats, le
 **réordonnancement** qui remonte le bon produit en tête (le texte vendeur faisant
 autorité), la validation visuelle et l'assemblage d'une **fiche structurée** avec
 provenance et complétude, puis l'enregistrement. Le prix est calculé par une cascade

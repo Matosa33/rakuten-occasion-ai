@@ -11,7 +11,7 @@
 - Source : google/gemini-2.0-flash-exp via OpenRouter
 
 ## Limitations
-- Risque hallucination si grounding pauvre. Stub mock en Cycle 6.2.
+- Risque d'hallucination si le grounding est pauvre. Une version simulée (mock) a été utilisée lors du développement.
 
 ## Source de vérité métriques
 

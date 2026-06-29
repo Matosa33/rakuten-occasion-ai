@@ -1,6 +1,6 @@
-# Serving BentoML — classifieur `@Production` (Cycle 12.2, D-022)
+# Serving BentoML — classifieur `@Production`
 
-Sert le modèle promu `@Production` du Registry MLflow (tfidf-svm TF-IDF, D-020) via BentoML,
+Sert le modèle promu `@Production` du Registry MLflow (classifieur SVM sur TF-IDF) via BentoML,
 avec **métriques Prometheus natives** sur `/metrics`. Découplage API ↔ modèle : le
 service charge le modèle depuis le store BentoML, alimenté par le Registry MLflow.
 
@@ -13,7 +13,7 @@ make bento-serve    # sert sur http://localhost:8500 (UI OpenAPI à la racine)
 
 > Port 8500 (le 3000 par défaut de BentoML est souvent déjà pris). `BENTOML_DO_NOT_TRACK=1`
 > désactive la télémétrie. Réexécuter `bento-import` après chaque promotion `@Production`
-> (la boucle fermée 12.3 l'automatisera).
+> (l'automatisation en boucle fermée le fera à terme).
 
 ## Endpoint
 
@@ -36,5 +36,5 @@ curl -s -X POST http://localhost:8500/classify -H "Content-Type: application/jso
 
 ## Suite
 
-Scrape Prometheus + dashboard Grafana → Cycle 14 (observabilité). Conteneurisation
-du service → Cycle 13 (Docker).
+Scrape Prometheus + dashboard Grafana → volet observabilité. Conteneurisation
+du service → volet Docker.

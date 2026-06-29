@@ -1,6 +1,6 @@
-# Qualité de fiche & richesse d'entrée — résultats (Cycle 34, D-042)
+# Qualité de fiche et richesse d'entrée — résultats
 
-- **558 fiches** (produits × conditions) · métrique principale : `completeness` · stats appariées.
+- **558 fiches** (produits × conditions) · métrique principale : `completeness` · statistiques sur échantillons appariés.
 
 | Condition | macro_acc | leaf_exact | leaf_overlap | entity_match | completeness | usable | n |
 |---|---|---|---|---|---|---|---|

@@ -2,7 +2,7 @@
 
 > Le projet utilise deux intelligences artificielles génératives. L'une "voit" (elle lit la photo d'un objet, puis la JUGE par rapport à de vrais candidats), l'autre "rédige" (elle écrit l'annonce de vente). Les deux sont volontairement bridées par des faits réels pour les empêcher d'inventer. C'est le garde-fou anti-invention du projet, du début à la fin.
 
-> Mise à jour Cycle 36. Le rôle du modèle qui "voit" a été élargi : en plus de lire la photo et de vérifier la correspondance, il pose désormais un **jugement raisonné** sur une liste de vrais produits candidats. Ce jugement reste strictement ancré dans les faits : le modèle ne peut JAMAIS introduire un produit qui n'est pas dans la liste, et chaque caractéristique qu'il propose doit citer sa source. Toute cette partie est décrite en détail à la section 3 ("L'identification raisonnée"). À noter : le Cycle 36 a été implémenté et mesuré en conditions réelles, mais n'est pas encore fusionné dans la branche principale (branche `feat/cycle34-listing-quality-bench`).
+> Le rôle du modèle qui "voit" a été élargi : en plus de lire la photo et de vérifier la correspondance, il pose désormais un **jugement raisonné** sur une liste de vrais produits candidats. Ce jugement reste strictement ancré dans les faits : le modèle ne peut JAMAIS introduire un produit qui n'est pas dans la liste, et chaque caractéristique qu'il propose doit citer sa source. Toute cette partie est décrite en détail à la section 3 ("L'identification raisonnée").
 
 ---
 
@@ -12,13 +12,13 @@
 
 Le projet aide une personne à revendre un objet d'occasion (un téléphone, une console, un outil, etc.). Pour cela, il faut deux compétences que des IA génératives savent fournir.
 
-- **VLM** veut dire "Vision-Language Model", c'est-à-dire un modèle qui comprend les images en plus du texte. Concrètement, c'est une IA à qui on montre une photo et qui répond en mots. Dans le projet, elle sert maintenant à trois choses. D'abord elle lit la photo prise par le vendeur et propose un titre probable (par exemple "iPhone 13 noir 128 Go") plus une liste d'attributs observés (marque, couleur, capacité de stockage). Ensuite, nouveauté du Cycle 36, elle réalise une "identification raisonnée" : on lui montre les 15 vrais produits candidats que la recherche a trouvés (résumés en texte) et on lui demande de JUGER lequel correspond, ou de signaler qu'aucun ne correspond. Enfin elle peut vérifier visuellement : "la photo du vendeur montre-t-elle bien le même produit que l'image officielle du catalogue ?".
+- **VLM** veut dire "Vision-Language Model", c'est-à-dire un modèle qui comprend les images en plus du texte. Concrètement, c'est une IA à qui on montre une photo et qui répond en mots. Dans le projet, elle sert à trois choses. D'abord elle lit la photo prise par le vendeur et propose un titre probable (par exemple "iPhone 13 noir 128 Go") plus une liste d'attributs observés (marque, couleur, capacité de stockage). Ensuite, elle réalise une "identification raisonnée" : on lui montre les 15 vrais produits candidats que la recherche a trouvés (résumés en texte) et on lui demande de JUGER lequel correspond, ou de signaler qu'aucun ne correspond. Enfin elle peut vérifier visuellement : "la photo du vendeur montre-t-elle bien le même produit que l'image officielle du catalogue ?".
 
 - **LLM** veut dire "Large Language Model", c'est-à-dire un modèle de langage entraîné sur d'énormes quantités de texte. C'est une IA qui écrit du texte fluide. Dans le projet, elle rédige le titre et la description de l'annonce de vente.
 
 - **RAG** veut dire "Retrieval-Augmented Generation", soit "génération assistée par récupération de faits". L'idée est simple : au lieu de laisser l'IA écrire de mémoire (ce qui la pousse à inventer), on lui fournit d'abord les vrais faits (la vraie fiche du produit qu'on a retrouvé dans le catalogue) et on lui demande de ne rédiger qu'à partir de ces faits. On appelle cela "ancrer" l'IA dans les faits (en anglais "grounding"). Le même principe est étendu à l'identification raisonnée : le modèle ne juge qu'à partir des 15 candidats réels fournis, jamais de sa mémoire interne.
 
-- **Le partage des rôles, en une image.** Le moteur de recherche (le "retriever") apporte la CONNAISSANCE : il sort du catalogue les 15 produits réels les plus proches. Le modèle génératif apporte le JUGEMENT : il choisit, parmi ces 15 produits réels, lequel est le bon, ou dit honnêtement qu'aucun ne l'est. C'est volontaire : on laisse l'IA faire ce qu'elle fait de mieux (comparer, juger une image) tout en l'empêchant de faire ce qu'elle fait de pire (inventer un produit qui n'existe pas dans nos données). On appelle ce principe "grounded avant génératif" : d'abord les faits, ensuite seulement le jugement.
+- **Le partage des rôles, en une image.** Le moteur de recherche par similarité apporte la CONNAISSANCE : il sort du catalogue les 15 produits réels les plus proches. Le modèle génératif apporte le JUGEMENT : il choisit, parmi ces 15 produits réels, lequel est le bon, ou dit honnêtement qu'aucun ne l'est. C'est volontaire : on laisse l'IA faire ce qu'elle fait de mieux (comparer, juger une image) tout en l'empêchant de faire ce qu'elle fait de pire (inventer un produit qui n'existe pas dans nos données). On appelle ce principe "grounded avant génératif" : d'abord les faits, ensuite seulement le jugement.
 
 - **"Catalog-miss" (produit absent du catalogue).** C'est le cas où le vrai produit du vendeur n'est dans aucun des 15 candidats (par exemple une carte graphique d'une génération qu'on n'a pas en base). Plutôt que de coller de force sur le candidat le plus ressemblant et de mentir, l'IA a le droit de déclarer "catalog_miss" : la fiche devient alors une ESTIMATION clairement étiquetée comme telle, et on ne traite pas les caractéristiques du mauvais candidat comme des faits.
 
@@ -28,9 +28,9 @@ Un modèle de langage invente par nature. Il complète une phrase avec ce qui es
 
 ### Pour aller plus loin (lecteur technique)
 
-- Le projet sépare strictement les rôles. Une première étape, appelée "retrieval", retrouve les candidats dans le catalogue : c'est elle qui borne l'espace des identités possibles (les 15 produits réels). Le VLM JUGE à l'intérieur de cet espace (il choisit le bon candidat ou déclare le catalog-miss), il VÉRIFIE visuellement, et le LLM ne fait que rédiger. Aucune des IA génératives ne peut faire apparaître une identité hors des candidats réels, ce qui supprime la principale source d'invention. C'est une évolution du Cycle 36 : avant, le retrieval décidait seul de l'identité (le top-1 brut) ; désormais le VLM peut REORDONNER les candidats pour faire remonter le bon, mais toujours en restant dans la liste fournie.
+- Le projet sépare strictement les rôles. Une première étape, appelée "retrieval", retrouve les candidats dans le catalogue : c'est elle qui borne l'espace des identités possibles (les 15 produits réels). Le VLM JUGE à l'intérieur de cet espace (il choisit le bon candidat ou déclare le catalog-miss), il VÉRIFIE visuellement, et le LLM ne fait que rédiger. Aucune des IA génératives ne peut faire apparaître une identité hors des candidats réels, ce qui supprime la principale source d'invention. Initialement, le retrieval décidait seul de l'identité (le top-1 brut) ; désormais le VLM peut REORDONNER les candidats pour faire remonter le bon, mais toujours en restant dans la liste fournie.
 
-- Le garde-fou anti-hallucination est implémenté concrètement (`src/vlm/reasoned_identification.py`, fonction `_parse`). Trois protections principales : (1) si le modèle nomme un produit (`chosen_parent_asin`) qui n'est pas dans les 15 candidats ET qu'il n'a pas déclaré de catalog-miss, on ignore son choix et on retombe sur le candidat n°1 du retrieval, en remettant sa confiance à zéro (le modèle n'a pas réellement endossé un candidat valide, donc l'aval ne doit pas le traiter comme un fait certain) ; (2) toute caractéristique ("facette") dont la source citée est invalide (ni "observé", ni "analogie", ni un index de candidat existant) est jetée — jamais d'affirmation non sourcée ; (3) le prix neuf de référence est conservé même sans preuve, mais il est alors une ESTIMATION explicitement étiquetée, pas un fait catalogue.
+- Le garde-fou anti-hallucination est implémenté concrètement (`src/vlm/reasoned_identification.py`, fonction `_parse`). Trois protections principales : (1) si le modèle nomme un produit (`chosen_parent_asin`) qui n'est pas dans les 15 candidats ET qu'il n'a pas déclaré de catalog-miss, on ignore son choix et on retombe sur le candidat n°1 du retrieval, en remettant sa confiance à zéro (le modèle n'a pas réellement endossé un candidat valide, donc l'aval ne doit pas le traiter comme un fait certain) ; (2) toute caractéristique ("facette") dont la source citée est invalide (ni "observé", ni "analogie", ni un index de candidat existant) est jetée, jamais d'affirmation non sourcée ; (3) le prix neuf de référence est conservé même sans preuve, mais il est alors une ESTIMATION explicitement étiquetée, pas un fait catalogue.
 
 - L'ancrage de la rédaction reste testable. Un mot présent dans la description générée doit appartenir soit aux mots du prompt, soit aux mots des faits fournis. Si un mot apparaît sans venir de l'une de ces deux sources, c'est une invention détectable automatiquement.
 
@@ -55,7 +55,7 @@ Tous les appels d'IA passent par OpenRouter, un service en ligne qui donne accè
 
 - **Pour la rédaction de l'annonce en français** (titre + description) et pour la traduction de la requête, le modèle par défaut est **`google/gemma-4-31b-it`** (Gemma 4 31B), défini dans `src/llm/openrouter_client.py` (`DEFAULT_LLM_MODEL`). C'est une tâche purement textuelle, qui n'a pas besoin de vision.
 
-Ce découpage est récent : historiquement un seul modèle (Gemma) servait les trois usages ; depuis le benchmark de modèles de vision, les tâches "image" sont passées sur Qwen, tandis que la rédaction texte est restée sur Gemma. Les sous-sections ci-dessous détaillent chaque brique.
+Ce découpage a évolué : historiquement un seul modèle (Gemma) servait les trois usages ; depuis le benchmark de modèles de vision, les tâches "image" sont passées sur Qwen, tandis que la rédaction texte est restée sur Gemma. Les sous-sections ci-dessous détaillent chaque brique.
 
 ### Le client d'accès au modèle texte (`src/llm/openrouter_client.py`)
 
@@ -76,11 +76,11 @@ C'est l'étape où le VLM regarde les photos du vendeur et en tire une descripti
 - Le prompt demande explicitement une réponse au format **JSON** de la forme `{title, attributes{brand, color, capacity, model, visible_text}}`. La lecture de la réponse est volontairement tolérante : elle sait extraire le JSON même s'il est entouré de balises de code (les trois accents graves) ou noyé dans du texte. Si le modèle répond malgré tout en texte libre, ce texte est repris tel quel comme requête de secours.
 - Si la clé OpenRouter est absente, la fonction lève une erreur claire (`PhotoExtractionUnavailable`). L'application répond alors par un message explicite invitant le vendeur à décrire l'objet par écrit, et le parcours sans photo continue de fonctionner.
 
-### L'identification raisonnée (`src/vlm/reasoned_identification.py`) — nouveauté majeure du Cycle 36
+### L'identification raisonnée (`src/vlm/reasoned_identification.py`)
 
-C'est l'étape centrale ajoutée au Cycle 36. Au lieu de faire confiance aveuglément au premier résultat de la recherche, on demande au modèle de vision de JUGER, à partir des photos, lequel des vrais candidats correspond.
+C'est une étape centrale du pipeline. Au lieu de faire confiance aveuglément au premier résultat de la recherche, on demande au modèle de vision de JUGER, à partir des photos, lequel des vrais candidats correspond.
 
-- **Le principe (le "pourquoi").** La recherche par similarité (le retriever, M7) est excellente pour rapprocher des produits proches, mais elle ne "comprend" pas l'image : son premier résultat peut être un accessoire (par exemple une coque d'iPhone affichée comme s'il s'agissait de l'iPhone lui-même). Le retriever apporte donc la CONNAISSANCE (les 15 candidats réels), et le modèle génératif apporte le JUGEMENT (lequel est le bon, et avec quelle confiance). C'est le coeur du principe "grounded avant génératif" décrit en section 1.
+- **Le principe (le "pourquoi").** Le moteur de recherche par similarité est excellent pour rapprocher des produits proches, mais il ne "comprend" pas l'image : son premier résultat peut être un accessoire (par exemple une coque d'iPhone affichée comme s'il s'agissait de l'iPhone lui-même). Le moteur de recherche apporte donc la CONNAISSANCE (les 15 candidats réels), et le modèle génératif apporte le JUGEMENT (lequel est le bon, et avec quelle confiance). C'est le coeur du principe "grounded avant génératif" décrit en section 1.
 
 - **L'entrée et la sortie.** La fonction `reason_identify(user_photo_paths, candidates, observed, seller_text)` fait **un seul appel** à OpenRouter. Elle envoie : 1 à 2 photos du vendeur (`MAX_USER_PHOTOS = 2`, encodées en data-URL base64), les 15 fiches candidates **résumées en texte** (`MAX_CANDIDATES = 15`, et non leurs 15 images : c'est une économie volontaire de jetons), les attributs déjà observés sur la photo, et le texte du vendeur. Elle renvoie un objet JSON structuré contenant notamment : la famille du produit (`product_family`) et sa confiance (`family_confidence`), le candidat choisi (`chosen_parent_asin`), le drapeau catalog-miss (`catalog_miss`), un prix neuf de référence en dollars (`reference_new_price_usd`, l'"ancre prix") et sa confiance, les fiches qui ont servi à estimer ce prix (`price_anchor_evidence`), un éventuel besoin de question discriminante (`ask_question` + `facet_question`), et une liste de caractéristiques sourcées (`facets`).
 
@@ -88,9 +88,9 @@ C'est l'étape centrale ajoutée au Cycle 36. Au lieu de faire confiance aveugl�
 
 - **Les garde-fous anti-hallucination (le coeur du "grounding").** La lecture de la réponse (`_parse`) valide tout : (1) une confiance est ramenée dans l'intervalle [0, 1] ; (2) si le candidat choisi n'est pas dans les 15 candidats ET qu'aucun catalog-miss n'est déclaré, on retombe sur le candidat n°1 du retrieval et on remet la confiance à zéro (le modèle a "halluciné" un identifiant, on ne le suit pas) ; (3) une caractéristique dont la source citée est invalide est jetée ; (4) le prix de référence est GARDÉ même sans preuve, car c'est une estimation honnêtement étiquetée "prix neuf estimé par IA" et c'est nettement mieux que de retomber sur une médiane de catégorie polluée (le fameux "11 € pour une montre à 150 €"). Pour calculer ce prix neuf, le modèle est explicitement invité à EXCLURE les candidats qui sont des accessoires ou des lots (coque, câble, chargeur, bundle, etc.) car leurs prix ne sont pas le prix du produit.
 
-- **La dégradation propre (R15, non bloquant).** Si la clé OpenRouter est absente, si le modèle est indisponible, si la réponse est inexploitable, ou en cas d'exception quelconque, la fonction renvoie simplement `None`. Le pipeline garde alors le classement du retrieval et la cascade de prix habituelle. Cette étape ne fait JAMAIS planter l'identification et ne produit jamais de fiche vide : c'est un bonus, jamais un point de passage obligé.
+- **La dégradation propre (non bloquante).** Si la clé OpenRouter est absente, si le modèle est indisponible, si la réponse est inexploitable, ou en cas d'exception quelconque, la fonction renvoie simplement `None`. Le pipeline garde alors le classement du retrieval et la cascade de prix habituelle. Cette étape ne fait JAMAIS planter l'identification et ne produit jamais de fiche vide : c'est un bonus, jamais un point de passage obligé.
 
-- **L'effet concret : le bon produit remonte en tête.** Le candidat choisi par le jugement est RÉORDONNÉ pour passer en première position (logique dans `src/api/main.py`, endpoint `/identify`). Conséquence : la fiche produite, le prix suggéré et la vérification visuelle portent ensuite sur le BON produit. Avant le Cycle 36, le premier résultat du retrieval pouvait être un accessoire, et toute la fiche en héritait.
+- **L'effet concret : le bon produit remonte en tête.** Le candidat choisi par le jugement est RÉORDONNÉ pour passer en première position (logique dans `src/api/main.py`, endpoint `/identify`). Conséquence : la fiche produite, le prix suggéré et la vérification visuelle portent ensuite sur le BON produit. Auparavant, le premier résultat du retrieval pouvait être un accessoire, et toute la fiche en héritait.
 
 ### Le texte du vendeur fait foi (`src/api/main.py`, fonction `_seller_text_best_match`)
 
@@ -112,7 +112,7 @@ C'est l'étape où le VLM confirme que la photo du vendeur correspond bien au pr
 - Le réglage **`MAX_USER_PHOTOS = 2`** limite la comparaison aux deux premières photos du vendeur, car la correspondance se joue surtout sur la vue principale. La réponse est limitée à 200 jetons et le délai d'attente à 60 secondes.
 - Le prompt précise au modèle d'ignorer l'état, l'arrière-plan et les accessoires, et de ne juger que le modèle du produit. On lui injecte aussi les attributs attendus du candidat (marque, modèle, capacité, couleur, taille), à vérifier UNIQUEMENT s'ils sont clairement visibles sur les photos du vendeur : utile en électronique où des variantes d'un même modèle se ressemblent beaucoup.
 - Cette vérification est un bonus, jamais un bloqueur. Si une condition manque (pas de photo, pas d'image catalogue, ou modèle indisponible), la fonction renvoie simplement `None` et l'identification du produit continue sans elle. Le verdict, quand il existe, sert à afficher un badge de confiance visuelle dans l'application ; c'est toujours l'humain qui valide, jamais une décision automatique.
-- **Optimisation de latence (Cycle 36).** Ce vérificateur est un troisième appel au modèle, exécuté en plus de l'extraction et de l'identification raisonnée. Pour ne pas allonger inutilement le temps de réponse, on le SAUTE quand l'identification raisonnée a déjà tranché avec confiance (famille sûre, pas de catalog-miss) : dans ce cas le jugement raisonné couvre déjà la correspondance, le badge visuel n'apporterait rien de plus.
+- **Optimisation de latence.** Ce vérificateur est un troisième appel au modèle, exécuté en plus de l'extraction et de l'identification raisonnée. Pour ne pas allonger inutilement le temps de réponse, on le SAUTE quand l'identification raisonnée a déjà tranché avec confiance (famille sûre, pas de catalog-miss) : dans ce cas le jugement raisonné couvre déjà la correspondance, le badge visuel n'apporterait rien de plus.
 
 ### Le rédacteur ancré (`src/llm/01_prompt_templates.py` et `src/llm/02_rag_grounded_writer.py`)
 
@@ -122,15 +122,15 @@ C'est l'étape où le LLM écrit l'annonce finale à partir des faits.
 - La fonction `extract_useful_sentences(reviews, top_n)` sélectionne les phrases qui serviront d'ancrage. Elle découpe les textes en phrases, garde celles d'au moins **50 caractères** (`MIN_SENTENCE_CHARS`), supprime les doublons, puis trie par longueur décroissante pour ne conserver que les **5 meilleures** (`TOP_N_GROUNDING_SENTENCES`). Ces phrases proviennent de textes réels et non d'une invention du modèle.
 - Le code repose sur une abstraction `LLMWriter`, c'est-à-dire une interface commune avec deux implémentations interchangeables : `OpenRouterWriter` qui appelle le vrai modèle, et `MockLLMWriter` qui produit une fausse annonce de démonstration. Le projet bascule automatiquement de l'une à l'autre selon que la clé d'accès est présente ou non. C'est ce qui rend la démonstration robuste et le code facile à tester sans dépendre du réseau.
 - Le résultat (`GeneratedListing`) conserve la liste exacte des phrases d'ancrage utilisées (`grounding_sentences_used`). On garde donc une trace de ce qui a servi à écrire l'annonce : c'est la traçabilité de l'ancrage.
-- Le rédacteur, lui, reste sur le modèle texte Gemma 4 31B (via le client `src/llm/openrouter_client.py`). En l'absence de clé OpenRouter, c'est le `MockLLMWriter` qui prend le relais (dégradation propre, D-013).
+- Le rédacteur, lui, reste sur le modèle texte Gemma 4 31B (via le client `src/llm/openrouter_client.py`). En l'absence de clé OpenRouter, c'est le `MockLLMWriter` qui prend le relais (dégradation propre).
 
 ### L'ancre prix de l'IA dans la cascade de prix (`src/pricing/01_algorithmique.py`)
 
 Le jugement de l'IA ne sert pas qu'à identifier le produit : il fournit aussi une "ancre prix", c'est-à-dire une estimation du prix NEUF du produit, qui s'insère dans la cascade de prix déterministe. C'est important pour le grounding car cela évite de baser le prix sur des médianes polluées.
 
-- **La cascade complète : L1 → L1.5 → L2 → L3 → L4.** Le niveau L1 (confiance haute) part du prix catalogue RÉEL du produit identifié, auquel on applique une décote selon l'état et une dépréciation selon l'âge. Le niveau **L1.5** (nouveauté du Cycle 36, confiance haute-moyenne) part de l'ANCRE prix neuf estimée par l'IA lors de la passe raisonnée, à laquelle on applique exactement la MÊME décote déterministe. Point crucial pour l'honnêteté du discours : seule l'ANCRE est une estimation de l'IA ; la décote (état, âge) reste 100 % déterministe et transparente. La promesse "pas de pricing par boîte noire ML" reste donc vraie. Les niveaux L2 et L3 (médianes des voisins et de la catégorie) ont été RÉTROGRADÉS sous L1.5, parce que ce sont eux, pollués par des accessoires et des lots, qui donnaient par exemple environ 6 € pour une montre valant 150 €. Le niveau L4 est le dernier recours (saisie manuelle) : le front n'affiche plus "0,00 €" mais "Prix à fixer".
+- **La cascade complète : L1 → L1.5 → L2 → L3 → L4.** Le niveau L1 (confiance haute) part du prix catalogue RÉEL du produit identifié, auquel on applique une décote selon l'état et une dépréciation selon l'âge. Le niveau **L1.5** (confiance haute-moyenne) part de l'ANCRE prix neuf estimée par l'IA lors de la passe raisonnée, à laquelle on applique exactement la MÊME décote déterministe. Point crucial pour l'honnêteté du discours : seule l'ANCRE est une estimation de l'IA ; la décote (état, âge) reste 100 % déterministe et transparente. La promesse "pas de pricing par boîte noire ML" reste donc vraie. Les niveaux L2 et L3 (médianes des voisins et de la catégorie) ont été RÉTROGRADÉS sous L1.5, parce que ce sont eux, pollués par des accessoires et des lots, qui donnaient par exemple environ 6 € pour une montre valant 150 €. Le niveau L4 est le dernier recours (saisie manuelle) : le front n'affiche plus "0,00 €" mais "Prix à fixer".
 
-- **Trois nouveaux garde-fous (Cycle 36).** (a) Anti sous-évaluation : si une médiane de voisins tombe très en dessous du prix neuf attendu décoté, on la relève à un plancher (un quart de ce prix attendu, constante `UNDERPRICING_FLOOR_RATIO = 0.25`). (b) Cohérence L1 : si le prix catalogue du premier candidat est ridiculement bas par rapport à l'ancre IA (moins de 0,2 fois l'ancre, constante `L1_ANCHOR_MIN_RATIO = 0.2`), c'est que ce candidat est probablement un accessoire mal apparié (une coque à 43 $ pour un iPhone) : on ignore ce prix catalogue et on bascule sur L1.5, ce qui évite d'afficher "iPhone à 15 €". (c) Prix catalogue aberrant : si le prix catalogue dépasse 4 fois la médiane des voisins (avec au moins 3 voisins, constante `CATALOG_OUTLIER_FACTOR = 4.0`), c'est une donnée corrompue (un casque listé à 9755 $) et on l'ignore.
+- **Trois garde-fous métier.** (a) Anti sous-évaluation : si une médiane de voisins tombe très en dessous du prix neuf attendu décoté, on la relève à un plancher (un quart de ce prix attendu, constante `UNDERPRICING_FLOOR_RATIO = 0.25`). (b) Cohérence L1 : si le prix catalogue du premier candidat est ridiculement bas par rapport à l'ancre IA (moins de 0,2 fois l'ancre, constante `L1_ANCHOR_MIN_RATIO = 0.2`), c'est que ce candidat est probablement un accessoire mal apparié (une coque à 43 $ pour un iPhone) : on ignore ce prix catalogue et on bascule sur L1.5, ce qui évite d'afficher "iPhone à 15 €". (c) Prix catalogue aberrant : si le prix catalogue dépasse 4 fois la médiane des voisins (avec au moins 3 voisins, constante `CATALOG_OUTLIER_FACTOR = 4.0`), c'est une donnée corrompue (un casque listé à 9755 $) et on l'ignore.
 
 - **L'état "pour pièces / HS".** Un cinquième état a été ajouté (`pour_pieces`), avec un multiplicateur de **0,15** (valeur résiduelle). Les multiplicateurs complets sont : neuf 1,00 ; très bon état 0,75 ; bon état 0,55 ; correct 0,35 ; pour pièces 0,15. Les prix du catalogue sont en dollars, convertis en euros par un taux fixe (environ 0,92, surchargeable par la variable d'environnement `PRICE_USD_EUR_RATE`).
 
@@ -154,7 +154,7 @@ En plus des métriques HTTP exposées à Prometheus (latence, compteurs), on ém
 - À la tarification, l'événement `price_done` consigne le niveau de cascade réellement utilisé, la méthode, le prix suggéré en euros, la présence d'une ancre IA, la catégorie et l'état.
 - Le but est de pouvoir LIRE ce que fait le pipeline (taux de catalog-miss, fréquence d'usage de L1.5, où part la latence), sans rien de décoratif.
 
-### Le durcissement de sécurité (Cycle 36)
+### Le durcissement de sécurité
 
 Une revue adverse a conduit à plusieurs corrections de robustesse, visibles dans le code.
 
@@ -200,12 +200,12 @@ Une revue adverse a conduit à plusieurs corrections de robustesse, visibles dan
   l'entrée en anglais ne change rien**. Conséquence produit : on peut alléger la saisie demandée au
   vendeur sans dégrader la fiche.
 
-- **La qualité de fiche après le Cycle 36, mesurée sur de vraies photos.** Un protocole
+- **La qualité de fiche bout-en-bout, mesurée sur de vraies photos.** Un protocole
   reproductible (`scripts/mesure_qualite_fiche.py`, sortie dans
   `reports/09_fiche_quality/mesure_fiche.{json,md}`) fait passer le panel réel `data/photos_eval`
   (94 produits, les noms de dossiers servant de vérité-terrain) par l'API complète (upload →
   identification → prix), en photo seule (sans précisions du vendeur). On respecte ainsi la doctrine
-  du projet (R21) : mesurer sur de VRAIES sorties, pas sur des anecdotes. Résultats mesurés sur les
+  du projet : mesurer sur de VRAIES sorties, pas sur des anecdotes. Résultats mesurés sur les
   **93 produits** traités (1 dossier non mesuré) :
   - **Identification** : **90,3 %** des produits sont correctement identifiés (critère : au moins
     50 % des mots clés du nom de produit retrouvés dans la famille jugée par l'IA et le titre du
@@ -219,7 +219,7 @@ Une revue adverse a conduit à plusieurs corrections de robustesse, visibles dan
     un Philips), un catalog-miss légitime (SSD, station d'accueil), ou un nom de dossier ambigu (un
     artefact de la mesure elle-même). C'est un chiffre défendable, pas une impression.
 
-- **Le parcours vendeur, refondu côté interface (Cycle 36).** Plusieurs changements rendent visible,
+- **Le parcours vendeur, refondu côté interface.** Plusieurs changements rendent visible,
   pour le vendeur, l'honnêteté du système (code dans `frontend/src` : `App.tsx`, `condition.ts`,
   `components/MarketplaceListing.tsx`).
   - Le choix manuel du "type d'objet" a été SUPPRIMÉ : le type est désormais DÉRIVÉ de la catégorie
@@ -245,8 +245,8 @@ Une revue adverse a conduit à plusieurs corrections de robustesse, visibles dan
 > 📊 **Chiffres et faits pour la slide** : lecture des photos par Qwen 3.5 Flash (champion d'une
 > comparaison de quatre modèles, retenu pour sa complétude et son coût), jusqu'à 4 vues en un seul
 > appel, sortie JSON, raisonnement désactivé, déterminisme à température 0 avec graine fixe pour
-> l'extraction et température 0,4 pour la rédaction ; identification raisonnée Cycle 36 = le modèle
-> JUGE le top-15 du retriever sans pouvoir inventer hors liste (grounded avant génératif) ; qualité
+> l'extraction et température 0,4 pour la rédaction ; identification raisonnée = le modèle
+> JUGE le top-15 du moteur de recherche par similarité sans pouvoir inventer hors liste (grounded avant génératif) ; qualité
 > de fiche mesurée sur 93 photos réelles : 90,3 % d'identification (rappel moyen 78 %), complétude
 > 0,84, catalog-miss 28 %, niveaux de prix L1 = 42 / L1.5 = 51 ; la photo prouvée comme maillon
 > décisif (gain de 0,145 de complétude par rapport au texte seul) ; description vendeur prouvée sans
@@ -283,7 +283,7 @@ Une revue adverse a conduit à plusieurs corrections de robustesse, visibles dan
 
 Pour situer ces IA génératives dans l'ensemble du projet : la plupart des "modèles" du projet sont des modèles entraînés ou construits par nous, et seules les briques génératives sont externalisées via OpenRouter.
 
-- **M7, la recherche par similarité (k-NN / FAISS HNSW sur des embeddings texte Arctic Embed)** : c'est le moteur d'identification en direct, qui fournit le top-15 des candidats réels.
+- **La recherche par similarité (k-NN / FAISS HNSW sur des embeddings texte Arctic Embed)** : c'est le moteur d'identification en direct, qui fournit le top-15 des candidats réels.
 - **Le vote pondéré des voisins (k-NN) sur la catégorie fine** : c'est le classifieur champion du projet ; il fournit le signal de confiance qui pilote le drapeau "Modèle à confirmer".
 - **Un modèle texte TF-IDF / SVM** en production dans le registre MLflow.
 - **La cascade de prix déterministe** (sans ML opaque), décrite plus haut.

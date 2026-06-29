@@ -1,12 +1,12 @@
-# Rapport anti-leakage — Sous-todo 1.3
+# Rapport anti-leakage
 
 > Version 1.0 — 2026-05-03
-> Statut : `completed` — chiffres mesurés sur les splits products + reviews_index générés en sous-todo 1.2.
-> Aucun chiffre inventé (R8).
+> Statut : terminé — chiffres mesurés sur les splits products + reviews_index générés à l'étape de nettoyage et de split.
+> Tous les chiffres sont mesurés, aucun n'est inventé.
 
 ## En une phrase
 
-Sur les 5 patterns canoniques de data leakage, **4 sont OK** (P1, P2, P3, P5) et **1 est attendu et explicitement documenté** (P4 — overlap user_id reviews_index). Le pipeline 1.2 est anti-leakage **au niveau product** (anti-L1 variantes + anti-B1 stratification cat). Pour les modèles "préférence user" futurs, un split dédié GroupKFold(user_id) sera nécessaire.
+Sur les 5 patterns canoniques de fuite de données (data leakage), **4 sont OK** (P1, P2, P3, P5) et **1 est attendu et explicitement documenté** (P4 — chevauchement des user_id dans le reviews_index). Le pipeline de nettoyage et de split est protégé contre les fuites **au niveau produit** (protection contre les variantes d'un même produit, et stratification par catégorie contre le déséquilibre catégoriel). Pour de futurs modèles de "préférence utilisateur", un split dédié GroupKFold(user_id) sera nécessaire.
 
 ## Pattern 1 — Doublons parent_asin train/test ✅
 
@@ -19,7 +19,7 @@ Sur les 5 patterns canoniques de data leakage, **4 sont OK** (P1, P2, P3, P5) et
 | n_unique parent_asin val | 3 955 355 | — |
 | n_unique parent_asin test | 3 955 377 | — |
 
-GroupKFold(parent_asin) trivial à respecter au product-level (1 ligne = 1 parent_asin). Strict 0 partout — split parfait pour anti-L1.
+GroupKFold(parent_asin) trivial à respecter au niveau produit (1 ligne = 1 parent_asin). Strict 0 partout : split parfait pour empêcher qu'un même produit (et ses variantes) se retrouve dans deux splits.
 
 ## Pattern 2 — Métadonnées qui contiennent le label ✅
 
@@ -68,18 +68,18 @@ La stratification cat-par-cat préserve naturellement la distribution temporelle
 | n_overlap users (test ∩ train) | **19 935 467** |
 | **% test_users dans train** | **88,2 %** |
 
-⚠️ **Verdict P4** : `severity = expected`. **C'est attendu et documenté comme limitation de design**.
+⚠️ **Verdict P4** : sévérité = attendu. **C'est attendu et documenté comme limitation de conception**.
 
 **Pourquoi c'est attendu** :
-- Le split de la sous-todo 1.2 est **product-level** (anti-L1 variantes du même produit)
-- Conséquence : un user qui a noté 10 produits peut très bien voir 7 de ces produits dans train et 3 dans test (avec des `parent_asin` différents)
+- Le split est réalisé **au niveau produit** (pour empêcher les variantes d'un même produit de fuiter entre splits)
+- Conséquence : un utilisateur qui a noté 10 produits peut très bien voir 7 de ces produits dans train et 3 dans test (avec des `parent_asin` différents)
 - Du coup ses reviews train et test partagent le même `user_id`
 
 **Conséquence pratique** :
-- ✅ **OK pour knn-faiss à pricing-cascade product-level** : les classifieurs et le retrieval n'utilisent pas `user_id` comme feature, donc pas de fuite.
-- ⚠️ **À traiter au Cycle 7+** si on entraîne un **modèle préférence user** (recommendation, sentiment user-personnalisé) : refaire un split dédié `GroupKFold(user_id)` qui forcera train_users ∩ test_users = ∅.
+- ✅ **Sans impact pour la chaîne de recherche par similarité (FAISS) et de prédiction de prix au niveau produit** : les classifieurs et la recherche par similarité n'utilisent pas `user_id` comme feature, donc pas de fuite.
+- ⚠️ **À traiter plus tard** si on entraîne un **modèle de préférence utilisateur** (recommandation, sentiment personnalisé par utilisateur) : refaire un split dédié `GroupKFold(user_id)` qui forcera train_users ∩ test_users = ∅.
 
-**Documentation** : ce point est inscrit comme **C4-bis** dans `reports/02_cleaning/cleaning_report.md` §11. À rappeler lors de la première sous-todo qui voudrait apprendre des préférences user.
+**Documentation** : ce point est inscrit comme condition aval dans `reports/02_cleaning/cleaning_report.md` §11. À rappeler dès la première étape qui voudrait apprendre des préférences utilisateur.
 
 ## Pattern 5 — Feature engineering stateless ✅
 
@@ -94,30 +94,30 @@ Toutes les features dérivées en étape 5 sont **purement pointwise** (calculé
 - `log_price` : `log1p(price_num)` (ligne par ligne)
 - `price_band` : seuils constants 50 / 200 (pas dérivés du dataset)
 - `length_title`, `length_description` : `str.len_chars()` (ligne par ligne)
-- `n_reviews_log` : `log1p(n_reviews)` (ligne par ligne — `n_reviews` est lui-même un agrégat reviews-par-produit, donc déjà product-level, pas global)
+- `n_reviews_log` : `log1p(n_reviews)` (ligne par ligne — `n_reviews` est lui-même un agrégat des reviews par produit, donc déjà au niveau produit, pas global)
 - `years_active` = `year_last_review - year_first_review + 1` (ligne par ligne)
 - `recency_year` = `2023 - year_last_review` avec **2023 = constante hardcodée** (`DATASET_LAST_YEAR`), pas dérivée du dataset → OK
 
-**Aucun risque de fuite feature engineering**. Si on ajoute des features statefuls plus tard (z-score, normalisation, target encoding), elles devront être calculées **sur le train uniquement** et passées explicitement (R3).
+**Aucun risque de fuite par feature engineering**. Si on ajoute des features statefuls plus tard (z-score, normalisation, target encoding), elles devront être calculées **sur le train uniquement** et passées explicitement, conformément à la règle anti-leakage.
 
 ## Synthèse
 
-| ID | Pattern | Severity | Action |
+| ID | Pattern | Sévérité | Action |
 |---|---|---|---|
-| **P1** | Doublons parent_asin train/test | **ok** (0 overlap) | aucune |
-| **P2** | Metadata contient le label | **ok** (0 alerte > 80 %) | aucune |
-| **P3** | Fuite temporelle | **ok** (spread 0 an) | aucune |
-| **P4** | Overlap user_id reviews_index | **expected** (88,2 % overlap, design choice) | refaire GroupKFold(user_id) si modèle préférence user |
-| **P5** | Feature engineering stateless | **ok** (0 stateful détecté) | maintenir la discipline si nouvelles features |
+| **P1** | Doublons parent_asin train/test | **OK** (0 chevauchement) | aucune |
+| **P2** | Les métadonnées contiennent le label | **OK** (0 alerte > 80 %) | aucune |
+| **P3** | Fuite temporelle | **OK** (écart de 0 an) | aucune |
+| **P4** | Chevauchement des user_id dans le reviews_index | **attendu** (88,2 % de chevauchement, choix de conception) | refaire GroupKFold(user_id) si modèle de préférence utilisateur |
+| **P5** | Feature engineering sans état (stateless) | **OK** (0 opération avec état détectée) | maintenir la discipline si nouvelles features |
 
-**Verdict global** : pipeline 1.2 anti-leakage **au niveau requis pour les modèles knn-faiss à pricing-cascade product-level** (cf. `docs/modeles.md`). La limitation P4 est explicitement documentée et n'impacte pas le scope nominal du projet.
+**Verdict global** : le pipeline de nettoyage et de split est protégé contre les fuites **au niveau requis pour la chaîne de recherche par similarité (FAISS) et de prédiction de prix au niveau produit** (cf. `docs/modeles.md`). La limitation P4 est explicitement documentée et n'impacte pas le périmètre nominal du projet.
 
 ## Annexes
 
 - Script : `src/data/validate/01_anti_leakage_check.py`
 - Métriques machine-readable : `reports/02_cleaning/anti_leakage_metrics.json` (gitignored, régénérable)
 - Tests CI : `tests/test_anti_leakage.py` (à créer dans le commit suivant) — vérifie P1, P3, P5 (rapides) sans recalculer P2/P4 (lourds)
-- Décisions / règles référencées : R3 (anti-leakage), R20 (cleanup fin cycle)
-- ADR référencées : D-009 (architecture cible RAG-grounded), D-008 (périmètre)
+- Règles méthodologiques appliquées : règle anti-leakage, et nettoyage systématique en fin d'étape.
+- Décisions structurantes référencées : architecture cible fondée sur la recherche augmentée par récupération (RAG), et périmètre du projet.
 - Stack : `polars 1.40.1` streaming
 - Durée check : ~1 min sur les 5 patterns

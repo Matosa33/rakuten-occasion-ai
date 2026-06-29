@@ -1,7 +1,7 @@
 # Model Card — svm-embed_v1
 
 **Type** : LinearSVC + Platt calibration
-**Tâche** : Classification multi-cat (4 cat D-011)
+**Tâche** : Classification multi-catégories (4 catégories)
 
 ## Inputs / Outputs
 - **Input** : Embeddings Arctic Embed L v2 (1024 dim, FP16)

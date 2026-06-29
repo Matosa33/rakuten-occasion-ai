@@ -8,11 +8,10 @@
 > Note d'organisation. Ce document couvre **deux niveaux** d'explicabilité, complémentaires et de
 > natures différentes. Le premier, **hors ligne** (sections 1 à 5), produit des rapports une fois
 > pour toutes pour la gouvernance : SHAP, t-SNE et fiches modèle. Le second, **en direct dans la
-> fiche d'annonce** (section 7, ajoutée au Cycle 36), expose au vendeur, requête par requête, la
+> fiche d'annonce** (section 7), expose au vendeur, requête par requête, la
 > **provenance de chaque champ**, l'**étiquette « estimé par IA »** sur le prix concerné et un
 > **signal de confiance / drapeau** quand le modèle exact reste à confirmer. Cette seconde partie
-> répond exactement à la limite que l'ancienne version de ce document signalait (« pas d'explication
-> par prédiction en direct ») : elle existe désormais et fait partie intégrante de l'interface.
+> couvre l'explication par prédiction en direct : elle fait partie intégrante de l'interface.
 
 ---
 
@@ -107,7 +106,7 @@ Les huit modèles internes :
 | m3_rf_v1 | Forêt aléatoire (300 arbres, profondeur max 20) | Classer un produit | Gourmand en mémoire (environ 2 Go), pas le meilleur score mais explicable via SHAP |
 | m4_mlp_v1 | Réseau de neurones (couches cachées 512 puis 256, arrêt anticipé) | Classer un produit | Boîte noire (peu explicable nativement), sensible à la mise à l'échelle des données |
 | m5_tfidf_linsvc_v1 | TF-IDF (mots 1-2 grammes et caractères 3-5 grammes) + LinearSVC + Platt | Classer un produit à partir du texte brut | Pas de sémantique (mots isolés), mais excellente base de référence |
-| m6_fusion_v1 | Fusion adaptative (moyenne pondérée des probabilités) | Combiner les modèles m2, m3, m4 et m5 | Coût d'inférence multiplié par quatre, à n'adopter que si le gain dépasse +0,02 de score F1 |
+| m6_fusion_v1 | Fusion adaptative (moyenne pondérée des probabilités) | Combiner les quatre classifieurs précédents (SVM, forêt aléatoire, réseau de neurones, TF-IDF) | Coût d'inférence multiplié par quatre, à n'adopter que si le gain dépasse +0,02 de score F1 |
 | m7_faiss_hnsw_v1 | Index FAISS HNSW (M=32, efConstruction=200, efSearch=64) | Retrouver les produits les plus proches d'un produit donné | Recherche approximative (taux de rappel de 95 à 98 %), à comparer à une recherche exacte de référence |
 | m8_pricing_v1 | Cascade de règles transparentes, sans apprentissage | Suggérer un prix indicatif avec un niveau de confiance | Dépréciation supposée linéaire (la vraie courbe ne l'est pas), pas d'effet de saisonnalité |
 
@@ -124,7 +123,8 @@ Quelques termes employés ci-dessus, expliqués simplement :
 - **Score F1** : une note de qualité de classification entre 0 et 1, qui combine la précision et le
   rappel ; plus c'est proche de 1, mieux c'est.
 
-Pour le modèle m5, la fiche indique des performances mesurées : F1 pondéré sur le test de 0,9503,
+Pour le modèle TF-IDF + LinearSVC (`m5_tfidf_linsvc_v1`), la fiche indique des performances
+mesurées : F1 pondéré sur le test de 0,9503,
 F1 macro de 0,9375, et une erreur de calibration attendue (ECE) de 0,0092. L'ECE mesure l'écart
 entre la confiance annoncée et la justesse réelle ; plus elle est faible, plus les probabilités
 annoncées sont honnêtes.
@@ -151,14 +151,16 @@ Les quatre modèles externes réutilisés :
 Précisions sur ces modèles externes :
 
 - « Gelé » signifie que le modèle est utilisé tel quel, sans réentraînement sur nos données. La
-  fiche e1 note que ce gel est une limite à lever si l'écart de qualité mesuré dépasse 5 points.
+  fiche de l'encodeur d'image (SigLIP) note que ce gel est une limite à lever si l'écart de
+  qualité mesuré dépasse 5 points.
 - Arctic Embed traite au maximum 256 mots par texte (un compromis qui le rend environ quatre fois
   plus rapide qu'avec une limite de 512 mots).
-- « Zero-shot » veut dire que le modèle e3 valide une correspondance sans entraînement spécifique,
-  uniquement à partir de sa culture générale. La fiche note un coût d'environ 0,0001 dollar par
-  appel et une latence de 1 à 3 secondes.
-- Le modèle e4 rédige à partir d'éléments factuels fournis (un « ancrage » dans les avis clients),
-  et sa fiche signale un risque d'invention si cet ancrage est pauvre.
+- « Zero-shot » veut dire que le validateur vision-langage valide une correspondance sans
+  entraînement spécifique, uniquement à partir de sa culture générale. La fiche note un coût
+  d'environ 0,0001 dollar par appel et une latence de 1 à 3 secondes.
+- Le rédacteur (grand modèle de langage) rédige à partir d'éléments factuels fournis (un
+  « ancrage » dans les avis clients), et sa fiche signale un risque d'invention si cet ancrage
+  est pauvre.
 
 ### Livrable 2 : la visualisation t-SNE des embeddings texte
 
@@ -177,16 +179,17 @@ Une partie « t-SNE vision » est prévue dans le code mais n'est pas encore imp
 embeddings d'images du jeu de validation existent, le script signale simplement qu'il faudrait la
 coder, sans produire d'image. La visualisation t-SNE livrée concerne donc uniquement le texte.
 
-### Livrable 3 : l'attribution SHAP sur la forêt aléatoire (m3)
+### Livrable 3 : l'attribution SHAP sur la forêt aléatoire
 
-Ce livrable n'est généré que si le modèle m3 (la forêt aléatoire, fichier `m3_rf_v1.joblib`) existe.
+Ce livrable n'est généré que si la forêt aléatoire (fichier `m3_rf_v1.joblib`) existe.
 Le script tire au hasard un échantillon de **1000 produits** (paramètre `SHAP_N_SAMPLES = 1000`)
 parmi les embeddings texte, puis lance `TreeExplainer`, la variante de SHAP adaptée aux modèles à
 base d'arbres. Il produit une image récapitulative, `reports/09_explainability/shap_m3_summary.png`
 (un *summary plot*), qui montre les variables les plus influentes sur la décision, jusqu'à 20
 affichées.
 
-À noter : l'entrée du modèle m3 n'est pas un texte lisible mais l'embedding, c'est-à-dire la liste
+À noter : l'entrée de cette forêt aléatoire n'est pas un texte lisible mais l'embedding,
+c'est-à-dire la liste
 des 1024 nombres. SHAP attribue donc une contribution à chacune de ces 1024 dimensions numériques.
 Ces dimensions n'ont pas de nom parlant, mais le graphique montre lesquelles pèsent le plus dans la
 décision et permet de vérifier que le modèle s'appuie sur un ensemble structuré de signaux, pas sur
@@ -203,13 +206,14 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
 
 ## 4. Résultats mesurés
 
-- **12 fiches modèle générées** : 8 modèles internes (m1 à m8) et 4 modèles externes (e1 à e4).
-  Cette documentation systématique assure la traçabilité de chaque brique du système.
+- **12 fiches modèle générées** : 8 modèles internes (construits dans le projet) et 4 modèles
+  externes (réutilisés tels quels). Cette documentation systématique assure la traçabilité de
+  chaque brique du système.
 - **t-SNE texte** : les catégories forment des groupes visuellement séparés. C'est une confirmation
   visuelle d'un bon score de classification : si les catégories se mélangeaient sur l'image, aucun
   classifieur ne pourrait bien les distinguer. Ici, l'œil confirme la métrique.
-- **SHAP sur m3** : les variables les plus influentes sont représentées dans l'image récapitulative
-  `shap_m3_summary.png`.
+- **SHAP sur la forêt aléatoire** : les variables les plus influentes sont représentées dans
+  l'image récapitulative `shap_m3_summary.png`.
 
 > Drapeau slide. Chiffres à afficher : « 12 fiches modèle pour la gouvernance », « t-SNE :
 > catégories visuellement séparées, ce qui confirme le score F1 », « SHAP : variables les plus
@@ -233,18 +237,18 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
 
 **Limites assumées :**
 
-- SHAP est calculé sur le modèle m3 (la forêt aléatoire), alors que ce modèle a été écarté du
+- SHAP est calculé sur la forêt aléatoire, alors que ce modèle a été écarté du
   service en production car peu efficace en grande dimension. SHAP explique donc un modèle
   *représentatif* à base d'arbres, et non directement le modèle de voisinage finalement servi. Ce
   dernier s'explique d'ailleurs naturellement autrement : en montrant ses voisins, ce que fait déjà
   la recherche de produits similaires. Ce point mérite d'être clarifié à l'oral.
 - Pas de décomposition SHAP *en direct*. Le vendeur ne voit pas, au moment de la requête, une
   attribution chiffrée par variable d'embedding. SHAP reste un livrable hors ligne. **En revanche**,
-  une explicabilité en direct d'une autre nature existe désormais et est pleinement intégrée à
-  l'interface (Cycle 36) : la provenance de chaque champ, l'étiquette « prix neuf estimé par IA » et
+  une explicabilité en direct d'une autre nature est pleinement intégrée à
+  l'interface : la provenance de chaque champ, l'étiquette « prix neuf estimé par IA » et
   le drapeau « modèle à confirmer ». Elle est décrite en détail à la section 7. Autrement dit, la
-  décomposition SHAP par prédiction manque toujours, mais l'affirmation « rien n'est expliqué en
-  direct » n'est plus vraie.
+  décomposition SHAP par prédiction n'est pas faite en direct, mais l'explication par prédiction,
+  elle, existe bien à l'écran.
 - t-SNE sur un échantillon de 5000 points : suffisant pour visualiser, mais pas exhaustif. UMAP,
   qui préserve mieux la structure d'ensemble, serait un bon complément.
 - La visualisation t-SNE des images n'est pas encore implémentée : seule celle du texte est
@@ -252,11 +256,11 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
 
 ---
 
-## 7. Explicabilité en direct dans la fiche d'annonce (Cycle 36)
+## 7. Explicabilité en direct dans la fiche d'annonce
 
 Cette section décrit la part de l'explicabilité qui n'est **pas** un rapport hors ligne, mais qui
-s'affiche au vendeur, requête par requête, au moment où il prépare son annonce. Elle a été ajoutée
-au Cycle 36 et repose sur un principe simple : **chaque information montrée doit dire d'où elle
+s'affiche au vendeur, requête par requête, au moment où il prépare son annonce. Elle
+repose sur un principe simple : **chaque information montrée doit dire d'où elle
 vient, et tout ce qui est deviné par l'IA doit être affiché comme tel, jamais comme un fait**. C'est
 la traduction concrète, côté produit, de la règle « ancré avant génératif » du projet : on s'appuie
 en priorité sur la connaissance réelle (le catalogue, la photo, le texte du vendeur) et on étiquette
@@ -303,8 +307,8 @@ produit.
 
 ### 7.2 Les facettes sourcées de la passe d'identification raisonnée
 
-Au-delà des champs venant directement de la photo ou du catalogue, le Cycle 36 introduit une **passe
-d'identification raisonnée** (`src/vlm/reasoned_identification.py`). Le principe de répartition des
+Au-delà des champs venant directement de la photo ou du catalogue, une **passe
+d'identification raisonnée** (`src/vlm/reasoned_identification.py`) intervient. Le principe de répartition des
 rôles est important pour l'explicabilité : **le retriever apporte la connaissance** (les 15
 candidats catalogue réels les plus proches) et **le modèle vision-langage apporte le jugement** (il
 choisit, à partir des photos du vendeur et des 15 fiches résumées en texte, quel candidat correspond

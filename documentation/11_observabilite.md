@@ -30,8 +30,8 @@ familles d'informations.
   demande, du début à la fin. On distingue deux usages de ces journaux : les journaux
   *techniques* (la demande HTTP est arrivée, a duré tant de millisecondes, a renvoyé tel code) et
   les journaux *métier*, qui racontent ce que le pipeline a réellement décidé pour cette demande
-  (quel produit identifié, avec quelle confiance, à quel niveau de prix). Cette seconde famille,
-  ajoutée au Cycle 36, est ce qui permet de répondre à des questions de fond comme « combien de fois
+  (quel produit identifié, avec quelle confiance, à quel niveau de prix). Cette seconde famille
+  est ce qui permet de répondre à des questions de fond comme « combien de fois
   le produit n'était-il pas au catalogue ? » ou « le niveau de prix estimé par l'IA sert-il
   souvent ? », sans rejouer manuellement les demandes.
 
@@ -103,7 +103,7 @@ ensuite les y récupérer.
 |---|---|---|
 | Journaux structurés | `src/observability/logging.py` | structlog au format JSON, horodatage normalisé (format ISO, en temps universel UTC), niveau de gravité, pile d'erreur en cas d'exception, contexte par demande |
 | Corrélation | `src/api/middleware.py` | attribue un `request_id` à chaque demande, intercepteur ajouté en tout premier pour que l'identifiant soit présent dans tous les journaux suivants |
-| Journaux métier | `src/api/main.py` (logger `rakuten.api`) | deux événements inspectables par demande, `identify_done` et `price_done`, qui consignent la décision réelle du pipeline et les temps des appels au modèle de langage (Cycle 36) |
+| Journaux métier | `src/api/main.py` (logger `rakuten.api`) | deux événements inspectables par demande, `identify_done` et `price_done`, qui consignent la décision réelle du pipeline et les temps des appels au modèle de langage |
 | Métriques du service | bibliothèque `prometheus_fastapi_instrumentator`, branchée dans `src/api/main.py` | latence (histogramme), nombre de requêtes (compteur) et demandes en cours (jauge, qui mesure la saturation) |
 | Métriques des traitements par lots | `src/monitoring/push_metrics.py` | pousse vers le Pushgateway les mesures des calculs ponctuels (dérive des données et décision de promotion de modèle) |
 | Tableaux de bord | `monitoring/grafana/dashboards/` | trois tableaux : `golden_signals`, `evidently_drift`, `mlops_promote_gate` |
@@ -132,7 +132,7 @@ demande à travers plusieurs maillons (le client, la passerelle d'entrée, l'app
 contexte est systématiquement nettoyé à la fin, pour qu'un identifiant ne « déborde » pas sur la
 demande suivante.
 
-### Les journaux métier : lire ce que le pipeline a vraiment décidé (Cycle 36)
+### Les journaux métier : lire ce que le pipeline a vraiment décidé
 
 Les métriques Prometheus décrites plus bas répondent à des questions techniques (combien de
 demandes, à quelle vitesse, avec combien d'erreurs), mais elles ne disent rien du *contenu* d'une

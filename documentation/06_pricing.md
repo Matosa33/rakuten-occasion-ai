@@ -38,7 +38,7 @@ aucun modèle d'apprentissage automatique ne serait réellement précis. Nous pr
 transparent, assorti d'une fourchette et d'un niveau de confiance, à une fausse précision affichée
 par un modèle qui n'aurait pas de quoi apprendre.
 
-Précision importante introduite au Cycle 36 : à un seul endroit de la cascade (le niveau L1.5), le
+Précision importante : à un seul endroit de la cascade (le niveau L1.5), le
 prix de référence DE DÉPART peut être une estimation produite par une IA, lorsqu'aucun prix catalogue
 n'est disponible. Cela ne contredit pas le principe de transparence : l'IA ne fournit que le prix
 NEUF de référence ; la décote d'âge, l'ajustement d'état et la conversion en euros restent un calcul
@@ -82,7 +82,7 @@ Le code se trouve dans le fichier `src/pricing/01_algorithmique.py`. La fonction
 s'appelle `suggest_price(...)`. Elle applique une cascade de niveaux de confiance : elle essaie
 d'abord la méthode la plus fiable, et descend d'un cran à chaque fois que les informations
 nécessaires manquent. À l'origine la cascade comptait quatre niveaux nommés L1 (le plus fiable) à
-L4 (mode de secours). Le Cycle 36 a intercalé un niveau supplémentaire, L1.5, entre L1 et L2, ce qui
+L4 (mode de secours). Un niveau supplémentaire, L1.5, a ensuite été intercalé entre L1 et L2, ce qui
 porte la cascade à cinq niveaux : **L1, L1.5, L2, L3, L4**.
 
 | Niveau | Nom de méthode | Conditions de déclenchement | Calcul appliqué |
@@ -93,7 +93,7 @@ porte la cascade à cinq niveaux : **L1, L1.5, L2, L3, L4**.
 | L3 | `category_median` | seule la catégorie du produit est connue | médiane de prix de la catégorie, ajustement selon l'état, conversion en euros, puis garde-fou anti sous-évaluation |
 | L4 | `fallback` | produit et catégorie tous deux inconnus | renvoie une fourchette vide et invite le vendeur à saisir un prix manuellement |
 
-### Pourquoi un niveau L1.5 a été ajouté (Cycle 36)
+### Pourquoi un niveau L1.5 a été ajouté
 
 Le besoin est né d'un constat concret sur de vraies photos. Quand un produit n'a pas de prix direct
 dans sa fiche catalogue, l'ancien système descendait directement sur la médiane des produits voisins
@@ -116,15 +116,16 @@ L1.5 est volontairement placé AVANT les médianes de voisins (L2/L3) parce que 
 justement la source du problème. Dans le même mouvement, L2 et L3 ont été RÉTROGRADÉES : elles ne
 servent plus qu'en l'absence d'ancre IA exploitable.
 
-### L'identification raisonnée qui alimente l'ancre (Cycle 36)
+### L'identification raisonnée qui alimente l'ancre
 
 L'ancre prix neuf ne tombe pas du ciel : elle provient d'un module dédié,
 `src/vlm/reasoned_identification.py`, dont la fonction principale est `reason_identify(...)`. Le
-principe tient en une phrase : **le moteur de recherche (le retriever) apporte la connaissance, le
-modèle d'IA apporte le jugement**. Concrètement, le retriever remonte les 15 fiches catalogue
-réelles les plus proches ; on envoie à l'IA, en un seul appel, la ou les photos du vendeur (1 à 2
-images) accompagnées des 15 fiches RÉSUMÉES EN TEXTE (pas les 15 images du catalogue, pour économiser
-des jetons), des attributs déjà observés et du texte saisi par le vendeur. L'IA doit alors juger :
+principe tient en une phrase : **le moteur de recherche par similarité apporte la connaissance, le
+modèle d'IA apporte le jugement**. Concrètement, le moteur de recherche remonte les 15 fiches
+catalogue réelles les plus proches ; on envoie à l'IA, en un seul appel, la ou les photos du vendeur
+(1 à 2 images) accompagnées des 15 fiches RÉSUMÉES EN TEXTE (pas les 15 images du catalogue, pour
+économiser des jetons), des attributs déjà observés et du texte saisi par le vendeur. L'IA doit
+alors juger :
 quelle est la famille de produit, quel candidat correspond vraiment, et quel est le prix neuf de
 référence estimé (le champ `reference_new_price_usd`). Le modèle utilisé est paramétrable par la
 variable d'environnement `PHOTO_VLM_IDENTIFY_MODEL` ; à défaut, c'est le modèle d'extraction photo du
@@ -134,8 +135,8 @@ interne désactivé).
 Trois garde-fous protègent ce jugement contre l'invention, dans `_parse(...)` :
 
 - si l'IA désigne un candidat qui ne fait PAS partie des 15 fiches réelles (un identifiant
-  « halluciné »), on retombe sur le candidat numéro 1 du retriever ET on remet la confiance de
-  famille à zéro, parce que l'IA n'a pas réellement endossé ce candidat ;
+  « halluciné »), on retombe sur le candidat numéro 1 du moteur de recherche ET on remet la confiance
+  de famille à zéro, parce que l'IA n'a pas réellement endossé ce candidat ;
 - une facette dont la source citée est invalide (ni « observé », ni « par analogie », ni un index de
   fiche réelle) est purement et simplement jetée : on n'affirme jamais une caractéristique non
   sourcée ;
@@ -143,15 +144,15 @@ Trois garde-fous protègent ce jugement contre l'invention, dans `_parse(...)` :
   que c'est une ESTIMATION explicitement étiquetée « prix neuf estimé par IA », pas un fait catalogue.
   Mieux vaut une estimation honnêtement étiquetée que la médiane polluée à 6 €.
 
-Ce module est **best-effort et non bloquant** (règle R15) : absence de clé API, modèle indisponible,
+Ce module est **best-effort et non bloquant** : absence de clé API, modèle indisponible,
 réponse illisible ou exception quelconque renvoient simplement `None`. Le pipeline garde alors le
-classement du retriever et la cascade de pricing telle quelle. Il n'y a jamais de plantage ni de
-fiche vide. Enfin, le candidat jugé correct est RÉORDONNÉ en tête des candidats, de sorte que la
-fiche, le prix et la validation portent sur le BON produit : auparavant, le candidat numéro 1 du
-retriever pouvait être un accessoire (par exemple une coque d'iPhone affichée à la place de
+classement du moteur de recherche et la cascade de pricing telle quelle. Il n'y a jamais de plantage
+ni de fiche vide. Enfin, le candidat jugé correct est RÉORDONNÉ en tête des candidats, de sorte que
+la fiche, le prix et la validation portent sur le BON produit : auparavant, le candidat numéro 1 du
+moteur de recherche pouvait être un accessoire (par exemple une coque d'iPhone affichée à la place de
 l'iPhone).
 
-### Le texte vendeur fait foi (Cycle 36)
+### Le texte vendeur fait foi
 
 Un mécanisme déterministe complète l'IA, dans `src/api/main.py` (fonction
 `_seller_text_best_match`). Si le texte saisi par le vendeur (les « précisions ») nomme un produit
@@ -189,7 +190,7 @@ un coefficient qui dépend de l'état déclaré de l'objet :
 - très bon état : coefficient 0,75 ;
 - bon état : coefficient 0,55 ;
 - état correct, avec défauts : coefficient 0,35 ;
-- pour pièces / HS : coefficient 0,15 (ajouté au Cycle 36).
+- pour pièces / HS : coefficient 0,15.
 
 Lorsque l'état n'est pas précisé, c'est « bon état » (coefficient 0,55) qui s'applique par défaut.
 L'état « pour pièces / HS » correspond à un objet hors service ou cédé pour récupération de pièces :
@@ -226,9 +227,9 @@ Le niveau de confiance est aussi chiffré entre 0 et 1 (le `confidence_score`) :
 Une protection écarte les prix invalides : seuls les prix supérieurs ou égaux à 0,01 dollar sont pris
 en compte, ce qui élimine les valeurs « 0,0 » parasites présentes dans certaines fiches Amazon.
 
-### Les trois garde-fous métier (Cycle 36)
+### Les trois garde-fous métier
 
-Au-delà de la cascade, le Cycle 36 a ajouté trois protections qui ont toutes une motivation observée
+Au-delà de la cascade, trois protections ont été ajoutées, qui ont toutes une motivation observée
 sur de vraies photos. Elles servent à empêcher des prix manifestement faux de remonter à l'utilisateur.
 
 1. **Anti sous-évaluation** (fonction `_floor_against_underpricing`, constante
@@ -243,8 +244,8 @@ sur de vraies photos. Elles servent à empêcher des prix manifestement faux de 
    disponible.
 
 2. **Cohérence du niveau L1** (constante `L1_ANCHOR_MIN_RATIO = 0,2`). Le candidat numéro 1 du
-   retriever peut être un accessoire mal apparié, par exemple une coque à 43 $ pour un iPhone dont le
-   prix neuf estimé est de l'ordre de 598 $. Si une ancre IA existe et que le prix catalogue du
+   moteur de recherche peut être un accessoire mal apparié, par exemple une coque à 43 $ pour un
+   iPhone dont le prix neuf estimé est de l'ordre de 598 $. Si une ancre IA existe et que le prix catalogue du
    candidat numéro 1 est DRASTIQUEMENT en dessous (inférieur à 0,2 fois l'ancre), on considère ce prix
    catalogue comme pollué : on l'ignore et on bascule sur L1.5. Cela évite d'afficher « iPhone à 15 € »
    parce que le candidat numéro 1 était une coque. Le ratio est volontairement BAS (0,2) car un prix
@@ -295,9 +296,9 @@ pour ne pas laisser croire que l'objet vaut zéro euro.
 - Tests automatisés : le fichier `test_pricing_cascade.py` vérifie le bon fonctionnement des niveaux
   de la cascade, la conversion de devise et les coefficients d'état.
 
-### Mesure de qualité de fiche sur le panel réel (Cycle 36)
+### Mesure de qualité de fiche sur le panel réel
 
-Pour mesurer l'effet réel des changements du Cycle 36 plutôt que de raconter des anecdotes, un
+Pour mesurer l'effet réel de ces mécanismes plutôt que de raconter des anecdotes, un
 protocole reproductible (`scripts/mesure_qualite_fiche.py`, sorties dans
 `reports/09_fiche_quality/mesure_fiche.{json,md}`) a été exécuté sur le panel réel
 `data/photos_eval`, qui contient **94 produits** dont les noms de dossiers servent de vérité-terrain.
@@ -319,7 +320,7 @@ difficile. Les résultats mesurés :
   ambigu (artefact de mesure plutôt qu'une vraie erreur).
 
 Cette mesure remplace les anecdotes par un chiffre défendable, conformément à notre doctrine de
-mesurer sur de VRAIES sorties (R21).
+mesurer sur de VRAIES sorties.
 
 > Point à expliquer honnêtement : une erreur de 62 % peut sembler élevée, mais elle est structurelle.
 > Nos prix de référence sont des prix neufs, alors que nous estimons de l'occasion, et nous n'avons
@@ -352,7 +353,7 @@ Les points solides :
   masquer.
 - L'ancre IA (L1.5) résout un problème concret et chiffré : les médianes de voisins polluées donnaient
   des prix absurdes (6 € pour une montre à 150 €). En faisant juger l'IA tout en gardant la décote
-  déterministe, on combine la connaissance du retriever et le bon sens du modèle SANS introduire de
+  déterministe, on combine la connaissance du moteur de recherche par similarité et le bon sens du modèle SANS introduire de
   boîte noire de prix.
 - Les trois garde-fous attrapent les cas pathologiques (accessoire mal apparié, donnée corrompue) qui,
   sinon, remonteraient un prix manifestement faux à l'utilisateur.

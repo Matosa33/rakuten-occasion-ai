@@ -208,15 +208,15 @@ la photo de son produit, plusieurs garde-fous s'appliquent.
   versions minimales ont été imposées sur certaines bibliothèques pour exclure les
   versions vulnérables.
 
-### Durcissement des entrées du pipeline (Cycle 36)
+### Durcissement des entrées du pipeline
 
 L'arrivée de l'identification raisonnée a élargi la surface d'attaque : le pipeline
 `/identify` envoie désormais des données du vendeur (texte de précisions, photos) à un
 modèle de langage externe (OpenRouter), et l'endpoint `/price` reçoit du front des
 montants (prix catalogue, prix des voisins, ancre de prix neuf estimée par l'IA). Ces
 valeurs viennent de l'extérieur et ne sont donc pas dignes de confiance par défaut. Une
-**revue adverse** menée pendant le Cycle 36 (cinq dimensions : prix, texte, listes,
-prompt, latence) a recensé des points à corriger, tous traités. Le détail.
+**revue adverse** portant sur cinq dimensions (prix, texte, listes, prompt, latence) a
+recensé des points à corriger, tous traités. Le détail.
 
 - **Bornes strictes sur les prix (anti-valeurs aberrantes, code `src/api/schemas.py`).**
   Dans `PriceRequest`, tous les champs de prix sont contraints par Pydantic v2 :
@@ -258,7 +258,7 @@ prompt, latence) a recensé des points à corriger, tous traités. Le détail.
   raccourcissement reste sûr car il n'intervient que lorsque la décision est déjà fiable.
 
 À noter, c'est un choix d'architecture qui sert aussi la sécurité : l'identification
-raisonnée est **best-effort et non bloquante** (discipline R15). Si la clé d'API est
+raisonnée est **best-effort et non bloquante**. Si la clé d'API est
 absente, si le service externe est indisponible, si la réponse est inexploitable ou si le
 modèle "hallucine" un produit hors des candidats réels, la passe retourne simplement
 `None` et le pipeline retombe sur le classement du retrieval et la cascade de pricing
@@ -287,7 +287,7 @@ les seuls produits possibles, le modèle ne fait que choisir parmi eux).
 > tests, audit pip-audit, construction Docker), au vert" ; "Images publiées sur GHCR avec
 > versionnage SemVer" ; "Zéro secret dans tout l'historique du code" ; "Authentification
 > JWT, protection anti-traversée de chemin, URLs imprévisibles" ; "Entrées du pipeline
-> durcies (Cycle 36) : bornes Pydantic sur les prix, anti-DoS, texte vendeur anti
+> durcies : bornes Pydantic sur les prix, anti-DoS, texte vendeur anti
 > prompt-injection". Capture d'écran suggérée : l'onglet Actions de GitHub (coches vertes)
 > et la page Packages (les images publiées sur GHCR).
 
@@ -306,7 +306,7 @@ les seuls produits possibles, le modèle ne fait que choisir parmi eux).
   repose sur **JWT et bcrypt**, et les **envois de fichiers sont durcis**.
 - Ces contrôles sont eux-mêmes **testés** automatiquement (authentification, envois de
   fichiers, contrats des pipelines).
-- Les **entrées du pipeline d'identification raisonnée sont durcies** (Cycle 36, à la
+- Les **entrées du pipeline d'identification raisonnée sont durcies** (à la
   suite d'une revue adverse) : bornes Pydantic strictes sur les prix (positif, plafonné,
   ni infini ni `NaN`), listes et textes plafonnés contre le déni de service et
   l'emballement du coût d'API, et texte vendeur délimité comme donnée non fiable dans le
@@ -348,6 +348,6 @@ tests, l'audit des dépendances (pip-audit) et la construction des quatre images
 la livraison continue publie ensuite des images versionnées (SemVer) sur GHCR. Côté
 sécurité : zéro secret dans tout l'historique du code (vérifié), authentification JWT plus
 bcrypt, des envois de fichiers durcis (protection anti-traversée de chemin et adresses
-imprévisibles), et des entrées de pipeline durcies au Cycle 36 (bornes Pydantic sur les
+imprévisibles), et des entrées de pipeline durcies (bornes Pydantic sur les
 prix, protections anti-déni de service, et texte vendeur traité comme donnée non fiable
 contre l'injection d'instructions dans le modèle de langage).*

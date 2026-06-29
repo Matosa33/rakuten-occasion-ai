@@ -60,8 +60,8 @@ transformation.
  [5] Identification raisonnée : un modèle qui voit et qui raisonne reçoit les
      1-2 photos du vendeur ET les 15 meilleurs candidats (résumés en texte). Il
      JUGE lequel est le bon produit, estime un prix neuf de référence, et signale
-     un éventuel produit absent du catalogue. Le retriever apporte la connaissance,
-     le modèle apporte le jugement.
+     un éventuel produit absent du catalogue. La recherche dans le catalogue apporte
+     la connaissance, le modèle apporte le jugement.
  |
  [5 bis] Texte vendeur autoritaire : si le vendeur a nommé un produit présent
      dans les candidats, ce candidat est retenu de façon déterministe (la
@@ -142,10 +142,10 @@ courte (« iPhone 13 noir »), donc son score de ressemblance est mécaniquement
 C'est pourquoi on a retenu trois niveaux au lieu d'un seul couperet et que l'on affiche
 toujours les candidats à l'humain.
 
-### L'identification raisonnée : le retriever sait, le modèle juge
+### L'identification raisonnée : la recherche sait, le modèle juge
 
 À partir des 30 candidats retrouvés, le système ajoute une étape de jugement. Le principe est
-résumé en une phrase : **le retriever apporte la connaissance, le modèle apporte le jugement.**
+résumé en une phrase : **la recherche dans le catalogue apporte la connaissance, le modèle apporte le jugement.**
 La recherche dans le catalogue est très douée pour rapprocher des produits qui se ressemblent,
 mais elle peut placer en tête un accessoire plutôt que l'objet lui-même (par exemple une coque
 d'iPhone classée avant l'iPhone). On confie donc aux 15 meilleurs candidats un seul appel à un

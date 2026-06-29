@@ -1,4 +1,4 @@
-# PoC bench — branche photo : VLM-extraction vs SigLIP (Cycle 17.0)
+# PoC bench — branche photo : VLM-extraction vs SigLIP
 
 > 2026-06-11. Exigence : scorer « très factuellement, en induisant la solution
 > et pas en la déduisant ». Tous les chiffres ci-dessous sont MESURÉS sur notre
@@ -26,14 +26,14 @@
 
 **⚠ Les colonnes ne sont PAS directement comparables** — c'est le cœur de la lecture honnête :
 - PoC B cherche dans un espace **1 580× plus petit** que la prod (2 k vs 3,16 M) → optimiste.
-- PoC B est **studio→studio** : la vraie photo utilisateur (lumière jaune, fond chaotique, angle) introduit un **domain shift jamais mesuré** — c'était le risque n°1 documenté dès D-009. Aucun de nos jeux de données ne contient de vraies photos utilisateur → ce risque est **non mesurable avant d'avoir investi**.
+- PoC B est **studio→studio** : la vraie photo utilisateur (lumière jaune, fond chaotique, angle) introduit un **domain shift jamais mesuré**, identifié comme le risque n°1 dès la conception de la branche photo. Aucun de nos jeux de données ne contient de vraies photos utilisateur → ce risque est **non mesurable avant d'avoir investi**.
 - PoC A est mesuré dans les **conditions réelles exactes** de la prod (index complet, chemin API complet).
 
 ## Lecture qualitative (inspection des 33 cas déménagement)
 
 - Les descriptions VLM sont **excellentes** (« Apple iPhone 8 Plus, Fully Unlocked, 256GB - Gold » lu sur la photo) — le maillon faible n'est PAS le VLM.
 - Les échecs exact-asin viennent de la **confusion inter-générations dans le matching texte** (iPhone 7 vs 8 Plus, JBL Flip 5 vs Charge 5, ThinkPad E495 vs P15s) : des produits visuellement et textuellement quasi identiques.
-- Or ce problème est EXACTEMENT ce que le produit traite déjà par design : facettes Akinator (capacité, génération) + visionneuse + **validation humaine** (R19/D-017 : l'humain tranche). La métrique produit pertinente est « le bon produit est dans l'écran de sélection » (~52 % direct, plus avec une boucle facette), pas « asin exact en top-1 ».
+- Or ce problème est EXACTEMENT ce que le produit traite déjà par design : facettes Akinator (capacité, génération) + visionneuse + **validation humaine** (c'est l'humain qui tranche au final). La métrique produit pertinente est « le bon produit est dans l'écran de sélection » (~52 % direct, plus avec une boucle facette), pas « asin exact en top-1 ».
 
 ## Question jury : « a-t-on fait assez d'entraînement ? »
 
@@ -42,17 +42,17 @@ tfidf-svm TF-IDF+LinearSVC+Platt 1 585 s) + bench comparatif 5 modèles + calibr
 + Registry @Production + **boucle de ré-entraînement automatisée** (Airflow,
 champion/challenger — des retrains réels ont créé les versions v4/v5 du registry).
 **SigLIP n'ajouterait RIEN ici : c'est un encoder FROZEN** (inférence + indexation,
-zéro entraînement). Le seul vrai « plus d'entraînement » serait F8 (fine-tuning VLM
-QLoRA), conditionnel à une preuve de gain (D-009) — indépendant du choix ci-dessous.
+zéro entraînement). Le seul vrai « plus d'entraînement » serait le fine-tuning du VLM
+en QLoRA, conditionnel à une preuve de gain — indépendant du choix ci-dessous.
 
 ## Scoring final
 
 | Critère | VLM-extraction | SigLIP index complet |
 |---|---|---|
 | Précision mesurée en conditions réelles | ~52 % same-model@5 (mesuré, espace complet) | non mesurable sans investir (88 % @5 en conditions doublement optimistes) |
-| Délai jusqu'à démontrable | **0 jour** (modèle actuel a la vision) | ~73 h de download CDN (mesuré 13 img/s, D-014) + encode + rebuild index |
+| Délai jusqu'à démontrable | **0 jour** (modèle actuel a la vision) | ~73 h de download CDN (mesuré 13 img/s) + encode + rebuild index |
 | Risque | dépendance API (fallback texte existant) | **domain shift photo réelle inconnu** → risque de découvrir le problème APRÈS 73 h |
-| Ce que ça débloque | TOUT le recadrage photo-first : upload obligatoire, guidage vues, extraction état, **VLM validateur F0.4**, OCR étiquettes | uniquement le matching visuel (multi-view RRF D-009) |
+| Ce que ça débloque | TOUT le recadrage photo-first : upload obligatoire, guidage vues, extraction état, **validateur vision-langage**, OCR étiquettes | uniquement le matching visuel (fusion multi-vues RRF) |
 | Valeur jury « entraînement » | 0 (API) | 0 (frozen) |
 | Casse l'existant ? | non (alimente le pipeline actuel) | non (vue additionnelle RRF) |
 
@@ -67,4 +67,4 @@ QLoRA), conditionnel à une preuve de gain (D-009) — indépendant du choix ci-
    RRF réel et surtout tester le domain shift avec quelques vraies photos prises au
    téléphone. GO/NO-GO sur les 73 h complètes seulement après CE chiffre.
 3. Ni l'un ni l'autre ne change la réponse jury « entraînement » — elle est déjà
-   couverte (svm-embed/mlp-embed/tfidf-svm + boucle retrain) et le seul levier serait F8 (hors décision).
+   couverte (svm-embed/mlp-embed/tfidf-svm + boucle retrain) et le seul levier serait le fine-tuning du VLM en QLoRA (hors décision).

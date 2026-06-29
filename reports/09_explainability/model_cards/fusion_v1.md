@@ -1,7 +1,7 @@
 # Model Card — fusion_v1
 
 **Type** : Fusion adaptive (moyenne pondérée probas)
-**Tâche** : Classification multi-cat (4 cat D-011)
+**Tâche** : Classification multi-catégories (4 catégories)
 
 ## Inputs / Outputs
 - **Input** : Probas calibrées de svm-embed/rf-embed/mlp-embed/tfidf-svm

@@ -1,8 +1,8 @@
-# Images Docker — Rakuten (Cycle 13 Infrastructure)
+# Images Docker — Rakuten
 
 Toutes les images sont **multi-stage** (build isolé du runtime) et **CPU-only** :
-la promesse soutenance « `make up` sur VM vierge » cible une machine sans GPU,
-et l'encodage GPU vit dans un worker isolé (ADR D-022).
+la promesse « `make up` sur VM vierge » cible une machine sans GPU,
+et l'encodage GPU vit dans un worker isolé.
 
 ## Inventaire
 
@@ -12,8 +12,8 @@ et l'encodage GPU vit dans un worker isolé (ADR D-022).
 | `rakuten/api:dev` | `Dockerfile.api` | API FastAPI (`/identify`, `/price`, `/describe`) | 8000 |
 | `rakuten/frontend:dev` | `Dockerfile.frontend` | SPA React (Vite) + proxy `/api` → backend | 80 |
 
-> Les services Compose qui les orchestrent (volumes, réseaux, profiles dev/prod) =
-> Cycle 13.2. Gateway Traefik (TLS + middlewares) = Cycle 13.3.
+> Les services Compose qui les orchestrent (volumes, réseaux, profiles dev/prod)
+> et la gateway Traefik (TLS + middlewares) sont décrits ailleurs dans l'infra.
 
 ## Build
 
@@ -40,7 +40,7 @@ le venv prêt-à-l'emploi du builder + le code source. Pas de toolchain de compi
 dans le runtime → image finale plus petite et surface d'attaque réduite.
 
 Healthcheck : `curl /health` (l'endpoint `src/api/main.py` expose l'état des
-services chargés — utilisable par Traefik 13.3 et k8s 13.5 sans modif de code).
+services chargés — utilisable par Traefik et Kubernetes sans modif de code).
 
 ## Dockerfile.frontend — détails
 
@@ -52,9 +52,9 @@ services chargés — utilisable par Traefik 13.3 et k8s 13.5 sans modif de code
 - **Proxy `/api/`** → `http://api:8000/` (nom de service Compose). Strip du
   préfixe `/api`, identique au proxy Vite de dev (`vite.config.ts`).
 - **SSE-friendly** : `proxy_buffering off` + `proxy_read_timeout 300s` pour
-  `/identify/stream` (cf. Cycle 9).
+  `/identify/stream` (streaming Server-Sent Events).
 
-## Données / volumes (à monter en Compose 13.2)
+## Données / volumes (à monter en Compose)
 
 L'API a besoin des artefacts ML produits hors image (le repo Git ne les contient
 pas) :
@@ -64,7 +64,7 @@ pas) :
 | `/opt/rakuten/data/embeddings/text` | embeddings Arctic (~3 Go) | encodage hôte/worker |
 | `/opt/rakuten/data/index` | index FAISS HNSW (~13 Go) | `python -m src.retrieval.01_faiss_indices` |
 | `/opt/rakuten/data/models` | classifieurs joblib | retrain (DAG `rakuten_retrain`) |
-| `/opt/rakuten/mlflow.db` + `/opt/rakuten/mlartifacts` | tracking MLflow | usage hôte / Cycle 13.4 (MinIO+server) |
+| `/opt/rakuten/mlflow.db` + `/opt/rakuten/mlartifacts` | tracking MLflow | usage hôte / serveur MLflow + MinIO |
 
 Sans ces volumes, l'image démarre et répond `200` sur `/health` mais `/identify`
 échoue à l'initialisation des services (FAISS introuvable). Honnête et attendu :
@@ -79,8 +79,8 @@ via la traduction NTFS↔ext4 → premier `faiss.read_index` prend **5 à 15 min
 mmap direct, **quasi-instantané**.
 
 Le `start_period` du healthcheck API est calé à 5 min pour tolérer ce cas
-sans marquer le conteneur `unhealthy` à tort. Cf. les notes d'apprentissage du projet
-(`bind-mount-RO-docker-desktop-windows-tres-lent-sur-gros-fichiers`).
+sans marquer le conteneur `unhealthy` à tort (lenteur connue des bind-mounts
+read-only sous Docker Desktop Windows sur les gros fichiers).
 
 ## Pourquoi pas de variante CUDA ?
 
@@ -88,8 +88,8 @@ L'API ne fait que de l'inférence légère (FAISS CPU + un classifieur sklearn).
 Les opérations lourdes GPU sont :
 - l'**encodage** des embeddings → fait à part (script `src/encoders/`) sur la
   machine de dev avec GPU, ou un worker dédié (différé).
-- le **fine-tuning VLM** → différé (D-014).
+- le **fine-tuning VLM** → différé.
 
-Une image GPU CUDA serait inutilement lourde (~6-8 Go) pour rien : la soutenance
-tournerait moins bien sur la VM sans GPU. Cf. principe D-022 (« l'orchestrateur
-orchestre, il ne calcule pas le GPU »).
+Une image GPU CUDA serait inutilement lourde (~6-8 Go) pour rien : la VM cible
+sans GPU tournerait moins bien. On applique le principe « l'orchestrateur
+orchestre, il ne calcule pas le GPU ».

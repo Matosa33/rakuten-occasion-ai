@@ -1,4 +1,4 @@
-# Audit dataset — Amazon Reviews 2023 (FULL sur 15 catégories evergreen-occasion)
+# Audit dataset — Amazon Reviews 2023 (intégralité des 15 catégories revente d'occasion)
 
 > **Note de périmètre (à lire en premier).** Cet audit explore le dataset large (15 catégories)
 > tel qu'il était au moment de l'exploration des données. Le **périmètre FINAL du projet a ensuite
@@ -7,15 +7,16 @@
 > portent donc sur les 15 catégories d'exploration, pas sur le périmètre livré. Tous les rapports
 > d'entraînement, de recherche et la documentation finale portent, eux, sur les 4 catégories.
 
-> Version : v2 FULL D-008 (chiffres mesurés le 2026-04-30 sur les 15 catégories complètes)
-> Statut : `completed` — chiffres issus des 3 fichiers JSON dans `reports/`
+> Chiffres mesurés le 2026-04-30 sur les 15 catégories complètes.
+> Statut : terminé — chiffres issus des 3 fichiers JSON dans `reports/`
 > (`audit_qualite_metrics.json`, `audit_distributions_metrics.json`,
-> `audit_biais_leakage_metrics.json`). Aucun chiffre inventé (R8 du brain).
+> `audit_biais_leakage_metrics.json`). Tous les chiffres sont mesurés, aucun n'est inventé.
 >
-> **Supersede** la v1 (3 cat Electronics + Toys_and_Games + All_Beauty) qui calibrait
-> sur un périmètre choisi par hypothèse (cf. R18 — biais de supposition explicite).
-> Périmètre actuel défini par méta-first (Range HTTP probes, cf. R17) puis filtre
-> evergreen-occasion (ADR D-008).
+> Cet audit **remplace** un premier audit qui portait sur 3 catégories seulement
+> (Electronics, Toys_and_Games, All_Beauty) et calibrait sur un périmètre choisi par hypothèse.
+> Le périmètre actuel est défini d'abord par exploration des métadonnées (sondes HTTP par plage
+> d'octets pour estimer les volumes avant tout téléchargement), puis par un filtre sur les produits
+> qui se revendent d'occasion.
 
 ---
 
@@ -28,10 +29,10 @@
 - **Volume total officiel du dataset complet** : 571,54 M reviews + 48 M items sur 33 catégories, période mai 1996 → septembre 2023
 - **Licence** : académique / non-commercial (licence McAuley Lab)
 
-## 2. Périmètre audité — D-008
+## 2. Périmètre audité
 
-- **Stratégie** : 15 catégories COMPLÈTES (full, pas un sample) — voir ADR D-008
-- **Filtre evergreen-occasion** : produits qui se revendent en seconde main après plusieurs années (ni numérique, ni consommable, ni abonnement). Exclues : Kindle, Software, Digital_Music, Magazine_Subscriptions, Subscription_Boxes, Gift_Cards, Beauty, Health, Office, Pet_Supplies, Arts, Unknown.
+- **Stratégie** : 15 catégories COMPLÈTES (intégralité des données, pas un échantillon)
+- **Filtre revente d'occasion** : produits qui se revendent en seconde main après plusieurs années (ni numérique, ni consommable, ni abonnement). Exclues : Kindle, Software, Digital_Music, Magazine_Subscriptions, Subscription_Boxes, Gift_Cards, Beauty, Health, Office, Pet_Supplies, Arts, Unknown.
 - **Catégories retenues (15)** : Clothing_Shoes_and_Jewelry, Home_and_Kitchen, Books, Electronics, Tools_and_Home_Improvement, Automotive, Sports_and_Outdoors, Cell_Phones_and_Accessories, Movies_and_TV, Toys_and_Games, CDs_and_Vinyl, Baby_Products, Video_Games, Musical_Instruments, Appliances.
 - **Total reviews** : **348 367 044** (348,4 M, soit 60,9 % du dataset complet)
 - **Total items meta** : **26 369 078** (26,4 M, soit 54,9 % du dataset complet)
@@ -53,7 +54,7 @@
 | `user_id` uniques | **48 808 303** | n/a |
 | `asin` uniques | **38 387 481** | n/a |
 
-**Observation** : `meta.n_unique_parent_asin = meta.n_total = 26 369 078` → meta sans doublons sur la clé. `reviews.n_unique_parent_asin = 26 362 426` (couverture 99,975 %) → seulement **6 652 produits** sur 26,37 M ont des reviews sans metadata. La discipline méta-first fonctionne, vs les ~99 % de NaN qu'on aurait sur un sample naïf.
+**Observation** : `meta.n_unique_parent_asin = meta.n_total = 26 369 078` → meta sans doublons sur la clé. `reviews.n_unique_parent_asin = 26 362 426` (couverture 99,975 %) → seulement **6 652 produits** sur 26,37 M ont des reviews sans metadata. L'approche consistant à explorer d'abord les métadonnées fonctionne, contre les ~99 % de NaN qu'on aurait sur un échantillon pris naïvement.
 
 > Note : les colonnes `images`, `videos`, `features`, `categories`, `details`, `bought_together` sont droppées au scan_concat. Raison : type mixte List[Struct]/String entre fichiers (selon polars natif vs fallback pandas) qui casse le concat. Aucune analyse d'audit ne s'appuie dessus.
 
@@ -63,7 +64,7 @@
 
 ![NaN reviews](figures/02a_nan_par_colonne_reviews.png)
 
-**Toutes les colonnes reviews sont à 0 % NaN.** Le dataset reviews est totalement renseigné — confirmation sur 348 M lignes du même finding qu'en v1.
+**Toutes les colonnes reviews sont à 0 % NaN.** Le dataset reviews est totalement renseigné, ce qui confirme sur 348 M lignes le même constat que sur le périmètre initial à 3 catégories.
 
 ### NaN par colonne (meta)
 
@@ -79,7 +80,7 @@
 | `title`, `description` | 1,19 % | quasi-complet |
 | `parent_asin`, `average_rating`, `rating_number` | 0,00 % | OK |
 
-**Décision pour C06** : drop `subtitle` et `author` (≥ 84 % vide) sauf pour les sous-catégories où ils sont denses (Books). Conserver `price` mais ne l'utiliser que pour les ~10,76 M items qui en ont un.
+**Décision pour le nettoyage** : supprimer `subtitle` et `author` (≥ 84 % vide) sauf pour les sous-catégories où ils sont denses (Books). Conserver `price` mais ne l'utiliser que pour les ~10,76 M items qui en ont un.
 
 ### Doublons et unicité
 
@@ -87,7 +88,7 @@
 |----------|--------:|-----:|
 | Lignes / parent_asin uniques | 348 367 044 / 26 362 426 = **13,21** | 26 369 078 / 26 369 078 = **1,00** |
 
-**Interprétation** : chaque produit a en moyenne **13 reviews**. Plus bas que la v1 sur 3 cat (23,29) car les 12 nouvelles catégories (Books, CDs, Movies, Clothing…) ont une distribution plus étalée qu'Electronics/Toys.
+**Interprétation** : chaque produit a en moyenne **13 reviews**. Plus bas que sur le périmètre initial à 3 catégories (23,29) car les 12 catégories ajoutées (Books, CDs, Movies, Clothing…) ont une distribution plus étalée qu'Electronics/Toys.
 
 ### Longueurs textes (reviews)
 
@@ -154,7 +155,7 @@
 | Video_Games | 137 269 | 0,5 % |
 | Appliances | 94 327 | 0,4 % |
 
-**Phénomène long-tail confirmé** : ratio max/min = **31,67** (Home_and_Kitchen 67,4 M reviews vs Appliances 2,1 M). Plus modéré que la v1 (× 62,56) car les 12 nouvelles cat sont plus uniformes, mais reste **high** au seuil B1.
+**Phénomène long-tail confirmé** : ratio max/min = **31,67** (Home_and_Kitchen 67,4 M reviews vs Appliances 2,1 M). Plus modéré que sur le périmètre initial à 3 catégories (× 62,56) car les 12 catégories ajoutées sont plus uniformes, mais reste un déséquilibre catégoriel **élevé**.
 
 ### Distribution prix
 
@@ -203,9 +204,9 @@ Sur les **10 759 353 prix valides** (40,8 % des items meta) :
 | 2022 | 40,7 M | décrue |
 | 2023 | 16,6 M | sample arrêté en sept 2023 (cohérent avec doc officielle) |
 
-Avant 2010 : moins de 1,5 % du total. Reviews sur 3 dernières années (2021-2023) : **30 %** → étalement satisfaisant, B4 reste **low**.
+Avant 2010 : moins de 1,5 % du total. Reviews sur les 3 dernières années (2021-2023) : **30 %** → étalement satisfaisant, la concentration temporelle récente reste **faible**.
 
-## 6. Biais identifiés (mesurés sur le FULL D-008)
+## 6. Biais identifiés (mesurés sur l'intégralité des 15 catégories)
 
 | ID | Label | Sévérité | Métrique mesurée |
 |----|-------|----------|------------------|
@@ -217,7 +218,7 @@ Avant 2010 : moins de 1,5 % du total. Reviews sur 3 dernières années (2021-202
 | B6 | plateforme (Amazon US ≠ Rakuten FR) | medium | détecté **a priori** : proxy assumé |
 | **B7** | rating skew positif | medium | **78,1 %** de 4-5★ vs 9,9 % de 1★ |
 
-## 7. Leakages potentiels (mesurés sur le FULL D-008)
+## 7. Leakages potentiels (mesurés sur l'intégralité des 15 catégories)
 
 | ID | Label | Sévérité | Métrique mesurée |
 |----|-------|----------|------------------|
@@ -227,9 +228,9 @@ Avant 2010 : moins de 1,5 % du total. Reviews sur 3 dernières années (2021-202
 
 **Interprétation L1** : duplication factor de 13,21 = chaque produit a en moyenne 13 reviews. Sans précaution au split (groupage par `parent_asin`), un produit pourra apparaître dans train ET test → leakage massif.
 
-**Interprétation L2** : 36,2 M users (74,2 %) ont > 1 review. Si on splitte aléatoirement, ces users feront fuiter leur préférence entre train et test → group leakage. À corriger en C07 avec `GroupKFold(group=user_id)`.
+**Interprétation L2** : 36,2 M users (74,2 %) ont > 1 review. Si on splitte aléatoirement, ces users feront fuiter leur préférence entre train et test (fuite par groupe). À corriger au moment du split avec `GroupKFold(group=user_id)`.
 
-**Interprétation L3** : 61,7 % de titres dupliqués est énorme (vs 57,3 % sur 3 cat). Largement dû aux titres ultra-courts ("Five Stars", "Great product", etc.). À investiguer en C06 — la médiane de longueur titre = 17 chars, donc beaucoup de titres minimaux.
+**Interprétation L3** : 61,7 % de titres dupliqués est énorme (vs 57,3 % sur le périmètre à 3 catégories). Largement dû aux titres ultra-courts ("Five Stars", "Great product", etc.). À investiguer au nettoyage — la médiane de longueur titre = 17 chars, donc beaucoup de titres minimaux.
 
 ## 8. Verdict
 
@@ -237,22 +238,22 @@ Avant 2010 : moins de 1,5 % du total. Reviews sur 3 dernières années (2021-202
 >
 > **Conditions à respecter** :
 >
-> - **C1** (cleaning, C06) : drop les colonnes meta très NaN (`subtitle` 85 %, `author` 89 %) sauf si on isole le sous-périmètre Books (où ces deux champs sont denses).
-> - **C2** (cleaning, C06) : pour le pricing, ne garder que les ~10,76 M items avec un `price` valide (40,8 % des items). Cap les prix à p99 (~465 $) si on entraîne un modèle de pricing standard, ou utiliser un modèle log-normal pour absorber la queue longue (max 1 M $).
-> - **C3** (cleaning, C06) : tronquer les `description` meta à 8 192 tokens (max actuel 1 476 557 chars > 370 K mots, outlier énorme). Évaluer si on filtre les ~11,75 M items avec description < 5 chars (45 %).
-> - **C4** (split, C07) : utiliser **`GroupKFold(group=parent_asin)` ou `group=user_id`** pour éviter L1 (variantes) et L2 (group leakage). Préférer parent_asin si on évalue produit-level, user_id si user-level.
-> - **C5** (modélisation, P03+) : la langue anglaise (B5) impose l'**Arctic Embed L v2 multilingue** prévu en P03.
-> - **C6** (validation finale) : ne JAMAIS valider la performance finale uniquement sur ce dataset. Croiser avec un dump FR (Vinted/Rakuten via API officielle) à terme. Le proxy est un outil d'**itération**, pas un benchmark de production.
-> - **C7** (rating skew B7) : pour un modèle de sentiment, downsampler 5★ ou utiliser `class_weight='balanced'`.
-> - **C8** (déséquilibre catégoriel B1) : si on garde les 15 catégories, le **stratified split** par catégorie est non-négociable pour éviter qu'Home_and_Kitchen et Clothing écrasent les petites cat (Appliances, Musical_Instruments). Si on entraîne un classifieur de catégorie, prévoir aussi un downsampling des dominantes ou des poids inversement proportionnels.
+> - **C1** (nettoyage) : supprimer les colonnes meta très NaN (`subtitle` 85 %, `author` 89 %) sauf si on isole le sous-périmètre Books (où ces deux champs sont denses).
+> - **C2** (nettoyage) : pour le pricing, ne garder que les ~10,76 M items avec un `price` valide (40,8 % des items). Plafonner les prix à p99 (~465 $) si on entraîne un modèle de pricing standard, ou utiliser un modèle log-normal pour absorber la queue longue (max 1 M $).
+> - **C3** (nettoyage) : tronquer les `description` meta à 8 192 tokens (max actuel 1 476 557 chars > 370 K mots, outlier énorme). Évaluer si on filtre les ~11,75 M items avec description < 5 chars (45 %).
+> - **C4** (split) : utiliser **`GroupKFold(group=parent_asin)` ou `group=user_id`** pour éviter la fuite par variantes (L1) et la fuite par groupe d'utilisateurs (L2). Préférer parent_asin si on évalue au niveau produit, user_id si au niveau utilisateur.
+> - **C5** (modélisation) : la langue anglaise (B5) impose un encodeur de texte multilingue (Arctic Embed L v2).
+> - **C6** (validation finale) : ne JAMAIS valider la performance finale uniquement sur ce dataset. Croiser avec un export français (Vinted/Rakuten via API officielle) à terme. Ce dataset est un substitut d'**itération**, pas un benchmark de production.
+> - **C7** (asymétrie des notes, B7) : pour un modèle de sentiment, sous-échantillonner les 5★ ou utiliser `class_weight='balanced'`.
+> - **C8** (déséquilibre catégoriel, B1) : si on garde les 15 catégories, le **split stratifié** par catégorie est non-négociable pour éviter qu'Home_and_Kitchen et Clothing écrasent les petites catégories (Appliances, Musical_Instruments). Si on entraîne un classifieur de catégorie, prévoir aussi un sous-échantillonnage des dominantes ou des poids inversement proportionnels.
 
 ## 9. Annexes
 
 - Scripts utilisés : `src/data/audit/01..04_*.py` (4 scripts polars + fallback pandas, `scan_concat` factorisé dans `__init__.py`)
-- Notebooks compagnons : `notebooks/00_meta_exploration.ipynb` (méta-first Range HTTP) + `notebooks/01_audit_exploratoire.ipynb` (pandas pour exploration interactive < 1 GB)
+- Notebooks compagnons : `notebooks/00_meta_exploration.ipynb` (exploration des métadonnées via sondes HTTP par plage d'octets) + `notebooks/01_audit_exploratoire.ipynb` (pandas pour exploration interactive < 1 GB)
 - Métriques machine-readable : `reports/audit_*_metrics.json` (3 fichiers, regénérables)
 - Graphiques : `reports/figures/*.png` (≥ 11 PNG, gitignored, regénérables via `make audit`)
 - Tests d'invariants : `tests/test_audit_invariants.py`
 - Stack utilisée : `polars 1.40.1` (engine streaming) + `pandas 2.2` + `pyarrow 21` + `huggingface-hub` + `matplotlib 3.10` + `seaborn 0.13`
-- Décisions tracées dans les ADR du projet : D-004 (dataset Amazon Reviews 2023, active), D-006 (polars lazy + streaming, active), D-007 (full vs sample, active), D-008 (périmètre 15 cat evergreen-occasion, active)
-- Règles méthodologiques : R17 (méta-first avant data-first), R18 (biais de supposition explicite) dans les règles d'or du projet
+- Décisions structurantes du projet : choix du dataset Amazon Reviews 2023, traitement en polars lazy + streaming, traitement de l'intégralité des données plutôt qu'un échantillon, et périmètre des 15 catégories revente d'occasion.
+- Règles méthodologiques appliquées : explorer les métadonnées avant les données, et expliciter tout biais de supposition.

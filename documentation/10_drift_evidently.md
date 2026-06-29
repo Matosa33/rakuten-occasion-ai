@@ -171,8 +171,8 @@ du rapport produit.
 ## 4. Résultats mesurés
 
 - **Un vrai rapport visuel existe** : le fichier `monitoring/evidently/reports/drift_latest.html`
-  pèse environ 3,8 Mo (3 811 010 octets précisément). C'est un rapport interactif réel, généré par
-  Evidently, et non un fichier vide servant de simple exemple.
+  pèse environ 3,8 Mo. C'est un rapport interactif réel, généré par Evidently, et non un fichier vide
+  servant de simple exemple.
 - **Une règle de décision chiffrée et nette** : la dérive est déclarée dès qu'au moins 50 % des
   caractéristiques surveillées ont changé.
 - **La boucle dérive vers ré-entraînement est câblée** : le traitement quotidien déclenche bien le

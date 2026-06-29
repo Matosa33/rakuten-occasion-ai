@@ -87,8 +87,8 @@ que l'utilisateur doit croire sur parole.
   montre quelle part des informations utiles est déjà renseignée) et un score
   de confiance d'identification devrait améliorer la qualité moyenne des
   fiches. Mesure visée : un taux de complétude (nombre de champs remplis divisé
-  par le nombre de champs possibles) supérieur à 75 %. Première mesure (Cycle
-  36, voir section 4 bis) : 0,84 en moyenne sur le panel réel, au-dessus du seuil,
+  par le nombre de champs possibles) supérieur à 75 %. Première mesure
+  (voir section 4 bis) : 0,84 en moyenne sur le panel réel, au-dessus du seuil,
   à consolider et à compléter par un test utilisateur sur la qualité perçue.
 - **H3** : un prix transparent et décomposé devrait être mieux accepté qu'un
   prix produit par un modèle opaque. Mesure visée : plus de 60 % des vendeurs
@@ -102,10 +102,11 @@ que l'utilisateur doit croire sur parole.
 
 ## 4. Fonctionnalités prévues (dans le périmètre)
 
-> La fonctionnalité F0 est le cœur du projet. Les fonctionnalités F1 à F7 sont
-> les briques produit. La fonctionnalité F8 est optionnelle.
+> La première fonctionnalité (cœur d'identification) est le centre du projet. Les
+> sept suivantes sont les briques produit. La dernière, la spécialisation du
+> modèle de vision-langage, est optionnelle.
 
-- **F0, cœur d'identification ancré, photo d'abord** : un parcours qui identifie
+- **Cœur d'identification ancré, photo d'abord** : un parcours qui identifie
   un produit à partir d'une ou plusieurs photos (au moins une, obligatoire,
   preuve pour l'acheteur) en cherchant son plus proche voisin dans un catalogue
   indexé. Le catalogue couvre quatre catégories de produits (environ 4,5
@@ -138,7 +139,7 @@ que l'utilisateur doit croire sur parole.
   5. Filets de sécurité : si aucun candidat ne dépasse le seuil de confiance,
      le système bascule en mode dégradé ("produit non identifié, saisie
      assistée") plutôt que de proposer un mauvais résultat.
-- **F1, classification automatique** : prédire la sous-catégorie du produit
+- **Classification automatique** : prédire la sous-catégorie du produit
   (par exemple "smartphones" à l'intérieur de "téléphonie"). Objectif chiffré :
   un score F1 pondéré supérieur ou égal à 0,90. Le F1 est une note de 0 à 1 qui
   combine la capacité à ne pas se tromper et à ne rien oublier ; "pondéré"
@@ -146,12 +147,12 @@ que l'utilisateur doit croire sur parole.
   modèles sont comparés (recherche du plus proche voisin, machine à vecteurs de
   support, forêt aléatoire, réseau de neurones simple), avec une méthode de
   référence simple et une fusion qui combine texte et image selon la situation.
-- **F2, extraction d'attributs** : remplir la marque, le modèle, la couleur, la
+- **Extraction d'attributs** : remplir la marque, le modèle, la couleur, la
   matière et la version à partir de la fiche du produit identifié, complétée par
   des observations dirigées quand la fiche ne contient pas l'information
   (lecture d'une étiquette par reconnaissance de texte sur image, lecture d'un
   code-barres). Aucun attribut n'est inventé par le modèle.
-- **F3, génération de texte ancrée** : produire un titre et une description en
+- **Génération de texte ancrée** : produire un titre et une description en
   français adapté au vendeur particulier, en s'appuyant sur les avis clients
   réels écrits sur Amazon pour le produit identifié. La technique, appelée
   "génération augmentée par recherche", consiste à retrouver d'abord des
@@ -159,19 +160,19 @@ que l'utilisateur doit croire sur parole.
   rédacteur pour qu'il s'en inspire au lieu d'inventer. Objectif chiffré : un
   gain de qualité de texte d'au moins +5 % par rapport à une génération sans
   cet appui, mesuré par un score de ressemblance au texte attendu.
-- **F4, prix transparent** : un prix indicatif calculé par une règle claire et
+- **Prix transparent** : un prix indicatif calculé par une règle claire et
   reproductible (et non par un modèle opaque). Il combine le prix médian de
   voisins proches, une dépréciation par catégorie qui dépend de l'âge, une
   pénalité liée à l'état et un ajustement selon la quantité d'informations
   disponibles. Le résultat est accompagné d'un niveau de confiance et d'une
   fourchette expliquée. La règle est organisée en cascade de cinq niveaux, du
   plus fiable au moins fiable : prix catalogue du produit exact ; prix neuf de
-  référence estimé par le modèle puis décoté (niveau L1.5 ajouté au Cycle 36, voir
+  référence estimé par le modèle puis décoté (niveau L1.5, voir
   section 4 bis) ; médiane des voisins ; médiane de la catégorie ; saisie manuelle
   en dernier recours. Seule l'ancre de départ du niveau L1.5 est estimée : la
   décote reste entièrement déterministe, donc aucun modèle opaque n'est utilisé
   pour le prix (voir la section 6, hors-périmètre).
-- **F5, interface progressive à plusieurs modes** : un mode express (environ 30
+- **Interface progressive à plusieurs modes** : un mode express (environ 30
   secondes, photo seule plus une courte liste de cases à cocher sur l'état) ;
   un mode assisté (observations ciblées via le mode de questions, plus un
   guidage de prise de vue adapté au type de produit) ; un mode déménagement
@@ -179,15 +180,15 @@ que l'utilisateur doit croire sur parole.
   avec une file d'attente sauvegardée dans le navigateur. Les photos du vendeur
   apparaissent dans l'annonce finale (avec zoom), et une visionneuse permet de
   comparer avec les images des candidats du catalogue.
-- **F6, filets de sécurité hors catalogue** : détecter les produits absents du
+- **Filets de sécurité hors catalogue** : détecter les produits absents du
   catalogue d'identification et basculer en mode dégradé ("produit non reconnu,
   saisie assistée") plutôt que d'inventer une fiche.
-- **F7, cycle de vie automatisé du modèle** : réentraînement hebdomadaire des
+- **Cycle de vie automatisé du modèle** : réentraînement hebdomadaire des
   classifieurs comparés ; détection de dérive (un changement progressif des
   données entrantes qui dégrade le modèle), à la fois sur les représentations
   numériques et sur la répartition des catégories ; remplacement du modèle en
   service sans interruption de l'application.
-- **F8 (optionnel), spécialisation du modèle de vision-langage** : à activer
+- **Spécialisation du modèle de vision-langage (optionnel)** : à activer
   uniquement si une comparaison chiffrée démontre un gain net (au moins +0,05
   de score F1 moyenné par catégorie) face au modèle de vision-langage ancré non
   spécialisé. La technique envisagée, dite QLoRA, ajuste finement un modèle en
@@ -195,16 +196,15 @@ que l'utilisateur doit croire sur parole.
   mémoire. Cette option n'est pas déclenchée à ce jour, faute de bénéfice
   démontré.
 
-## 4 bis. Statut d'avancement (Cycle 36, mesuré le 2026-06-26)
+## 4 bis. Statut d'avancement (mesuré le 2026-06-26)
 
 > Cette section donne l'état réel de l'implémentation à la date indiquée. Elle
-> distingue ce qui est codé et mesuré de ce qui reste un pari. Le travail décrit
-> ici vit pour l'instant sur une branche de travail
-> (`feat/cycle34-listing-quality-bench`) et n'est pas encore fusionné dans la
-> branche principale. Il a toutefois été exécuté en direct sur de vraies photos
-> et mesuré sur le panel réel décrit plus bas.
+> distingue ce qui est codé et mesuré de ce qui reste un pari. Ce travail récent
+> a été exécuté en direct sur de vraies photos et mesuré sur le panel réel décrit
+> plus bas ; les chiffres qui en découlent sont donnés comme premières mesures, à
+> consolider.
 
-**Ce qui change avec le Cycle 36, en une phrase.** Le parcours d'identification
+**Ce qui change avec cette étape, en une phrase.** Le parcours d'identification
 ne se contente plus de classer des candidats par ressemblance : un modèle qui
 voit et raisonne (le modèle de vision-langage) examine les quinze meilleurs
 candidats réels proposés par le moteur de recherche et rend un jugement motivé.
@@ -242,7 +242,7 @@ choisir un produit absent de ces quinze candidats.
   consigne. La métadonnée du vendeur "sauve" l'identification quand le produit
   exact est mal perçu sur la photo mais présent au catalogue.
 - **Prix transparent, désormais à cinq niveaux.** La règle de prix de la section
-  4 (F4) gagne un niveau intermédiaire L1.5 : quand le prix catalogue du produit
+  4 gagne un niveau intermédiaire L1.5 : quand le prix catalogue du produit
   exact n'est pas disponible, on part du prix neuf estimé par le modèle, puis on
   applique exactement la même décote déterministe (état, âge). Seule l'ancre de
   départ est estimée ; la décote reste entièrement transparente et reproductible,
@@ -317,19 +317,18 @@ nouvelle passe raisonnée ; un modèle rédacteur ancré produit la description.
 ## 5. Indicateurs de succès
 
 Le tableau ci-dessous liste les seuils visés. La colonne "statut" indique si la
-mesure est déjà disponible ou reste à faire. Les mesures du Cycle 36 (section 4
-bis) portent sur un panel réel, en photo seule, et ne sont pas encore fusionnées
-dans la branche principale ; elles sont donc reportées ici comme premières
-mesures, à consolider.
+mesure est déjà disponible ou reste à faire. Les mesures les plus récentes
+(section 4 bis) portent sur un panel réel, en photo seule ; elles sont reportées
+ici comme premières mesures, à consolider.
 
 | Dimension | Indicateur mesuré | Seuil visé | Statut |
 |-----------|-------------------|------------|--------|
 | Identification | Bon produit présent dans les 5 premiers candidats | au moins 0,80 | à mesurer |
-| Identification | Bon produit en première position après vérification visuelle | au moins 0,70 | première mesure : 0,903 sur le panel Cycle 36 (photo seule, branche non fusionnée), à consolider |
+| Identification | Bon produit en première position après vérification visuelle | au moins 0,70 | première mesure : 0,903 sur le panel réel (photo seule), à consolider |
 | Identification | Taux d'identifications faussement positives | moins de 5 % | à mesurer |
 | Classification | Score F1 pondéré sur le jeu de test | au moins 0,90 | à mesurer |
 | Génération de texte | Gain de qualité face à une génération sans appui | au moins +5 % | à mesurer |
-| Complétude de la fiche | Champs remplis sur champs possibles (hypothèse H2) | au moins 0,75 | première mesure : 0,84 sur le panel Cycle 36, à consolider |
+| Complétude de la fiche | Champs remplis sur champs possibles (hypothèse H2) | au moins 0,75 | première mesure : 0,84 sur le panel réel, à consolider |
 | Prix | Quatre niveaux de confiance distincts | mécanisme en place | en place : cinq niveaux (L1, L1.5, L2, L3, L4) |
 | Latence | Temps de réponse de l'identification (seuil dépassé dans 95 % des cas) | moins de 5 s | à mesurer |
 | Démonstration | Installation sur une machine virtuelle Ubuntu vierge | démarrée en moins de 15 min | à valider |
@@ -345,7 +344,7 @@ mesures, à consolider.
 - **Pas de spécialisation d'un modèle de texte seul** (par exemple un petit
   modèle de langue tournant en local). L'exploration a mesuré un gain marginal
   (de l'ordre de +0,06 sur le score de qualité de texte) pour plus de 8 heures
-  d'entraînement, ce qui n'est pas rentable. Le rédacteur ancré (F3) utilise un
+  d'entraînement, ce qui n'est pas rentable. Le rédacteur ancré utilise un
   modèle de pointe accessible par internet, sans entraînement spécifique, en
   s'appuyant sur la recherche d'avis réels.
 - **Pas de réentraînement du modèle de vision.** Le modèle SigLIP est utilisé
@@ -372,7 +371,7 @@ mesures, à consolider.
   ultérieur pourra explorer la vidéo en direct si le projet le justifie après
   la première version.
 - **Pas de spécialisation du modèle de vision-langage dans la version
-  nominale.** La fonctionnalité F8 est explicitement optionnelle et ne
+  nominale.** La spécialisation du modèle de vision-langage est explicitement optionnelle et ne
   s'active que sur preuve d'un bénéfice mesurable.
 - **Périmètre limité à quatre catégories** : électronique, téléphonie et
   accessoires, jeux vidéo, outils et bricolage (environ 4,5 millions de fiches

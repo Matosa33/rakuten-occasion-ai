@@ -10,7 +10,7 @@ l'image, le système identifie le produit, propose une catégorie précise, pré
 caractéristiques, rédige un titre et une description, et suggère un prix avec une fourchette. Tout le
 reste de ce document décrit comment chaque brique technique a été construite, vérifiée et mesurée.
 
-Une mise à jour importante de l'identification (cycle 36) mérite d'être posée dès l'introduction,
+Une mise à jour importante de l'identification mérite d'être posée dès l'introduction,
 car elle conditionne la qualité de toute la fiche. Le principe retenu sépare deux rôles : la
 recherche par similarité (le « retriever ») apporte la *connaissance* (elle ramène les quinze fiches
 catalogue les plus proches de la photo), tandis qu'un modèle de langage apporte le *jugement* (il
@@ -172,7 +172,7 @@ Précisions sur les modèles cités, pour le lecteur technique :
 - Le modèle vision-langage appelé via l'API externe (par défaut `qwen/qwen3.5-flash-02-23`, réglable
   par la variable d'environnement `PHOTO_VLM_IDENTIFY_MODEL`) joue désormais trois rôles distincts :
   extraire les attributs visibles sur la photo, valider visuellement que la photo correspond au
-  meilleur candidat, et conduire la « passe d'identification raisonnée » introduite au cycle 36. Tous
+  meilleur candidat, et conduire la « passe d'identification raisonnée ». Tous
   ses appels sont rendus reproductibles (température à zéro, graine fixée, raisonnement interne
   désactivé), ce qui permet de rejouer une décision à l'identique. Le code dédié à la passe raisonnée
   se trouve dans `src/vlm/reasoned_identification.py`.
@@ -187,8 +187,8 @@ un choix d'ingénierie assumé, justifié par la durée du projet (trois mois) o
 - Pas d'estimation de prix par apprentissage automatique opaque. Le prix est calculé par une cascade
   algorithmique transparente : on part d'un prix neuf de référence, puis on applique une dépréciation
   selon la catégorie et l'état, pour que le vendeur comprenne d'où vient le chiffre. Cette ligne reste
-  vraie après le cycle 36 : un nouveau niveau intermédiaire (« L1.5 ») utilise désormais comme point
-  de départ un prix neuf *estimé par l'IA* quand le prix catalogue réel manque, mais seule cette ancre
+  vraie avec l'identification raisonnée : un nouveau niveau intermédiaire (« L1.5 ») utilise désormais
+  comme point de départ un prix neuf *estimé par l'IA* quand le prix catalogue réel manque, mais seule cette ancre
   est une estimation. La décote (dépréciation et état) reste à 100 % déterministe et explicable, et le
   prix obtenu est étiqueté honnêtement « prix neuf estimé par IA » dans l'interface. Le détail de la
   cascade et de ses garde-fous est donné en section 6. On assume ce parti pris de transparence : un
@@ -226,9 +226,9 @@ La porte d'entrée du système est protégée par plusieurs mécanismes complém
   fichiers dont on possède déjà le lien.
 - Traitement non bloquant des requêtes, pour que le service reste réactif sous charge.
 
-Le cycle 36 a ajouté un durcissement supplémentaire, issu d'une revue de sécurité adversariale menée
-sur cinq dimensions (cette revue a relevé sept points jugés importants et huit points jugés moyens,
-tous corrigés) :
+L'identification raisonnée a ajouté un durcissement supplémentaire, issu d'une revue de sécurité
+adversariale menée sur cinq dimensions (cette revue a relevé sept points jugés importants et huit
+points jugés moyens, tous corrigés) :
 
 - Bornes strictes sur les valeurs reçues. Les champs de prix de l'interface n'acceptent plus que des
   nombres strictement positifs, plafonnés à un million, et refusent les valeurs aberrantes comme
@@ -246,9 +246,9 @@ tous corrigés) :
 
 ---
 
-## 6. Les fonctionnalités du cycle 36 : identification raisonnée et fiche prête pour la production
+## 6. L'identification raisonnée et la fiche prête pour la production
 
-Cette section décrit les évolutions du cycle 36, qui visent toutes le même objectif : rendre la fiche
+Cette section décrit un ensemble d'évolutions qui visent toutes le même objectif : rendre la fiche
 fiable et défendable, même quand le produit photographié est mal capté par la recherche ou absent du
 catalogue de référence. Le fil conducteur est une règle simple, héritée de la doctrine du projet : on
 ne génère jamais une donnée avant de l'avoir ancrée sur une preuve réelle.
@@ -364,7 +364,7 @@ et l'étiquette « prix neuf estimé par IA » accompagne explicitement le nivea
 
 ### 6.6 L'observabilité métier
 
-Au-delà des mesures techniques exposées à Prometheus, le cycle 36 ajoute des journaux structurés
+Au-delà des mesures techniques exposées à Prometheus, le pipeline produit des journaux structurés
 (`structlog`) inspectables par requête, dans `src/api/main.py`. Deux événements résument ce que fait
 le pipeline : `identify_done` (statut, nombre de candidats, score du premier, catégorie fine et sa
 confiance, présence et résultat de la passe raisonnée, réorganisation effectuée, produit hors
@@ -406,10 +406,9 @@ l'ancre estimée par l'IA, qui fait le vrai travail de remise à niveau du prix.
 
 ### 6.9 Statut de livraison
 
-Ces fonctionnalités du cycle 36 ont été implémentées et vérifiées en direct sur de vraies photos.
-Elles vivent sur une branche de travail (`feat/cycle34-listing-quality-bench`) et ne sont pas encore
-fusionnées sur la branche principale ; cette précision est utile pour qu'un examinateur sache où
-trouver le code.
+Ces fonctionnalités ont été implémentées et vérifiées en direct sur de vraies photos. Le code se
+trouve principalement dans `src/vlm/reasoned_identification.py`, `src/api/main.py`,
+`src/pricing/01_algorithmique.py`, `src/serving/listing_fill.py` et `frontend/src`.
 
 ---
 

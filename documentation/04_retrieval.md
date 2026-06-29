@@ -4,14 +4,14 @@
 > ressemblent le plus à la photo et à la description fournies par le vendeur, vite et juste, puis
 > lever le doute sans jamais inventer.
 
-> Évolution Cycle 36 : la recherche ne s'arrête plus au classement brut. Le top-15 des candidats
-> réels devient la matière d'une **passe d'identification raisonnée** : le retriever apporte la
-> CONNAISSANCE (15 fiches réelles), un modèle multimodal apporte le JUGEMENT (lequel de ces 15 est
+> La recherche ne s'arrête plus au classement brut. Le top-15 des candidats réels devient la
+> matière d'une **passe d'identification raisonnée** : le moteur de recherche par similarité apporte
+> la CONNAISSANCE (15 fiches réelles), un modèle multimodal apporte le JUGEMENT (lequel de ces 15 est
 > le produit ?). À cela s'ajoute une règle d'autorité du **texte vendeur** et un **réordonnancement**
 > du candidat choisi en tête de liste, pour que la fiche, le prix et la validation portent sur le
-> bon produit. Ces trois mécanismes sont décrits en section 5. Ils ne remplacent pas le retrieval :
+> bon produit. Ces trois mécanismes sont décrits en section 4. Ils ne remplacent pas le retrieval :
 > ils le couronnent, et ils retombent proprement sur le classement retrieval brut en cas de
-> défaillance (best-effort, jamais bloquant).
+> défaillance (en mode best-effort, jamais bloquant).
 
 ---
 
@@ -193,20 +193,21 @@ produit, on lève l'ambiguïté par observation dirigée, en quatre temps :
 
 ---
 
-## 4. L'identification raisonnée : le top-15 devient la matière du jugement (Cycle 36)
+## 4. L'identification raisonnée : le top-15 devient la matière du jugement
 
-Cette section est le cœur de l'évolution Cycle 36. Jusque-là, le retrieval produisait un classement
-et on présentait le premier candidat. Le problème pratique : le tout premier voisin retrouvé n'est
-pas toujours le bon produit. Sur une photo d'iPhone, par exemple, le candidat le mieux noté pouvait
+Cette section décrit un mécanisme clé. Initialement, le retrieval produisait un classement et on
+présentait le premier candidat. Le problème pratique : le tout premier voisin retrouvé n'est pas
+toujours le bon produit. Sur une photo d'iPhone, par exemple, le candidat le mieux noté pouvait
 être une coque d'iPhone (un accessoire dont le titre ressemble énormément), pas le téléphone. La
 fiche, le prix et la validation se construisaient alors sur le mauvais objet.
 
-L'idée de Cycle 36 répartit clairement les rôles : **le retriever apporte la connaissance, le
-modèle apporte le jugement**. Le retriever sait quels 15 produits réels du catalogue ressemblent le
-plus à l'annonce. Un modèle multimodal (vision + langage), lui, sait regarder la photo du vendeur et
-décider lequel de ces 15 produits est réellement présent sur l'image. On ne lui demande jamais
-d'inventer un produit : il choisit parmi les 15 candidats réels, ou il avoue qu'aucun ne convient.
-C'est la doctrine « grounded avant génératif » poussée jusqu'au bout.
+L'idée répartit clairement les rôles : **le moteur de recherche par similarité apporte la
+connaissance, le modèle apporte le jugement**. Le moteur de recherche sait quels 15 produits réels
+du catalogue ressemblent le plus à l'annonce. Un modèle multimodal (vision + langage), lui, sait
+regarder la photo du vendeur et décider lequel de ces 15 produits est réellement présent sur
+l'image. On ne lui demande jamais d'inventer un produit : il choisit parmi les 15 candidats réels,
+ou il avoue qu'aucun ne convient. C'est la doctrine « grounded avant génératif » poussée jusqu'au
+bout.
 
 ### a) La passe d'identification raisonnée (fichier `src/vlm/reasoned_identification.py`)
 
@@ -218,7 +219,7 @@ appel** à l'API OpenRouter. Elle reçoit :
   fine, attributs, prix, identifiant), pas les 15 images du catalogue. C'est un choix d'économie :
   envoyer 15 images coûterait beaucoup de jetons (tokens) pour un gain de jugement faible, alors que
   le résumé texte suffit à identifier le bon candidat ;
-- **les attributs déjà observés** par le VLM d'extraction et **le texte vendeur**.
+- **les attributs déjà observés** par le modèle d'extraction photo et **le texte vendeur**.
 
 Le modèle par défaut est lu dans la variable d'environnement `PHOTO_VLM_IDENTIFY_MODEL` (repli sur
 le modèle d'extraction, `qwen/qwen3.5-flash-02-23`). L'appel est rendu **reproductible** (température
@@ -236,8 +237,8 @@ objet `{...}` trouvé). Les champs produits sont notamment :
 - `catalog_miss` : vrai si AUCUN des 15 candidats n'est le produit (y compris quand ce sont tous une
   autre génération / variante que ce qui est vu) ;
 - `reference_new_price_usd` : une **ancre de prix NEUF estimée**, exprimée en dollars, ancrée sur les
-  prix neufs PROPRES des candidats réels (accessoires et lots exclus) — voir section 5.b sur le
-  pricing ;
+  prix neufs PROPRES des candidats réels (accessoires et lots exclus), voir la sous-section sur le
+  pricing plus bas ;
 - `reference_new_confidence` et `price_anchor_evidence` : la confiance de cette ancre et la liste des
   index de fiches qui l'ont étayée (pour l'auditabilité) ;
 - `ask_question` + `facet_question` : si une seule observation discriminante changerait la famille ou
@@ -267,7 +268,7 @@ déraper. Les garde-fous, expliqués pour le POURQUOI :
 Si la clé API est absente, si le modèle est indisponible, si le JSON est inexploitable, ou si une
 exception survient, `reason_identify` retourne `None`. Le pipeline garde alors le **classement
 retrieval brut** et la **cascade de pricing habituelle**. Il n'y a jamais de plantage, jamais de
-fiche vide. Cette discipline (best-effort) garantit qu'ajouter de l'intelligence ne fragilise pas
+fiche vide. Cette discipline du best-effort garantit qu'ajouter de l'intelligence ne fragilise pas
 le chemin nominal.
 
 ### d) Le texte vendeur fait autorité (fonction `_seller_text_best_match`, fichier `src/api/main.py`)
@@ -308,9 +309,9 @@ choisi.
 ### f) Économie de latence
 
 Le pipeline enchaînait potentiellement trois appels à des modèles : extraction photo, validation
-visuelle du top-1, et la nouvelle passe raisonnée. Pour ne pas allonger inutilement la réponse, on
-**saute le 3ᵉ appel** (le validateur visuel) lorsque la passe raisonnée a déjà tranché avec confiance
-(famille confiante, sans catalog-miss). Le jugement de correspondance est alors déjà couvert.
+visuelle du top-1, et la passe raisonnée. Pour ne pas allonger inutilement la réponse, on **saute le
+3ᵉ appel** (le validateur visuel) lorsque la passe raisonnée a déjà tranché avec confiance (famille
+confiante, sans catalog-miss). Le jugement de correspondance est alors déjà couvert.
 
 ### g) Observabilité métier
 
@@ -373,11 +374,12 @@ Autres mesures :
   ambigu (inférieur à 0,05) dans 75 % des cas, soit 1 500 requêtes. Parmi ces cas ambigus, le
   système trouve au moins une observation à proposer pour 1 492 d'entre eux.
 
-### Qualité de fiche bout-en-bout sur photos réelles (Cycle 36)
+### Qualité de fiche bout-en-bout sur photos réelles
 
-Les chiffres ci-dessus mesurent le moteur de recherche isolé sur des vecteurs catalogue. Cycle 36
-ajoute une mesure **bout-en-bout sur de vraies photos**, qui inclut donc l'extraction VLM, le
-retrieval, la passe raisonnée et l'assemblage de fiche. Le protocole est reproductible
+Les chiffres ci-dessus mesurent le moteur de recherche isolé sur des vecteurs catalogue. Une mesure
+complémentaire évalue la qualité **bout-en-bout sur de vraies photos**, qui inclut donc l'extraction
+par le modèle de vision, le retrieval, la passe raisonnée et l'assemblage de fiche. Le protocole est
+reproductible
 (`scripts/mesure_qualite_fiche.py`, sorties dans `reports/09_fiche_quality/mesure_fiche.{json,md}`) :
 il s'applique au panel réel `data/photos_eval`, où chaque dossier est nommé d'après la vérité-terrain
 (le vrai produit), et il n'utilise que la **photo seule** (sans le texte de précisions). Sur les 94
@@ -418,10 +420,10 @@ Cette mesure remplace les anecdotes par un chiffre défendable, conformément à
   produits inconnus et constitue notre principale défense contre les fausses identifications.
 - Le mode Akinator par observation dirigée, guidé par l'entropie, désambigue intelligemment et de
   façon accessible au vendeur.
-- La passe d'identification raisonnée (Cycle 36) sépare proprement la connaissance (le retrieval) du
-  jugement (le modèle) : elle corrige le défaut où le premier voisin retrouvé était un accessoire,
-  sans jamais permettre au modèle d'introduire un produit hors des 15 candidats réels. Le tout est
-  best-effort : si elle échoue, on revient sans bruit au classement retrieval.
+- La passe d'identification raisonnée sépare proprement la connaissance (le retrieval) du jugement
+  (le modèle) : elle corrige le défaut où le premier voisin retrouvé était un accessoire, sans jamais
+  permettre au modèle d'introduire un produit hors des 15 candidats réels. Le tout est best-effort :
+  si elle échoue, on revient sans bruit au classement retrieval.
 - Le texte vendeur, traité comme une autorité déterministe (et non comme une instruction au modèle),
   « sauve » l'identification quand le produit EST au catalogue, indépendamment des aléas du modèle.
 
@@ -441,7 +443,7 @@ Cette mesure remplace les anecdotes par un chiffre défendable, conformément à
   gagnera nettement en qualité quand le point de vue image sera activé.
 - Sur photo seule, la perception du MODÈLE exact reste limitée pour des produits sans marquage visible
   sur les images envoyées (par exemple un casque Sennheiser Momentum 3 dont le logo est sur l'étui) :
-  le modèle peut alors choisir un sosie avec aplomb. On atténue par trois leviers — le texte vendeur
+  le modèle peut alors choisir un sosie avec aplomb. On atténue par trois leviers : le texte vendeur
   autoritaire (la métadonnée fixe le produit), le flag « Modèle à confirmer », et le bouton « Ce n'est
   pas le bon produit ? Voir les autres résultats ». La métadonnée sauve quand le produit est au
   catalogue.
@@ -472,8 +474,8 @@ bonnes réponses de 0,948 (index HNSW, paramètre M de 32, choisi après compara
 recherche exacte et contre l'index compressé IVF_PQ), fusionne les points de vue par RRF (constante
 de Cormack de 60), refuse d'inventer grâce à des garde-fous OOD calibrés du côté de la précision
 (seuil de 0,600, précision de 0,95 et rappel de 0,99), et lève l'ambiguïté en demandant au vendeur
-l'observation visuelle la plus discriminante (mode Akinator guidé par l'entropie). Depuis Cycle 36,
-le top-15 de cette recherche alimente une passe d'identification raisonnée — le retriever apporte la
-connaissance, le modèle apporte le jugement — qui choisit le bon candidat parmi les 15, le réordonne
-en tête (avec le texte vendeur faisant autorité), et atteint 90,3 % d'identification bout-en-bout sur
-photos réelles.*
+l'observation visuelle la plus discriminante (mode Akinator guidé par l'entropie). Le top-15 de cette
+recherche alimente une passe d'identification raisonnée, où le moteur de recherche par similarité
+apporte la connaissance et le modèle apporte le jugement, qui choisit le bon candidat parmi les 15,
+le réordonne en tête (avec le texte vendeur faisant autorité), et atteint 90,3 % d'identification
+bout-en-bout sur photos réelles.*

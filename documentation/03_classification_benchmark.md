@@ -268,8 +268,8 @@ fiche s'affiche directement, pourcentage à l'appui.
 **Où ce signal s'insère dans la décision globale.** Il ne travaille pas seul. Le drapeau « Modèle à
 confirmer » est levé soit lorsque le vote est fragmenté (part inférieure à 60 %), soit lorsque la
 passe d'identification raisonnée (un appel à un modèle vision-langage qui juge à partir des candidats
-réels du retriever) pose une question discriminante. Et il est **désactivé** dans le cas du
-« produit estimé, absent du catalogue » (catalog-miss), qui a son propre bandeau d'avertissement : il
+réels du moteur de recherche par similarité) pose une question discriminante. Et il est **désactivé**
+dans le cas du « produit estimé, absent du catalogue », qui a son propre bandeau d'avertissement : il
 serait redondant de réclamer une confirmation de modèle pour un produit dont on dit déjà qu'il
 n'existe pas tel quel au catalogue. Cette articulation est documentée en détail dans les fiches
 consacrées à l'identification raisonnée et au parcours vendeur ; ici, le point à retenir est que la

@@ -1,10 +1,10 @@
-# Airflow — orchestration de la boucle de ré-entraînement (Cycle 12.1)
+# Airflow — orchestration de la boucle de ré-entraînement
 
-Orchestrateur du retrain Rakuten via **Docker Compose** (ADR D-022).
+Orchestrateur du retrain Rakuten via **Docker Compose**.
 Principe : **l'orchestrateur orchestre, il ne calcule pas le GPU**. Le DAG ré-entraîne
-les têtes CPU (M5/M2/M4) sur les embeddings en cache, logge dans MLflow (D-021) et
-enregistre `rakuten-category-classifier@Production`. L'encodage GPU est une tâche amont isolée
-(worker GPU en prod ; no-op sur cache en démo).
+les classifieurs CPU (SVM TF-IDF, SVM sur embeddings, MLP) sur les embeddings en cache,
+logge dans MLflow et enregistre `rakuten-category-classifier@Production`. L'encodage GPU
+est une tâche amont isolée (worker GPU en prod ; no-op sur cache en démo).
 
 ## Lancer
 
@@ -30,7 +30,7 @@ check_new_data  →  train_classifiers  →  evaluate_gate
 |---|---|
 | `check_new_data` | Étape encode (GPU isolé). No-op si embeddings présents (cache) ; échoue sinon avec un message clair. |
 | `train_classifiers` | Supprime les anciens `.joblib` puis `python -m src.classifiers.{01_tfidf_linsvc,03_svm,05_mlp}` → log MLflow live + register + `@Production`. |
-| `evaluate_gate` | Garde-fou qualité : échoue le DAG si `test_f1_weighted < 0.85` (R15, pas de régression silencieuse). |
+| `evaluate_gate` | Garde-fou qualité : échoue le DAG si `test_f1_weighted < 0.85` (pas de régression silencieuse). |
 
 Planification : `@weekly`, en pause à la création (déclenchement manuel pour la démo).
 
@@ -43,8 +43,8 @@ Le conteneur monte le **repo complet** sur `/opt/rakuten` (code `src/`, `data/`,
 ## Limites connues / suite
 
 - **Promote conditionnel champion/challenger** (ne promeut que si meilleur que la
-  version courante) → sous-todo **12.3** (boucle fermée). Ici, `train` réutilise
-  l'auto-promote M5 du Cycle 11.
+  version courante) → différé (boucle fermée). Ici, `train` réutilise l'auto-promote
+  du classifieur MLP déjà en place.
 - **Encodage GPU réel** du delta → worker GPU dédié (hors `make up` portable).
-- **Intégration Airflow ↔ DVC** (`dvc repro` par stage) → à reconsidérer au Cycle 13
-  une fois `dvc.lock` + remote MinIO en place (alternative C de D-022).
+- **Intégration Airflow ↔ DVC** (`dvc repro` par stage) → à reconsidérer une fois
+  `dvc.lock` + remote MinIO en place.

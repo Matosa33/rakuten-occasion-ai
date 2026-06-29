@@ -122,7 +122,7 @@ bricolage (Tools_and_Home_Improvement).
 
 ## Identification raisonnée (le retriever sait, le modèle juge)
 
-> Termes introduits par le cycle 36. L'idée centrale tient en une phrase : le
+> L'idée centrale tient en une phrase : le
 > *retriever* (la recherche de produits similaires) apporte la **connaissance**
 > (les vrais produits du catalogue), et le modèle vision-langage apporte le
 > **jugement** (lequel correspond, à quel prix neuf). Le modèle ne peut jamais
@@ -254,13 +254,13 @@ bricolage (Tools_and_Home_Improvement).
   estimé par IA », jamais comme un prix catalogue certain.
 - **Décote d'état (multiplicateur)** : le facteur appliqué au prix neuf selon
   l'état déclaré : neuf 1,00 ; très bon état 0,75 ; bon état 0,55 ; correct
-  0,35 ; pour pièces / hors service 0,15. Ce dernier état (valeur résiduelle d'un
-  appareil HS) a été ajouté au cycle 36.
+  0,35 ; pour pièces / hors service 0,15. Ce dernier état correspond à la
+  valeur résiduelle d'un appareil hors service.
 - **Dépréciation par âge** : la perte de valeur annuelle selon la catégorie
   (Electronics -15 %/an, téléphones -20 %/an, jeux vidéo -10 %/an, outillage
   -5 %/an). Si le vendeur n'a pas renseigné l'année d'achat, un âge de deux ans
   est supposé, et l'interface le signale.
-- **Garde-fous de pricing (cycle 36)** : trois protections contre les prix
+- **Garde-fous de pricing** : trois protections contre les prix
   absurdes. (a) **Anti sous-évaluation** : une médiane de voisins qui s'effondre
   bien en dessous du prix neuf attendu décoté est relevée à un plancher. (b)
   **Cohérence du niveau L1** : si le prix catalogue du premier candidat est

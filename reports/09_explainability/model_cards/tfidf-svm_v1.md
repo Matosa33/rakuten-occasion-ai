@@ -1,14 +1,14 @@
 # Model Card — tfidf-svm_v1
 
 **Type** : TF-IDF (word 1-2gram + char 3-5gram) + LinearSVC + Platt
-**Tâche** : Classification multi-cat (4 cat D-011)
+**Tâche** : Classification multi-catégories (4 catégories)
 
 ## Inputs / Outputs
 - **Input** : Texte brut (titre + description)
 - **Output** : P(catégorie | texte) calibré Platt
 
 ## Données / Source
-- Training data : 3,16M items train, 4 cat D-011
+- Training data : 3,16M items train, 4 catégories
 
 ## Performance
 - F1_w test = 0.9503, F1_m = 0.9375, ECE = 0.0092

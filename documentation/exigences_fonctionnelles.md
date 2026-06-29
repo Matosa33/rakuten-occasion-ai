@@ -1,4 +1,4 @@
-# Les fonctions du produit (F0 à F8) : ce qui a été promis, ce qui est livré
+# Les fonctions du produit : ce qui a été promis, ce qui est livré
 
 ## À quoi sert ce document
 
@@ -9,9 +9,9 @@ c'est-à-dire la catégorie de l'objet, ses caractéristiques, un titre, une des
 prix indicatif. On vise les vendeurs occasionnels (quelqu'un qui veut écouler entre un et
 cinquante objets après un déménagement ou un vide-grenier), pas les revendeurs professionnels.
 
-Au démarrage du projet, on a écrit une liste de fonctions attendues, numérotées de F0 à F8.
-Ce sont les promesses faites au début. Ce document fait le bilan honnête : pour chacune de ces
-neuf fonctions, il dit ce qui a été réellement construit, comment cela marche, et ce qui reste
+Au démarrage du projet, on a écrit une liste des neuf fonctions attendues. Ce sont les
+promesses faites au début. Ce document fait le bilan honnête : pour chacune de ces neuf
+fonctions, il dit ce qui a été réellement construit, comment cela marche, et ce qui reste
 à faire. Il répond à la question « est-ce qu'on construit le bon produit ? ». Il se lit seul :
 aucune connaissance technique préalable n'est nécessaire, et chaque terme technique est
 expliqué en une phrase à sa première apparition.
@@ -41,19 +41,19 @@ différé = volontairement reporté, avec une raison assumée.
 
 | Fonction | Ce qui était promis | État | En une phrase |
 |---|---|---|---|
-| **F0** Identification ancrée | photo vers recherche vers désambiguïsation vers vérification visuelle | conforme | L'entrée par photo est active de bout en bout : la photo est lue par un VLM, transformée en requête, le bon produit est retrouvé, jugé par une étape d'identification raisonnée, puis une vérification visuelle confirme le résultat (90,3 % d'identification mesurés sur un panel réel de 94 produits). |
-| **F1** Catégorie précise | trouver la sous-catégorie, qualité supérieure à 0,90 | conforme | On affiche la vraie catégorie fine du produit retrouvé, et un banc d'essai de six modèles de classement atteint une qualité de 0,954. |
-| **F2** Caractéristiques et observations dirigées | marque, modèle, couleur, version, plus observations guidées | conforme | Les caractéristiques visibles sont pré-remplies depuis la photo, et l'application demande des observations ciblées quand deux produits se ressemblent trop. |
-| **F3** Génération ancrée | rédaction appuyée sur les données réelles du produit | conforme | Le titre et la description sont rédigés en s'appuyant sur la description réelle du produit dans le catalogue, pas sur la mémoire de l'IA. |
-| **F4** Prix transparent | prix expliqué à partir de produits voisins, état et ancienneté | conforme | Le prix est calculé par une formule lisible (cascade L1 à L4, plus un niveau L1.5 d'ancre IA), avec un niveau de confiance, une fourchette, des garde-fous anti-aberrations et une conversion dollar vers euro. |
-| **F5** Plusieurs modes d'usage | mode express, mode assisté, mode lot | conforme | Les trois modes existent, dont un mode « déménagement » qui enchaîne les objets à la chaîne. |
-| **F6** Garde-fous contre l'inconnu | seuil de confiance et mode dégradé | conforme | Trois niveaux de confiance ; les candidats sont toujours montrés et c'est l'humain qui valide. |
-| **F7** Entretien automatique du modèle | ré-entraînement, détection de dérive, rechargement | conforme | Une chaîne automatisée ré-entraîne, compare et remplace le modèle en service ; un outil surveille la dérive des données. |
-| **F8** Spécialisation poussée du VLM | optionnelle, seulement si le gain dépasse un seuil mesuré | différé | Non déclenchée faute de preuve d'un gain suffisant (refus assumé de la sur-ingénierie). |
+| **Identification ancrée** | photo vers recherche vers désambiguïsation vers vérification visuelle | conforme | L'entrée par photo est active de bout en bout : la photo est lue par un VLM, transformée en requête, le bon produit est retrouvé, jugé par une étape d'identification raisonnée, puis une vérification visuelle confirme le résultat (90,3 % d'identification mesurés sur un panel réel de 94 produits). |
+| **Catégorie précise** | trouver la sous-catégorie, qualité supérieure à 0,90 | conforme | On affiche la vraie catégorie fine du produit retrouvé, et un banc d'essai de six modèles de classement atteint un F1 de 0,954. |
+| **Caractéristiques et observations dirigées** | marque, modèle, couleur, version, plus observations guidées | conforme | Les caractéristiques visibles sont pré-remplies depuis la photo, et l'application demande des observations ciblées quand deux produits se ressemblent trop. |
+| **Génération ancrée** | rédaction appuyée sur les données réelles du produit | conforme | Le titre et la description sont rédigés en s'appuyant sur la description réelle du produit dans le catalogue, pas sur la mémoire de l'IA. |
+| **Prix transparent** | prix expliqué à partir de produits voisins, état et ancienneté | conforme | Le prix est calculé par une formule lisible (cascade L1 à L4, plus un niveau L1.5 d'ancre IA), avec un niveau de confiance, une fourchette, des garde-fous anti-aberrations et une conversion dollar vers euro. |
+| **Plusieurs modes d'usage** | mode express, mode assisté, mode lot | conforme | Les trois modes existent, dont un mode « déménagement » qui enchaîne les objets à la chaîne. |
+| **Garde-fous contre l'inconnu** | seuil de confiance et mode dégradé | conforme | Trois niveaux de confiance ; les candidats sont toujours montrés et c'est l'humain qui valide. |
+| **Entretien automatique du modèle** | ré-entraînement, détection de dérive, rechargement | conforme | Une chaîne automatisée ré-entraîne, compare et remplace le modèle en service ; un outil surveille la dérive des données. |
+| **Spécialisation poussée du VLM** | optionnelle, seulement si le gain dépasse un seuil mesuré | différé | Non déclenchée faute de preuve d'un gain suffisant (refus assumé de la sur-ingénierie). |
 
 ## Détail de chaque fonction
 
-### F0 : identifier le produit à partir de la photo, sans inventer
+### Identification ancrée : identifier le produit à partir de la photo, sans inventer
 
 C'est le cœur du projet. Le parcours d'identification fonctionne en plusieurs étapes, et
 l'entrée par photo est pleinement active.
@@ -82,7 +82,7 @@ l'entrée par photo est pleinement active.
 
 3. **Désambiguïsation si deux produits se ressemblent trop.** Quand le meilleur et le deuxième
    candidat ont des scores très proches (écart inférieur à 0,05), l'application bascule en mode
-   d'observation dirigée, décrit dans la fonction F2.
+   d'observation dirigée, décrit dans la fonction « Caractéristiques et observations dirigées ».
 
 4. **Identification raisonnée : le moteur de recherche apporte la connaissance, l'IA apporte le
    jugement.** Une étape clé a été ajoutée pour fiabiliser le choix du bon produit. Le moteur de
@@ -91,8 +91,8 @@ l'entrée par photo est pleinement active.
    ou deux photos du vendeur plus les quinze fiches candidates résumées en texte (pas leurs images,
    pour économiser le coût) plus les attributs déjà observés. L'IA renvoie alors la famille de
    produit, le candidat qu'elle estime le bon, un prix neuf de référence estimé (utile pour le
-   prix, voir F4), d'éventuelles caractéristiques avec leur source, et éventuellement une question
-   à poser au vendeur. Le candidat choisi est remis en tête de liste, pour que la fiche, le prix et
+   prix, voir la fonction « Prix transparent »), d'éventuelles caractéristiques avec leur source, et
+   éventuellement une question à poser au vendeur. Le candidat choisi est remis en tête de liste, pour que la fiche, le prix et
    la vérification portent ensuite sur le bon produit. C'est cette étape qui corrige un défaut
    concret : auparavant, le tout premier résultat de la recherche pouvait être un accessoire (par
    exemple une coque d'iPhone affichée comme s'il s'agissait de l'iPhone lui-même). Des garde-fous
@@ -124,7 +124,7 @@ l'entrée par photo est pleinement active.
 
 7. **Filet de sécurité quand rien ne correspond.** Si aucun candidat n'est satisfaisant, on
    bascule honnêtement en mode dégradé « produit non identifié, saisie assistée » plutôt que
-   d'afficher une mauvaise correspondance (voir F6).
+   d'afficher une mauvaise correspondance (voir la fonction « Garde-fous contre l'inconnu »).
 
 Mesure réelle de bout en bout. Plutôt que de se fier à des impressions, on a mesuré ce parcours
 sur un panel de 94 vrais produits photographiés (le nom du dossier de chaque produit servant de
@@ -152,7 +152,7 @@ texte. La mécanique est déjà prête dans le code, mais elle attend la product
 d'image de tout le catalogue. Cette décision est volontairement reportée tant qu'une mesure
 réelle ne prouve pas son utilité.
 
-### F1 : afficher la bonne catégorie, fine et fiable
+### Catégorie précise : afficher la bonne catégorie, fine et fiable
 
 La promesse était de prédire la sous-catégorie d'un produit avec une qualité supérieure à 0,90.
 La qualité se mesure par le F1, un score entre 0 et 1 qui combine deux choses : la précision
@@ -177,7 +177,7 @@ pondérée par la ressemblance. Sur un banc d'essai, ce vote des voisins atteint
 0,733 contre 0,710 en recopiant le premier, soit un gain de 2,4 points, et il fournit en prime
 une confiance (la part du vote en faveur de la catégorie gagnante).
 
-### F2 : remplir les caractéristiques et lever les doutes par l'observation
+### Caractéristiques et observations dirigées : remplir les caractéristiques et lever les doutes par l'observation
 
 La promesse était de remplir marque, modèle, couleur, version, et de compléter par des
 observations guidées quand l'information manque.
@@ -227,7 +227,7 @@ chargeur, ne sont plus rangés comme des téléphones). La checklist d'état sp�
 console, et ainsi de suite) s'affiche après l'identification, c'est-à-dire au bon moment, une fois
 qu'on sait de quel type d'objet il s'agit.
 
-### F3 : rédiger un titre et une description ancrés sur la réalité
+### Génération ancrée : rédiger un titre et une description ancrés sur la réalité
 
 La promesse était de produire un titre et une description en français, sans inventer.
 
@@ -245,7 +245,7 @@ Amélioration future : ancrer aussi la rédaction sur les avis clients réels du
 sa description), ce qui demanderait une jointure de données supplémentaire encore à mettre en
 place.
 
-### F4 : proposer un prix transparent et explicable
+### Prix transparent : proposer un prix transparent et explicable
 
 La promesse était un prix indicatif calculé par une formule claire, et non par un modèle
 « boîte noire » dont on ne pourrait pas expliquer le chiffre. Ce choix est assumé : sans
@@ -258,7 +258,8 @@ Le calcul descend une cascade de niveaux de confiance, du plus sûr au moins sû
   ce prix neuf et on applique l'ancienneté puis l'état (confiance affichée à 0,90).
 - **Niveau haut-moyen (L1.5, ajouté avec l'identification raisonnée)** : pas de prix catalogue
   direct, mais l'IA a estimé un prix neuf de référence lors de l'étape d'identification raisonnée
-  (voir F0). On applique à cette ancre exactement la même décote déterministe d'ancienneté et
+  (voir la fonction « Identification ancrée »). On applique à cette ancre exactement la même décote
+  déterministe d'ancienneté et
   d'état. Point important pour la transparence : seule l'ancre, c'est-à-dire le point de départ,
   est une estimation de l'IA ; la décote, elle, reste entièrement calculée par une formule lisible.
   La promesse « pas de prix boîte noire » tient donc toujours. Ce niveau est volontairement placé
@@ -295,7 +296,7 @@ conversion est appliquée à la fin avec un taux fixe documenté de 0,92 (la moy
 2024 à 2026), modifiable sans redéploiement par une variable d'environnement. Chaque prix
 s'accompagne d'une fourchette et d'une explication en français qui détaille le calcul.
 
-### F5 : trois modes d'usage selon le besoin
+### Plusieurs modes d'usage : trois modes selon le besoin
 
 La promesse était une interface progressive avec plusieurs modes. Les trois sont livrés dans
 l'interface web :
@@ -308,7 +309,7 @@ l'interface web :
   arrière-plan. La file est conservée par le navigateur. Ce mode est pensé pour traiter en série
   beaucoup d'objets, typiquement lors d'un déménagement.
 
-### F6 : avouer le doute plutôt qu'inventer
+### Garde-fous contre l'inconnu : avouer le doute plutôt qu'inventer
 
 La promesse était de détecter les produits hors catalogue et de basculer en mode dégradé au lieu
 d'afficher une fausse correspondance. « OOD » est le terme technique pour « hors distribution »,
@@ -340,7 +341,7 @@ discriminante proposée par l'IA quand elle en a une. Enfin, l'interface auto-co
 directement quand l'IA est sûre, tout en gardant toujours un bouton « ce n'est pas le bon
 produit ? » pour revenir aux autres candidats : la décision finale reste à l'humain.
 
-### F7 : entretenir le modèle tout seul
+### Entretien automatique du modèle : entretenir le modèle tout seul
 
 La promesse était un cycle de vie automatisé : ré-entraîner le modèle, détecter la dérive des
 données, et recharger le nouveau modèle sans coupure.
@@ -367,7 +368,7 @@ au fil du temps, ce qui signalerait que le modèle risque de vieillir.
 Amélioration future : le rechargement à chaud du modèle dans l'interface de programmation, pour
 basculer sur le nouveau modèle sans aucune interruption de service.
 
-### F8 : la spécialisation poussée du VLM, volontairement reportée
+### Spécialisation poussée du VLM, volontairement reportée
 
 Cette fonction était dès le départ marquée comme optionnelle. L'idée était de spécialiser le VLM
 sur nos données par une technique d'entraînement légère (le « fine-tuning QLoRA », qui ajuste un
@@ -378,16 +379,17 @@ refus assumé de la sur-ingénierie : on ne dépense pas un effort coûteux sans
 
 ## Bilan en une phrase
 
-Les fonctions F0 à F7 sont conformes : le parcours par photo est complet, de la lecture de
+Huit des neuf fonctions sont conformes : le parcours par photo est complet, de la lecture de
 l'image jusqu'au prix expliqué, en passant par l'identification ancrée, la catégorie fine, la
 levée d'ambiguïté, la rédaction ancrée, les trois modes d'usage, les garde-fous contre l'inconnu
 et l'entretien automatique du modèle. Les seuls reports assumés sont l'indexation visuelle
 directe du catalogue (image contre image, en attente d'une mesure de gain) et la spécialisation
-poussée du VLM (la fonction F8, conditionnée à une preuve de bénéfice).
+poussée du VLM, conditionnée à une preuve de bénéfice.
 
 ## D'où venaient les manques au départ, et comment ils ont été comblés
 
-Les fonctions F1, F2 et F3 ont d'abord souffert d'un choix de nettoyage initial : pour simplifier
+Les fonctions « Catégorie précise », « Caractéristiques et observations dirigées » et « Génération
+ancrée » ont d'abord souffert d'un choix de nettoyage initial : pour simplifier
 les données, on avait écarté les colonnes riches de chaque produit (ses images, sa fiche
 technique détaillée, son arborescence de catégories, sa description). On a corrigé cela en
 reconstruisant une table de correspondance compacte à partir des métadonnées brutes. Cette table
@@ -398,11 +400,11 @@ fusion de données d'origine, donc à coût maîtrisé.
 
 ## Ce qu'il reste à faire
 
-Le cœur du produit (fonctions F0 à F7) est conforme. Les suites prévues sont :
+Le cœur du produit est conforme. Les suites prévues sont :
 
 - **Tester l'indexation visuelle directe du catalogue** (environ une nuit de calcul) puis décider,
   par la mesure et non par intuition, si on l'active.
-- **Déclencher la spécialisation poussée du VLM (F8)** uniquement si un test démontre un gain réel
+- **Déclencher la spécialisation poussée du VLM** uniquement si un test démontre un gain réel
   supérieur à 0,05 de qualité face au VLM utilisé sans spécialisation.
 - **Améliorations mineures** : ancrer la rédaction aussi sur les avis clients (en plus de la
   description), recharger à chaud le modèle dans l'interface de programmation, et normaliser la

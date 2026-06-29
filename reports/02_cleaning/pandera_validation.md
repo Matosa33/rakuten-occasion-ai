@@ -1,12 +1,12 @@
-# Rapport validation Pandera — Sous-todo 1.4
+# Rapport validation Pandera
 
 > Version 1.0 — 2026-05-03
-> Statut : `completed` — schemas définis et validation full passée sur 6/6 splits.
-> Aucun chiffre inventé (R8).
+> Statut : terminé — schemas définis et validation complète passée sur 6/6 splits.
+> Tous les chiffres sont mesurés, aucun n'est inventé.
 
 ## 1. Objectif
 
-Définir des **contrats formels** (schemas Pandera-polars) pour les sorties du pipeline 1.2 et valider que les parquets produits respectent ces contrats. Toute régression future de schéma sera détectée automatiquement.
+Définir des **contrats formels** (schemas Pandera-polars) pour les sorties du pipeline de nettoyage et de split, et valider que les parquets produits respectent ces contrats. Toute régression future de schéma sera détectée automatiquement.
 
 ## 2. Schemas définis
 
@@ -15,7 +15,7 @@ Définir des **contrats formels** (schemas Pandera-polars) pour les sorties du p
 S'applique à : `data/processed/products/{train,val,test}.parquet`
 
 Catégories de colonnes :
-- **Clé + provenance (2)** : `parent_asin` (str non-null, format ASIN), `_source_category` (isin 15 cat D-008)
+- **Clé + provenance (2)** : `parent_asin` (str non-null, format ASIN), `_source_category` (appartenance aux 15 catégories du périmètre)
 - **Champs meta originaux (8)** : `main_category`, `title`, `average_rating`, `rating_number`, `description`, `price`, `store`, `subtitle`, `author`
 - **Agrégats reviews (10)** : `n_reviews` (UInt32, ≥0), `mean_rating` (Float64, [0,5]), `std_rating` (Float64, ≥0), `pct_verified` (Float64, [0,1]), `pct_5stars` (Float64, [0,1]), `pct_1stars` (Float64, [0,1]), `year_first_review` (Int32, [1996,2023]), `year_last_review` (Int32, [1996,2023]), `n_unique_users` (UInt32, ≥0), `mean_helpful_vote` (Float64, ≥0)
 - **Flags qualité (4)** : `description_too_short`, `title_too_short`, `has_description`, `has_title` (Boolean non-null)
@@ -31,7 +31,7 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 | `asin` | str | ✅ | — |
 | `user_id` | str | ✅ | — |
 | `timestamp` | str | ✅ | format mixte Int64 ms / String ISO toléré |
-| `_source_category` | str | ❌ | isin 15 cat D-008 |
+| `_source_category` | str | ❌ | appartenance aux 15 catégories du périmètre |
 | `_split` | str | ❌ | isin {train, val, test} |
 
 ## 3. Résultat validation (run 2026-05-03)
@@ -60,8 +60,8 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 
 - **3 tests structurels** (toujours actifs, sans données) :
   - Schemas s'importent
-  - ProductSchema définit les 10 colonnes critiques pour knn-faiss à pricing-cascade
-  - ReviewIndexSchema a `_split` avec check isin
+  - ProductSchema définit les 10 colonnes critiques pour la chaîne de recherche par similarité (FAISS) et de prédiction de prix
+  - ReviewIndexSchema a `_split` avec un contrôle d'appartenance à {train, val, test}
 - **6 tests avec données** (skipif si parquets absents) :
   - 3 splits products → ProductSchema sur sample 1k
   - 3 splits reviews_index → ReviewIndexSchema sur sample 1k
@@ -70,12 +70,12 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 
 Première run : `ProductSchema KO sur length_title (UInt32 vs attendu Int64)`. Cause : Pandera mappe `int` Python sur Int64, mais polars produit `UInt32` pour `pl.len()` et `Int32` pour `dt.year()`. Fix : utiliser les types polars natifs dans les définitions de schema (`pl.UInt32`, `pl.Int32`, `pl.Float64`, `pl.Boolean`).
 
-Cette itération est documentée dans les notes d'apprentissage du projet comme `pandera-polars-types-natifs-vs-int-python`.
+Cette itération est documentée dans les notes d'apprentissage du projet : avec Pandera-polars, utiliser les types polars natifs plutôt que les types int Python.
 
 ## 7. Conditions à respecter aval
 
 - Tout nouveau script qui modifie `data/processed/products/` ou `data/processed/reviews_index/` doit re-lancer `python -m src.data.validate.03_validate_processed` et obtenir 6/6 OK avant commit.
-- Si le schema doit évoluer (nouvelles features par exemple), modifier `src/data/validate/schemas.py` ET ajouter une entrée dans les ADR du projet qui documente le changement et son impact aval.
+- Si le schema doit évoluer (nouvelles features par exemple), modifier `src/data/validate/schemas.py` ET ajouter une décision documentée dans le journal des décisions du projet, qui trace le changement et son impact en aval.
 
 ## 8. Annexes
 
@@ -84,5 +84,5 @@ Cette itération est documentée dans les notes d'apprentissage du projet comme 
 - Métriques machine-readable : `reports/02_cleaning/pandera_validation.json` (gitignored, régénérable)
 - Tests CI : `tests/test_pandera_schemas.py` (9 tests)
 - Stack : `pandera[polars] 0.31.1` ajouté au pyproject.toml extras `[data]`
-- Décisions / règles référencées : R3 (anti-leakage), R20 (cleanup), D-006 (polars), D-009 (architecture cible)
-- Durée totale validation : ~17 sec (full products + sample reviews_index)
+- Règles et décisions référencées : règle anti-leakage, nettoyage systématique, traitement en polars, et architecture cible du projet.
+- Durée totale validation : ~17 sec (validation complète des products + échantillon du reviews_index)

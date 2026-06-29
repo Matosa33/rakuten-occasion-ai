@@ -1,7 +1,7 @@
-# Bench classifieurs Cycle 3 — les 6 modèles
+# Bench classifieurs — comparaison des modèles
 
-> Synthèse comparative des 6 modèles entraînés en Cycle 3 (P04, C12-C15).
-> Tri par F1_weighted_test décroissant. Vainqueur en haut → MLflow alias `@Production` (Cycle 11).
+> Synthèse comparative des modèles de classification entraînés.
+> Tri par F1 pondéré (test) décroissant. Le modèle en tête est celui promu en production via l'alias `@Production` du registre MLflow.
 
 ## Comparaison
 
@@ -15,14 +15,14 @@
 
 ## Lecture
 
-- **Vainqueur** : `knn-faiss_v1` avec F1_weighted test = **0.9537**
-- **Calibration la mieux** : modèle avec ECE test minimum (cible < 0.05)
-- **Latence inférence** : non mesurée ici (à mesurer en Cycle 11 quand on serve via API)
+- **Meilleur modèle** : `knn-faiss_v1` avec F1 pondéré (test) = **0.9537**
+- **Meilleure calibration** : le modèle dont l'ECE (test) est minimal (cible < 0.05)
+- **Latence d'inférence** : non mesurée ici (à mesurer lors de la mise en service via l'API)
 
 ## Décision
 
-Pour MLflow Registry (Cycle 11), promouvoir `knn-faiss_v1` au stage `@Production`. 
-Les autres modèles restent disponibles via alias `@Latest` pour A/B test futur.
+Promouvoir `knn-faiss_v1` au stage `@Production` du registre MLflow.
+Les autres modèles restent disponibles via l'alias `@Latest` pour un futur test A/B.
 
 ## Fusion adaptive
 
@@ -35,7 +35,7 @@ Les autres modèles restent disponibles via alias `@Latest` pour A/B test futur.
 ## Annexes
 
 - Scripts : `src/classifiers/01..06_*.py`
-- Module métriques : `src/classifiers/metrics.py`
-- JSON détaillés : `reports/04_classifiers_bench/m{1..6}_*.json`
-- ADR référencées : D-009 (RAG-grounded), D-011 (4 cat MVP)
-- Règle R3 : anti-leakage strict (fit train, predict val/test)
+- Module de métriques : `src/classifiers/metrics.py`
+- JSON détaillés : `reports/04_classifiers_bench/*.json`
+- Architecture : RAG ancré ; périmètre MVP restreint à 4 catégories
+- Anti-fuite de données strict : ajustement sur le jeu d'entraînement, prédiction sur validation/test

@@ -79,7 +79,7 @@ check_new_data → train_classifiers → evaluate_gate → promote_gate → reim
 | Étape | Ce qu'elle fait exactement |
 |---|---|
 | `check_new_data` | Point d'entrée. Vérifie la présence des données préparées (les « embeddings », c'est à dire les descriptions de produits transformées en listes de nombres que le modèle sait lire). Si elles sont déjà là, l'étape ne fait rien et continue. En production réelle, c'est ici qu'on lancerait le calcul des nouvelles données sur une carte graphique. |
-| `train_classifiers` | Ré-entraîne trois modèles de classification (nommés tfidf-svm, svm-embed et mlp-embed dans le projet) sur les données, et enregistre chaque entraînement dans MLflow. tfidf-svm est le modèle principal destiné à la production. |
+| `train_classifiers` | Ré-entraîne trois modèles de classification sur les données : un SVM sur représentation TF-IDF du texte, un SVM sur embeddings (descriptions transformées en listes de nombres), et un perceptron multicouche (MLP, un petit réseau de neurones) sur ces mêmes embeddings. Chaque entraînement est enregistré dans MLflow. Le SVM sur TF-IDF est le modèle principal destiné à la production. |
 | `evaluate_gate` | La barrière de qualité. Elle lit le score du modèle fraîchement entraîné. Si ce score passe sous un seuil fixé, elle fait échouer tout le DAG : on refuse ainsi de déployer un modèle dégradé. |
 | `promote_gate` | Compare le nouveau modèle (le « challenger ») au modèle actuellement en production (le « champion »). Elle ne fait passer le nouveau en production que s'il est réellement meilleur. |
 | `reimport_bento` | Uniquement si une promotion a eu lieu : recharge le nouveau modèle de production dans le service qui répond aux requêtes (BentoML). Si aucune promotion n'a eu lieu, cette étape est ignorée. |
@@ -150,8 +150,8 @@ Ce n'est pas un montage théorique. L'historique des exécutions est conservé d
 - Ces ré-entraînements ont produit de nouvelles versions du modèle au registre (les versions 3,
   4 et 5), ce qui constitue la trace concrète de la boucle en action.
 - La barrière de promotion a fait son travail : elle a correctement conservé le champion (le
-  modèle tfidf-svm) parce que les nouveaux candidats étaient moins bons. La production a donc été
-  protégée d'une dégradation.
+  SVM sur représentation TF-IDF) parce que les nouveaux candidats étaient moins bons. La production a
+  donc été protégée d'une dégradation.
 
 > Drapeau slide : « boucle fermée en 5 étapes : entraîner, évaluer, promouvoir, redéployer », « 4
 > exécutions programmées et des exécutions manuelles », « les ré-entraînements ont créé les

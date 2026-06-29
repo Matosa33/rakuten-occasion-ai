@@ -1,4 +1,4 @@
-# Rapport cleaning + features + split — Sous-todo 1.2
+# Rapport nettoyage + features + split
 
 > **Note de périmètre.** Ce rapport porte sur le dataset large d'exploration (15 catégories). Le
 > **périmètre FINAL livré du projet est de 4 catégories** (Electronics, Cell_Phones_and_Accessories,
@@ -6,28 +6,28 @@
 > portent sur ces 4 catégories.
 
 > Version 1.0 — 2026-05-03
-> Statut : `completed` — chiffres mesurés sur l'exécution réelle du pipeline.
-> Aucun chiffre inventé (R8 du brain).
+> Statut : terminé — chiffres mesurés sur l'exécution réelle du pipeline.
+> Tous les chiffres sont mesurés, aucun n'est inventé.
 
 ## 1. Source et périmètre
 
-- **Input** : 30 parquets `data/raw/full/{reviews,meta}/<Cat>.parquet` issus de l'audit D-008 (15 cat evergreen-occasion sur Amazon Reviews 2023, cf. `reports/01_audit/audit_v1_amazon_reviews_2023.md`)
+- **Input** : 30 parquets `data/raw/full/{reviews,meta}/<Cat>.parquet` issus de l'audit (15 catégories revente d'occasion sur Amazon Reviews 2023, cf. `reports/01_audit/audit_v1_amazon_reviews_2023.md`)
 - **Volume input** : 348 367 044 reviews + 26 369 078 items meta (60 GB parquet zstd)
-- **Output principal** : 26 369 078 items product-level enrichis et nettoyés, splittés 70/15/15
+- **Output principal** : 26 369 078 items au niveau produit, enrichis et nettoyés, splittés 70/15/15
 
-## 2. Décision de granularité (Option C+)
+## 2. Décision de granularité
 
-Cf. ADR D-009 (architecture cible RAG-grounded). Granularité retenue :
+L'architecture cible repose sur la recherche augmentée par récupération (RAG). Granularité retenue :
 
-- **Dataset principal product-level** (`data/processed/products/`) : 1 ligne par `parent_asin`, ~26 M items. Carburant pour knn-faiss à pricing-cascade (classification, encoders, FAISS retrieval, pricing).
-- **`reviews_index` séparé** (`data/processed/reviews_index/`) : `(parent_asin, asin, user_id, timestamp, _split)` × ~348 M lignes (4 colonnes, ~5-10 GB). Permet au RAG Cycle 6 de retrouver toutes les reviews d'un produit dans le bon split sans dupliquer le contenu reviews — la jointure se fait lazy à la demande sur `data/raw/full/reviews/` déjà sur disque.
+- **Dataset principal au niveau produit** (`data/processed/products/`) : 1 ligne par `parent_asin`, ~26 M items. Carburant pour la chaîne de recherche par similarité (FAISS) et de prédiction de prix (classification, encodeurs, recherche par similarité, pricing).
+- **`reviews_index` séparé** (`data/processed/reviews_index/`) : `(parent_asin, asin, user_id, timestamp, _split)` × ~348 M lignes (4 colonnes, ~5-10 GB). Permet au composant RAG de retrouver toutes les reviews d'un produit dans le bon split sans dupliquer le contenu des reviews ; la jointure se fait à la demande, en lecture paresseuse, sur `data/raw/full/reviews/` déjà présent sur disque.
 - **Pas de matérialisation review × meta complète** (gaspillage 50-80 GB).
 
 ## 3. Pipeline 6 étapes
 
 | Étape | Script | Rôle | Durée | Sortie | Taille |
 |---|---|---|---:|---|---:|
-| 1 | `clean/01_join_meta_with_review_aggregates.py` | Agréger reviews → enrichir meta product-level | ~76 s | `intermediate/01_meta_enriched.parquet` | 6,16 GB |
+| 1 | `clean/01_join_meta_with_review_aggregates.py` | Agréger reviews → enrichir meta au niveau produit | ~76 s | `intermediate/01_meta_enriched.parquet` | 6,16 GB |
 | 2 | `clean/02_drop_sparse_columns.py` | Vider subtitle/author hors Books/CDs/Movies | ~58 s | `intermediate/02_meta_pruned.parquet` | 6,16 GB |
 | 3 | `clean/03_normalize_text.py` | Strip HTML, collapse whitespace, empty→null | ~70 s | `intermediate/03_meta_normalized.parquet` | 6,15 GB |
 | 4 | `clean/04_cap_text_lengths.py` | Cap description 8192 / title 1024 + flags | ~56 s | `intermediate/04_meta_capped.parquet` | 5,65 GB |
@@ -36,7 +36,7 @@ Cf. ADR D-009 (architecture cible RAG-grounded). Granularité retenue :
 
 **Durée totale étapes 1-5 + split products** : ~6 min. Le `reviews_index` est plus long (scan 348 M reviews × filter sur 18 M parent_asins par split).
 
-## 4. Agrégats reviews → product-level (étape 1)
+## 4. Agrégats reviews → niveau produit (étape 1)
 
 Pour chaque `parent_asin`, on calcule :
 
@@ -54,7 +54,7 @@ Pour chaque `parent_asin`, on calcule :
 **Couverture meta×reviews mesurée** :
 - 26 369 078 items meta total
 - 26 364 454 items avec ≥ 1 review (99,98 % couverture, cohérent avec audit 99,975 %)
-- ~4 624 items sans aucune review (~0,02 %, à investiguer en C06+ ou drop pour ML)
+- ~4 624 items sans aucune review (~0,02 %, à investiguer au nettoyage ou à supprimer pour le ML)
 
 ## 5. Drop colonnes sparses (étape 2)
 
@@ -63,7 +63,7 @@ Pour chaque `parent_asin`, on calcule :
 | `subtitle` | 84,8 % | Vidée hors Books, CDs_and_Vinyl, Movies_and_TV | 84,9 % (pas de gain agrégé, mais signal préservé pour les cat text-rich) |
 | `author` | 89,1 % | Idem | 89,1 % |
 
-Décision : on **ne supprime pas** la colonne entière (schéma stable parquet). On **vide** (`set None`) hors des 3 catégories où ces champs sont denses. La validation Pandera (sous-todo 1.4) refusera le NaN sur ces colonnes pour les cat où ils sont attendus.
+Décision : on **ne supprime pas** la colonne entière (schéma parquet stable). On **vide** (`set None`) hors des 3 catégories où ces champs sont denses. La validation Pandera (étape suivante) refusera le NaN sur ces colonnes pour les catégories où ils sont attendus.
 
 ## 6. Normalisation textuelle (étape 3)
 
@@ -73,7 +73,7 @@ Pipeline (prudent, préserve l'information) :
 1. **Strip HTML** : regex `<[^>]+>` + 10 entités HTML les plus fréquentes (`&amp;`, `&nbsp;`, `&mdash;` etc.)
 2. **Collapse whitespace** : `\s+` → ` `, trim leading/trailing
 3. **Empty → null** : `""` après cleanup → vrai NaN (cohérence avec absence)
-4. **PAS de lowercase global** : préserve les acronymes (USB, Apple, Samsung) qui portent du signal pour les classifieurs et l'identification. La casefolding se fera côté tokenizer encoder (Cycle 2) ou TF-IDF (Cycle 3.2).
+4. **PAS de mise en minuscules globale** : préserve les acronymes (USB, Apple, Samsung) qui portent du signal pour les classifieurs et l'identification. La normalisation de casse se fera côté tokenizer de l'encodeur, ou côté TF-IDF, lors des étapes de modélisation.
 5. **NFKC** : non appliqué côté polars (pas de fonction native) — délégué aux tokenizers d'encoders qui le font nativement.
 
 ## 7. Cap longueurs + flags qualité (étape 4)
@@ -106,7 +106,7 @@ Flags ajoutés :
 ## 9. Split stratifié 70/15/15 (étape 6)
 
 **Stratégie** :
-- **Group = parent_asin** : trivial à ce stade (1 ligne = 1 parent_asin product-level), mais formalisé pour C07 anti-leakage.
+- **Group = parent_asin** : trivial à ce stade (1 ligne = 1 parent_asin au niveau produit), mais formalisé pour la protection anti-leakage au split.
 - **Stratification = `_source_category`** : chaque cat répartie 70/15/15 indépendamment → tout le périmètre représenté à la même proportion dans les 3 splits.
 - **Seed = 42** (`SEED` dans `src/config.py`).
 - **Ratios** : 70/15/15 (cible standard ML).
@@ -142,7 +142,7 @@ Flags ajoutés :
 
 Chaque cat est répartie **exactement** à 70/15/15 (±1 ligne d'arrondi). La stratification fonctionne.
 
-**Reviews_index split-aware** : pour chaque split, on construit `reviews_index/{train,val,test}.parquet` qui contient `(parent_asin, asin, user_id, timestamp, _source_category, _split)` filtré sur les `parent_asin` du split correspondant. Permet au RAG Cycle 6 de retrouver toutes les reviews d'un produit dans le bon split en faisant `pl.scan(reviews_index_train) JOIN data/raw/full/reviews/<cat>.parquet ON (parent_asin, asin)`.
+**Reviews_index conscient du split** : pour chaque split, on construit `reviews_index/{train,val,test}.parquet` qui contient `(parent_asin, asin, user_id, timestamp, _source_category, _split)` filtré sur les `parent_asin` du split correspondant. Permet au composant RAG de retrouver toutes les reviews d'un produit dans le bon split en faisant `pl.scan(reviews_index_train) JOIN data/raw/full/reviews/<cat>.parquet ON (parent_asin, asin)`.
 
 **Résultat reviews_index (mesuré)** :
 
@@ -153,13 +153,13 @@ Chaque cat est répartie **exactement** à 70/15/15 (±1 ligne d'arrondi). La st
 | test | 52 593 901 | 1,64 GB | 15,10 % |
 | **Total** | **348 367 044** | **10,20 GB** | **100,00 %** |
 
-Ratio val/test légèrement asymétrique (15,22 vs 15,10) car le nombre de reviews est variable par produit, et la stratification est faite **au niveau product** (anti-L1), pas review. Le `_split` final côté reviews est dérivé du split du `parent_asin` parent.
+Ratio val/test légèrement asymétrique (15,22 vs 15,10) car le nombre de reviews est variable par produit, et la stratification est faite **au niveau produit** (pour empêcher les variantes d'un même produit de fuiter entre splits), pas au niveau review. Le `_split` final côté reviews est dérivé du split du `parent_asin` parent.
 
 **Performance** : inner join polars lazy + streaming sur 348 M reviews × 26 M parent_asins = **65 secondes** seulement (vs estimation initiale > 30 min avec `pl.col("parent_asin").is_in(big_list)`). Refactor crucial : préférer toujours un `join` à un `is_in(big_list)` quand on a > 100 k éléments.
 
-## 10. Vérifications de cohérence vs audit D-008
+## 10. Vérifications de cohérence vs audit
 
-| Métrique | Audit D-008 (full) | Train cleaning | Verdict |
+| Métrique | Audit (intégralité 15 cat) | Train nettoyage | Verdict |
 |---|---:|---:|---|
 | Total items meta | 26 369 078 | 26 369 078 | ✅ identique |
 | Couverture meta×reviews | 99,975 % | 99,98 % | ✅ identique |
@@ -173,19 +173,19 @@ Ratio val/test légèrement asymétrique (15,22 vs 15,10) car le nombre de revie
 
 **Aucun finding inattendu** : le pipeline cleaning ne modifie pas les distributions naturelles, il les nettoie. Tous les chiffres restent dans la marge attendue.
 
-## 11. Conditions à respecter aval (C06+ → C03)
+## 11. Conditions à respecter en aval
 
-- **C1** : Filtrer ou imputer les ~4 624 items sans aucune review (n_reviews null). Pour la classification, on peut soit les drop, soit les garder en posant `n_reviews=0` et flags spéciaux.
-- **C2** : Pour le pricing pricing-cascade (Cycle 7), ne garder que les ~7,53 M items train avec `price_num not null` (40,8 %). Les modèles de pricing baseline doivent gérer le cas `price_band=None`.
-- **C3** : Au train classifier (Cycle 3), utiliser `class_weight='balanced'` ou stratifier le DataLoader pour absorber le ratio max/min cat 31,67 (cf. audit B1).
-- **C4** : Le titre `description` est utilisable directement par les encoders SigLIP/Arctic (cap 8192 ≪ context 8192 tokens des encoders).
-- **C5** : Pour le RAG Cycle 6, utiliser `reviews_index/{split}.parquet` pour ne récupérer que les reviews du bon split (anti-leakage L2).
+- **C1** : Filtrer ou imputer les ~4 624 items sans aucune review (n_reviews null). Pour la classification, on peut soit les supprimer, soit les garder en posant `n_reviews=0` et des flags spéciaux.
+- **C2** : Pour la prédiction de prix, ne garder que les ~7,53 M items train avec `price_num not null` (40,8 %). Les modèles de pricing de référence doivent gérer le cas `price_band=None`.
+- **C3** : À l'entraînement du classifieur, utiliser `class_weight='balanced'` ou stratifier le DataLoader pour absorber le ratio max/min entre catégories de 31,67 (déséquilibre catégoriel mesuré à l'audit).
+- **C4** : Le champ `description` est utilisable directement par les encodeurs SigLIP/Arctic (le plafond de 8192 caractères reste inférieur à la fenêtre de contexte de 8192 tokens des encodeurs).
+- **C5** : Pour le composant RAG, utiliser `reviews_index/{split}.parquet` pour ne récupérer que les reviews du bon split (protection contre la fuite par groupe d'utilisateurs).
 
 ## 12. Annexes
 
 - Scripts : `src/data/clean/01..05_*.py` + `src/data/split/01_split_stratified_groupkfold.py`
 - Tests d'invariants : `tests/test_clean_invariants.py` (15 tests passent)
-- ADR référencées : D-006 (polars streaming), D-008 (périmètre 15 cat), D-009 (architecture RAG-grounded)
-- Stack : `polars 1.40.1` (streaming engine), Python 3.11
-- Hardware : RTX 4080 16 GB VRAM (utilisé en CPU-only ici, GPU réservé aux encoders Cycle 2)
-- Pic mémoire mesuré : ~10-12 GB RAM (concat 26 M items product-level en mémoire au moment du split). Aucun OOM.
+- Décisions structurantes référencées : traitement en polars streaming, périmètre des 15 catégories, et architecture cible fondée sur la recherche augmentée par récupération (RAG).
+- Stack : `polars 1.40.1` (moteur streaming), Python 3.11
+- Hardware : RTX 4080 16 GB VRAM (utilisé en CPU uniquement ici, le GPU étant réservé aux encodeurs lors de l'étape de modélisation)
+- Pic mémoire mesuré : ~10-12 GB RAM (concaténation de 26 M items au niveau produit en mémoire au moment du split). Aucun dépassement mémoire.

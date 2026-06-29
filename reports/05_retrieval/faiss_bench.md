@@ -1,7 +1,7 @@
-# FAISS indices bench — Cycle 4.1
+# Bench des index FAISS
 
-> Mesure recall@k et latence sur 1_000 queries du val 
-> contre un index de 3_156_705 vecteurs × 1024 dim.
+> Mesure du recall@k et de la latence sur 1 000 requêtes du jeu de validation,
+> contre un index de 3 156 705 vecteurs × 1024 dimensions.
 
 ## Comparaison
 
@@ -13,6 +13,6 @@
 
 ## Décision
 
-Pour le serving (Cycle 9 API) : **HNSW** (rapide + recall ≥ 95 %).
+Pour la mise en service via l'API : **HNSW** (rapide et recall ≥ 95 %).
 Pour la référence d'évaluation : **Flat IP** (recall 100 %).
-Pour scale-up futur (>20 M vecteurs) : envisager **IVF_PQ** si recall acceptable (>0.85).
+Pour un passage à l'échelle futur (plus de 20 M de vecteurs) : envisager **IVF_PQ** si le recall reste acceptable (> 0,85).
