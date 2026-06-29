@@ -41,7 +41,7 @@ desktop.ini
 .env.local
 *.pem
 *.key
-# Audit 2026-06-05 : pattern générique (couvre infra/k8s/ et tout futur chemin).
+# Pattern générique (couvre infra/k8s/ et tout futur chemin).
 **/secrets.yaml
 
 # === Notebooks ===
@@ -50,16 +50,16 @@ desktop.ini
 # === Docker ===
 docker-compose.override.yml
 
-# === Data lourde (DVC géré plus tard, cf. ADR D-006/D-007/D-008) ===
+# === Data lourde (gérée via DVC) ===
 data/raw/*.parquet
 data/raw/*.csv
 data/raw/*.jsonl
 data/raw/*.json
 data/raw/cache/
 data/raw/full/
-# Photos vendeur uploadées (Cycle 17.1, D-035) — jamais committées (R2/vie privée).
+# Photos vendeur uploadées — jamais committées (vie privée).
 data/uploads/
-# Dataset photos d'éval (Phase 2) — vraies photos = privé, jamais committées.
+# Dataset photos d'éval — vraies photos = privé, jamais committées.
 data/photos_eval/*
 !data/photos_eval/.gitkeep
 data/processed/*.parquet
@@ -87,7 +87,7 @@ models/
 
 # === Audit reports — on garde les .md commit (synthèse humaine), mais pas
 # les artefacts lourds régénérables. *_inventory.json reste commité pour
-# figer la trace des décisions (méta-first, choix périmètre, etc.).
+# figer la trace des décisions.
 reports/**/figures/*.png
 reports/**/figures/*.svg
 reports/figures/*.png
@@ -105,7 +105,7 @@ mlruns.db
 .dvc/tmp
 dvc_storage/
 
-# === Frontend (P11 — React + Vite à venir) ===
+# === Frontend (React + Vite) ===
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
@@ -113,24 +113,24 @@ frontend/coverage/
 frontend/.env.local
 frontend/.env.*.local
 
-# === Infra (P14 — Docker / Compose / k8s à venir) ===
+# === Infra (Docker / Compose / k8s) ===
 infra/**/.env
 infra/**/secrets/
 infra/minio/data/
 infra/postgres/data/
 
-# === Airflow (Cycle 12 — orchestration) ===
+# === Airflow (orchestration) ===
 infra/airflow/logs/
 infra/airflow/plugins/*
 !infra/airflow/plugins/.gitkeep
 
-# === K8s (Cycle 13.5) ===
+# === K8s ===
 # Binaire kind téléchargé localement (cf. infra/k8s/README), pas un dep du repo.
 .local/
 # Secrets K8s effectifs (gabarit committé sous infra/k8s/secrets.example.yaml).
 infra/k8s/secrets.yaml
 
-# === Monitoring (P15) ===
+# === Monitoring ===
 monitoring/prometheus/data/
 monitoring/grafana/data/
 monitoring/evidently/reports/
@@ -146,18 +146,18 @@ catboost_info/
 !data/embeddings/*.dvc
 !models/**/*.dvc
 
-# === SQLite (Cycle 9.5 persistence) ===
+# === SQLite (persistance) ===
 *.db
 *.sqlite
 *.sqlite3
 
-# === Interne agent / exam (non public, gardé en local) — Cycle 19 ===
+# === Interne (non public, gardé en local) ===
 BRAIN/
 docs/soutenance/
 docs/formation/
 tests/test_brain_structure.py
 
-# === docs internes (exercices/exam, non public) — Cycle 33 ===
+# === docs internes (non public) ===
 docs/decouverte/
 docs/architecture.md
 docs/modeles.md
@@ -165,7 +165,7 @@ docs/README.md
 reports/10_audit_app/
 
 # prep soutenance perso (local, non public)
-documentation/SOUTENANCE_PLAN.md
+documentation/SOUTENANCE_PLAN.*
 
-# Audits internes (œil naïf, non publics — comme BRAIN/)
+# Audits internes (non publics)
 auditV2/
