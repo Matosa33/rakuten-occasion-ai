@@ -122,8 +122,11 @@ jobs:
         #   CVE-2025-3000 (torch) - aucune version corrigée publiée à ce jour
         #   (vérifié 2026-07-01) ; risque accepté : torch sert à l'encodage local,
         #   jamais exposé au réseau.
+        #   PYSEC-2026-597 (nltk) - aucune version corrigée publiée à ce jour
+        #   (vérifié 2026-07-02) ; risque accepté : nltk sert au nettoyage de texte
+        #   hors-ligne (data prep), jamais exposé à une entrée réseau.
         run: |
-          pip-audit --skip-editable --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2025-3000
+          pip-audit --skip-editable --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2025-3000 --ignore-vuln PYSEC-2026-597
 
   docker-build:
     name: Docker build check (${{ matrix.image }})
