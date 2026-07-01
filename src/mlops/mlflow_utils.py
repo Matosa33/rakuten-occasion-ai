@@ -149,6 +149,14 @@ def log_training_run(
                     signature=signature,
                     input_example=input_example,
                     registered_model_name=REGISTERED_MODEL if register else None,
+                    # MLflow 3.14 sérialise en skops (sûr) et refuse par défaut les types
+                    # internes de nos estimateurs. On déclare explicitement les nôtres :
+                    # la calibration Platt (tfidf-svm, svm-embed) et l'optimiseur du MLP.
+                    skops_trusted_types=[
+                        "sklearn.calibration._CalibratedClassifier",
+                        "sklearn.calibration._SigmoidCalibration",
+                        "sklearn.neural_network._stochastic_optimizers.AdamOptimizer",
+                    ],
                 )
                 # version créée PAR CET appel (ordre-indépendant, vs "max version")
                 registered_version = getattr(info, "registered_model_version", None)

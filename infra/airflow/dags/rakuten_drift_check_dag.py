@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+from airflow.datasets import Dataset
 from airflow.models.dag import DAG
 from airflow.operators.python import ShortCircuitOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
@@ -56,6 +57,8 @@ with DAG(
     t_detect = ShortCircuitOperator(
         task_id="detect_drift",
         python_callable=detect_drift_callable,
+        # Lignage déclaré : le check produit le rapport de dérive (onglet Datasets).
+        outlets=[Dataset("evidently://drift_check")],
     )
 
     t_trigger = TriggerDagRunOperator(

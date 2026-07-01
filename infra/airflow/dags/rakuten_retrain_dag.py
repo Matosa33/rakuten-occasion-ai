@@ -28,6 +28,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from airflow.datasets import Dataset
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
@@ -38,6 +39,12 @@ REPO_ROOT = Path("/opt/rakuten")
 EMBEDDINGS_DIR = REPO_ROOT / "data" / "embeddings" / "text"
 BENCH_DIR = REPO_ROOT / "reports" / "04_classifiers_bench"
 MODELS_DIR = REPO_ROOT / "data" / "models"
+
+# Lignage déclaré (onglet Datasets d'Airflow) : chaque tâche dit ce qu'elle PRODUIT.
+# Pure métadonnée (aucun effet sur l'exécution) - trace « qui a mis à jour quoi, quand ».
+DS_MODELS = Dataset("file://opt/rakuten/data/models")
+DS_BENCH = Dataset("file://opt/rakuten/reports/04_classifiers_bench")
+DS_PRODUCTION = Dataset("mlflow://rakuten-category-classifier@Production")
 
 # Rapport écrit par 01_tfidf_linsvc (OUT_METRICS = "<MODEL_NAME>.json").
 PRODUCTION_REPORT = BENCH_DIR / "tfidf-svm_v1.json"
@@ -134,6 +141,7 @@ with DAG(
         task_id="train_tfidf_svm",
         cwd="/opt/rakuten",
         pool="cpu_training",
+        outlets=[DS_MODELS, DS_BENCH],
         bash_command=(
             "set -e; rm -f data/models/tfidf-svm_v1.joblib; "
             "python -m src.classifiers.01_tfidf_linsvc"
@@ -143,6 +151,7 @@ with DAG(
         task_id="train_svm_embed",
         cwd="/opt/rakuten",
         pool="cpu_training",
+        outlets=[DS_MODELS, DS_BENCH],
         bash_command=(
             "set -e; rm -f data/models/svm-embed_v1.joblib; python -m src.classifiers.03_svm"
         ),
@@ -151,6 +160,7 @@ with DAG(
         task_id="train_mlp_embed",
         cwd="/opt/rakuten",
         pool="cpu_training",
+        outlets=[DS_MODELS, DS_BENCH],
         bash_command=(
             "set -e; rm -f data/models/mlp-embed_v1.joblib; python -m src.classifiers.05_mlp"
         ),
@@ -164,6 +174,7 @@ with DAG(
     t_promote = PythonOperator(
         task_id="promote_gate",
         python_callable=promote_gate_callable,
+        outlets=[DS_PRODUCTION],
     )
 
     t_reimport = PythonOperator(
