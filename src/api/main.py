@@ -2,15 +2,15 @@
 
 Endpoints
 ---------
-- `POST /auth/login` — authentification (OAuth2 password) → Bearer JWT
-- `POST /upload` — stocke une photo vendeur (entrée du flow photo-first)
-- `GET  /uploads/{image_id}` — sert une photo (capability-URL publique)
-- `GET  /health` — version, services chargés
-- `POST /identify` — photos (+ texte optionnel) → top-K candidats + validation VLM + Akinator
-- `POST /price` — produit identifié + état → suggestion prix (cascade L1-L4)
-- `POST /describe` — produit identifié + état → titre + description grounded
-- `GET  /history` — N dernières identifications (traçabilité)
-- `POST /identify/stream` — SSE : étapes du pipeline en temps réel
+- `POST /auth/login` - authentification (OAuth2 password) → Bearer JWT
+- `POST /upload` - stocke une photo vendeur (entrée du flow photo-first)
+- `GET  /uploads/{image_id}` - sert une photo (capability-URL publique)
+- `GET  /health` - version, services chargés
+- `POST /identify` - photos (+ texte optionnel) → top-K candidats + validation VLM + Akinator
+- `POST /price` - produit identifié + état → suggestion prix (cascade L1-L4)
+- `POST /describe` - produit identifié + état → titre + description grounded
+- `GET  /history` - N dernières identifications (traçabilité)
+- `POST /identify/stream` - SSE : étapes du pipeline en temps réel
 
 Lifespan
 --------
@@ -81,11 +81,39 @@ log = logging.getLogger(__name__)
 obs_log = get_logger("rakuten.api")
 
 # Mots non discriminants du texte vendeur (état/couleur/génériques) → exclus du match d'autorité.
-_SELLER_STOPWORDS = frozenset({
-    "neuf", "occasion", "tres", "bon", "etat", "avec", "sans", "pour", "the", "and", "les", "des",
-    "noir", "noire", "blanc", "blanche", "gris", "grise", "rouge", "bleu", "bleue", "vert",
-    "comme", "parfait", "tbe", "complet", "complete", "vends", "vendre",
-})
+_SELLER_STOPWORDS = frozenset(
+    {
+        "neuf",
+        "occasion",
+        "tres",
+        "bon",
+        "etat",
+        "avec",
+        "sans",
+        "pour",
+        "the",
+        "and",
+        "les",
+        "des",
+        "noir",
+        "noire",
+        "blanc",
+        "blanche",
+        "gris",
+        "grise",
+        "rouge",
+        "bleu",
+        "bleue",
+        "vert",
+        "comme",
+        "parfait",
+        "tbe",
+        "complet",
+        "complete",
+        "vends",
+        "vendre",
+    }
+)
 
 
 def _seller_text_best_match(text: str, candidates: list) -> str:
@@ -116,6 +144,7 @@ def _seller_text_best_match(text: str, candidates: list) -> str:
         med = statistics.median([c.price for c in priced])
         return min(priced, key=lambda c: abs(c.price - med)).parent_asin
     return tied[0].parent_asin
+
 
 # Singleton state (rempli au lifespan startup, consommé par les endpoints)
 APP_STATE: dict[str, Any] = {
@@ -176,7 +205,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Rakuten AI Assistant — RAG-grounded",
+    title="Rakuten AI Assistant - RAG-grounded",
     description="Pipeline d'identification + pricing + rédaction pour vendeurs particuliers",
     version="0.1.0",
     lifespan=lifespan,
@@ -189,7 +218,7 @@ app.middleware("http")(request_id_middleware)
 
 # Observabilité C14.2 (D-030) : Prometheus /metrics (histogram latence + counter
 # requêtes + gauge in-progress = saturation 4ᵉ golden signal). Activé via env var
-# `ENABLE_METRICS=true` (mise en compose `api`) — opt-in propre qui évite
+# `ENABLE_METRICS=true` (mise en compose `api`) - opt-in propre qui évite
 # `ValueError: Duplicated timeseries` quand pytest recrée l'app : la lib leak la
 # Gauge inprogress vers le REGISTRY global, donc on désactive en tests.
 Instrumentator(
@@ -199,7 +228,7 @@ Instrumentator(
     excluded_handlers=["/metrics", "/health"],
 ).instrument(app).expose(app)
 
-# CORS — autorise le frontend (Vite :5173) en dev. En prod (build statique servi
+# CORS - autorise le frontend (Vite :5173) en dev. En prod (build statique servi
 # par nginx + proxy /api/ même-origine), CORS n'est pas sollicité. Audit 2026-06-05
 # (P1) : méthodes + headers explicites (au lieu de "*") pour réduire le vecteur
 # CSRF sur /auth/login public.
@@ -213,14 +242,14 @@ app.add_middleware(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Auth (Cycle 15.1, D-032) — `/auth/login` reste PUBLIC pour pouvoir s'authentifier,
+# Auth (Cycle 15.1, D-032) - `/auth/login` reste PUBLIC pour pouvoir s'authentifier,
 # `/health` + `/metrics` restent publics pour les sondes K8s + scrape Prometheus.
 # Tous les autres endpoints métier sont protégés par `Depends(get_current_user)`.
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 @app.post("/auth/login", response_model=TokenResponse)
-async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:  # noqa: B008 — pattern FastAPI standard
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:  # noqa: B008 - pattern FastAPI standard
     """OAuth2 password flow stub démo. Retourne un Bearer JWT HS256.
 
     `form.username` + `form.password` arrivent en `application/x-www-form-urlencoded`
@@ -229,14 +258,14 @@ async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:  
     if not authenticate(form.username, form.password):
         raise HTTPException(
             status_code=401,
-            detail="Invalid credentials",
+            detail="Identifiants invalides",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return TokenResponse(access_token=create_access_token(subject=form.username))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Photos vendeur (Cycle 17.1, D-035) — la photo est l'entrée du flow photo-first.
+# Photos vendeur (Cycle 17.1, D-035) - la photo est l'entrée du flow photo-first.
 # POST protégé (vendeur connecté) ; GET public (capability-URL uuid4 non devinable,
 # nécessaire pour afficher les photos dans l'annonce).
 # ─────────────────────────────────────────────────────────────────────────────
@@ -292,7 +321,7 @@ async def identify(
     ident: IdentificationService | None = APP_STATE.get("identification")
     if ident is None or not ident.ready:
         raise HTTPException(
-            503, "IdentificationService indisponible. Vérifie Cycle 2.4 (index FAISS)."
+            503, "Service d'identification indisponible : index de recherche non chargé."
         )
 
     # v3 photo-first (D-035) : les photos vendeur sont extraites par le VLM
@@ -314,7 +343,7 @@ async def identify(
                 "Analyse photo indisponible (clé OpenRouter absente). "
                 "Décrivez le produit en texte pour continuer.",
             ) from e
-        except Exception as e:  # noqa: BLE001 — VLM down ≠ flow mort si texte fourni
+        except Exception as e:  # noqa: BLE001 - VLM down ≠ flow mort si texte fourni
             if not query:
                 raise HTTPException(
                     503, f"Analyse photo en échec ({e}). Réessayez ou décrivez en texte."
@@ -340,7 +369,7 @@ async def identify(
 
     # Identification raisonnée (Cycle 36) : le LLM JUGE le top-15 → famille + ancre prix neuf +
     # question discriminante. Best-effort, non bloquant (R15) : None si VLM indispo/échec. Calculée
-    # TÔT car son choix (chosen_parent_asin) fait remonter le BON candidat en tête — fiche, prix et
+    # TÔT car son choix (chosen_parent_asin) fait remonter le BON candidat en tête - fiche, prix et
     # validation portent alors sur le produit JUGÉ, pas sur le top-1 retrieval qui peut être un
     # accessoire (ex. coque iPhone). Sans elle, on garde l'ordre retrieval inchangé.
     r_paths = (
@@ -377,9 +406,7 @@ async def identify(
             reference_new_confidence=ri.reference_new_confidence,
             ask_question=ri.ask_question,
             facet_question=ri.facet_question,
-            facets=[
-                ReasonedFacetOut(key=f.key, value=f.value, source=f.source) for f in ri.facets
-            ],
+            facets=[ReasonedFacetOut(key=f.key, value=f.value, source=f.source) for f in ri.facets],
         )
 
     # top-1 effectif (réordonné par la passe raisonnée si disponible)
@@ -417,7 +444,7 @@ async def identify(
             top1_category=top1.category if top1 else None,
             top1_score=top1.score if top1 else None,
         )
-    except Exception as e:  # noqa: BLE001 — la persistance ne doit jamais casser l'API
+    except Exception as e:  # noqa: BLE001 - la persistance ne doit jamais casser l'API
         log.warning("Persistence log échoué (non bloquant) : %s", e)
 
     next_obs = None
@@ -447,7 +474,9 @@ async def identify(
                 for k in (c.attributes or {})
             }
             relevant = [f for f in expected if f in present]
-            expected = relevant or expected  # garde-fou : si rien ne matche, on garde le schéma macro
+            expected = (
+                relevant or expected
+            )  # garde-fou : si rien ne matche, on garde le schéma macro
         # OVERRIDE VENDEUR : le vendeur a nommé ce produit (≠ perception VLM/raisonné, souvent
         # mal perçu) → on bâtit la fiche sur SA fiche catalogue (fiable), en IGNORANT l'extraction
         # et le raisonné qui portaient sur un autre produit. Sinon : logique normale.
@@ -558,7 +587,7 @@ async def identify(
             )
             for c in candidates
         ],
-        vlm_validation=vlm_validation,  # F0.4 (17.2, D-035) — None si pas de photos
+        vlm_validation=vlm_validation,  # F0.4 (17.2, D-035) - None si pas de photos
         next_observation=next_obs,
         explanation=result.explanation,
         predicted_category_fine=result.predicted_category_fine,
@@ -578,7 +607,7 @@ async def price(
     log.info("price by user=%s", user)
     pricing: PricingService | None = APP_STATE.get("pricing")
     if pricing is None or not pricing.ready:
-        raise HTTPException(503, "PricingService indisponible. Vérifie Cycle 7.1 (pricing-cascade).")
+        raise HTTPException(503, "Service de prix indisponible : modèle de prix non chargé.")
 
     result = pricing.suggest(
         category=req.category.value,
@@ -643,7 +672,7 @@ async def history(
     limit: int = 20,
     user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
 ) -> dict:
-    """Cycle 9.5 — N dernières identifications historisées (traçabilité)."""
+    """Cycle 9.5 - N dernières identifications historisées (traçabilité)."""
     log.info("history by user=%s", user)
     try:
         return {"logs": persistence.recent_logs(limit=limit)}
@@ -656,7 +685,7 @@ async def identify_stream(
     req: IdentifyRequest,
     user: str = Depends(get_current_user),  # D-032 : Bearer JWT requis
 ):
-    """Cycle 9.4 — SSE : streame les étapes du pipeline pour UX progressive.
+    """Cycle 9.4 - SSE : streame les étapes du pipeline pour UX progressive.
 
     Chaque étape = un event JSON. Le frontend (Cycle 10) affiche la
     progression (encodage → recherche → garde-fous → résultat).
@@ -667,7 +696,7 @@ async def identify_stream(
         raise HTTPException(503, "IdentificationService indisponible.")
     query = req.text_hint.strip()
     if not query:
-        raise HTTPException(422, "text_hint vide (MVP text-only, cf. D-014).")
+        raise HTTPException(422, "text_hint vide : décrivez le produit en quelques mots.")
 
     async def event_generator():
         def _sse(event: str, data: dict) -> str:

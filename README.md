@@ -1,4 +1,4 @@
-# Rakuten AI — Assistant de mise en vente d'occasion
+# Rakuten AI - Assistant de mise en vente d'occasion
 
 ![tests](https://img.shields.io/badge/tests-406%20passing-brightgreen)
 ![python](https://img.shields.io/badge/python-3.11-blue)
@@ -6,9 +6,9 @@
 ![stack](https://img.shields.io/badge/stack-FastAPI%20%2B%20React%2019-0aa)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-**À partir de quelques photos d'un objet, l'application produit une fiche de vente d'occasion complète : catégorie exacte, attributs structurés, titre, description et prix conseillé.** Cas d'usage fondateur : le vendeur particulier qui « mitraille » son grenier un jour de déménagement et veut des annonces propres en quelques secondes — sans rien saisir à la main.
+**À partir de quelques photos d'un objet, l'application produit une fiche de vente d'occasion complète : catégorie exacte, attributs structurés, titre, description et prix conseillé.** Cas d'usage fondateur : le vendeur particulier qui « mitraille » son grenier un jour de déménagement et veut des annonces propres en quelques secondes - sans rien saisir à la main.
 
-Le cœur ML est un **pipeline d'identification ancrée** (*grounded*) : on **récupère** le produit réel dans un catalogue de ~4,5 M références (index FAISS de **3,16 M vecteurs**, le split d'entraînement) **avant** de laisser un modèle génératif rédiger. Les modèles génératifs **valident et rédigent — ils n'identifient jamais sans ancre catalogue**. Anti-hallucination par construction.
+Le cœur ML est un **pipeline d'identification ancrée** (*grounded*) : on **récupère** le produit réel dans un catalogue de ~4,5 M références (index FAISS de **3,16 M vecteurs**, le split d'entraînement) **avant** de laisser un modèle génératif rédiger. Les modèles génératifs **valident et rédigent - ils n'identifient jamais sans ancre catalogue**. Anti-hallucination par construction.
 
 Ce principe se prolonge par une **identification raisonnée** : le **retriever apporte la connaissance** (les 15 fiches catalogue réelles les plus proches) et le **modèle vision-langage apporte le jugement** (lequel de ces 15 candidats correspond vraiment à la photo, faut-il poser une question, quel est le prix neuf de référence). Le modèle génératif **ne peut jamais introduire un produit hors des 15 candidats** : un identifiant produit inventé est ignoré et l'on retombe sur le meilleur résultat du retrieval. Le retrieval seul pouvait laisser un *accessoire* en tête (une coque d'iPhone affichée comme « le produit ») ; la passe raisonnée **réordonne** le bon candidat en tête, et c'est sur lui que portent ensuite la fiche, le prix et la validation.
 
@@ -52,7 +52,7 @@ Ce principe se prolonge par une **identification raisonnée** : le **retriever a
    VLM validateur                      ◄── photo vendeur × image catalogue
    {match, confidence, reason}             → badge de correspondance visuelle
               │                              (sauté si la passe raisonnée est
-       ┌──────┴───────┐                      déjà confiante — économie latence)
+       ┌──────┴───────┐                      déjà confiante - économie latence)
        ▼              ▼
    PRICING        LLM rédacteur
    transparent    ancré (Gemma)
@@ -118,7 +118,7 @@ Les artefacts lourds (index FAISS, embeddings, modèles, dumps catalogue) sont *
 python3.11 -m venv .venv && .venv\Scripts\activate    # (Linux : source .venv/bin/activate)
 pip install -e ".[dev,data,ml,api,monitoring,mlops]"   # mêmes extras que la CI
 
-pytest tests/                  # 406 tests — contrats, parsing, sécurité, cascade prix, identification raisonnée, priorité au texte vendeur, compose…
+pytest tests/                  # 406 tests - contrats, parsing, sécurité, cascade prix, identification raisonnée, priorité au texte vendeur, compose…
 ruff check src/ tests/         # lint 0 erreur
 ruff format --check src/ tests/
 
@@ -135,11 +135,11 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 |---|---|---|
 | Encodeur texte (frozen) | Snowflake **Arctic Embed L v2** | ✅ |
 | Retrieval (cœur identification) | **FAISS HNSW** 3,16 M vecteurs + RRF + détection hors-distribution 3 niveaux | ✅ |
-| Identification raisonnée | **1 appel modèle vision-langage** qui juge le top-15 (famille + candidat réordonné + ancre prix neuf + produit absent du catalogue + question) — ancré, non bloquant | ✅ |
+| Identification raisonnée | **1 appel modèle vision-langage** qui juge le top-15 (famille + candidat réordonné + ancre prix neuf + produit absent du catalogue + question) - ancré, non bloquant | ✅ |
 | Priorité au texte vendeur | match déterministe (≥2 mots, ≥50 %, numéros de modèle gardés) → fixe le produit indépendamment du modèle | ✅ |
 | Désambiguation | **Akinator** multi-facette par entropie (Python pur) | ✅ |
 | Extraction photo + validateur | **VLM Gemma** via OpenRouter (extraction attributs + match visuel) | ✅ |
-| Classifieurs benchmark | k-NN, SVM, MLP, TF-IDF+LinSVC, Fusion — garde-fou de catégorie | ✅ |
+| Classifieurs benchmark | k-NN, SVM, MLP, TF-IDF+LinSVC, Fusion - garde-fou de catégorie | ✅ |
 | LLM rédacteur ancré | **Gemma** via OpenRouter + RAG sur fiche catalogue réelle | ✅ |
 | Pricing transparent | cascade algorithmique déterministe L1→L1.5→L2→L3→L4 + garde-fous anti sous-évaluation / cohérence / outlier + conversion USD→EUR | ✅ |
 | Explainability | SHAP + t-SNE + 12 Model Cards | ✅ |
@@ -152,8 +152,8 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 | Infra | **Docker Compose** (14 services) + Traefik + MinIO + manifests **k8s** (kind) | ✅ |
 | Observabilité | **structlog** JSON + **Prometheus** + **Grafana** + Evidently (drift) | ✅ |
 | CI/CD | **GitHub Actions** (lint, tests, pip-audit, docker-build) + **GHCR** semver | ✅ |
-| Indexation vision catalogue | SigLIP multi-vues — **conditionnée** à un test de mesure d'une nuit | ⏸️ |
-| Fine-tuning VLM | QLoRA — **conditionnel** à un gain mesuré > +0.05 F1 | ⏸️ |
+| Indexation vision catalogue | SigLIP multi-vues - **conditionnée** à un test de mesure d'une nuit | ⏸️ |
+| Fine-tuning VLM | QLoRA - **conditionnel** à un gain mesuré > +0.05 F1 | ⏸️ |
 
 ---
 
@@ -167,7 +167,7 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 | Seuil hors-distribution (mode dégradé) | 0.600 (P=0.953 / R=0.988) | `reports/05_retrieval/` |
 | Calibration (ECE meilleur modèle) | 0.0013 | `reports/04_classifiers_bench/` |
 
-**Qualité de fiche** — mesure reproductible sur le **panel réel de 94 produits** (`data/photos_eval/`, photo seule sans précisions, noms de dossiers = vérité-terrain) :
+**Qualité de fiche** - mesure reproductible sur le **panel réel de 94 produits** (`data/photos_eval/`, photo seule sans précisions, noms de dossiers = vérité-terrain) :
 
 | Métrique | Valeur | Source |
 |---|---|---|
@@ -178,7 +178,7 @@ Les tests **ne dépendent pas des artefacts lourds** : ils valident la logique (
 | Question discriminante posée | **11 %** | `reports/09_fiche_quality/` |
 | Niveaux de prix utilisés | **L1 = 42**, **L1.5 = 51** | `reports/09_fiche_quality/` |
 
-> Toutes les comparaisons de modèles respectent deux règles de méthode : au moins trois modèles benchmarkés et tout entraînement tracé dans MLflow. Les biais des preuves de concept (espace de recherche réduit, conditions d'évaluation contrôlées) sont **documentés explicitement** dans les rapports, sans chiffre choisi pour faire bonne figure. La mesure de fiche remplace l'anecdote par un chiffre défendable, mesuré sur de **vraies sorties** : 9 produits sur 94 ne sont pas identifiés, et chacun est **expliqué** (perception du modèle exact limitée sur photo — RTX 4080 Super lue comme une 3080, Xbox Series S, casque Sennheiser Momentum confondu avec un Philips ; produit réellement absent du catalogue, comme un SSD ou une station d'accueil ; ou nom de dossier ambigu, artefact de mesure).
+> Toutes les comparaisons de modèles respectent deux règles de méthode : au moins trois modèles benchmarkés et tout entraînement tracé dans MLflow. Les biais des preuves de concept (espace de recherche réduit, conditions d'évaluation contrôlées) sont **documentés explicitement** dans les rapports, sans chiffre choisi pour faire bonne figure. La mesure de fiche remplace l'anecdote par un chiffre défendable, mesuré sur de **vraies sorties** : 9 produits sur 94 ne sont pas identifiés, et chacun est **expliqué** (perception du modèle exact limitée sur photo - RTX 4080 Super lue comme une 3080, Xbox Series S, casque Sennheiser Momentum confondu avec un Philips ; produit réellement absent du catalogue, comme un SSD ou une station d'accueil ; ou nom de dossier ambigu, artefact de mesure).
 
 ---
 
@@ -222,13 +222,13 @@ rakuten/
 
 ---
 
-## MLOps — le cycle de vie, pas juste un modèle
+## MLOps - le cycle de vie, pas juste un modèle
 
 - **Tracking** : chaque entraînement loggé dans MLflow (params / métriques / artefacts).
-- **Registry** : le modèle servi est *registered* avec alias `@Production` — promotion par **gate champion/challenger** (`make promote-gate`).
+- **Registry** : le modèle servi est *registered* avec alias `@Production` - promotion par **gate champion/challenger** (`make promote-gate`).
 - **Boucle fermée** : DAG Airflow `rakuten_retrain` (`make airflow-trigger`) → réentraînement → comparaison → promotion conditionnelle (de vrais retrains ont produit des versions v4/v5 en Registry).
 - **Drift** : rapports Evidently (`make drift-check`).
-- **Observabilité** : 4 golden signals Prometheus + dashboards Grafana, logs structurés JSON corrélés par `request_id`. **Logs métier inspectables** : `identify_done` (statut, candidats, score top-1, catégorie fine, passe raisonnée, réordonnancement, produit absent du catalogue, ancre prix, question, complétude, timings extraction/raisonnement) et `price_done` (niveau de cascade réellement utilisé, méthode, prix suggéré, présence d'une ancre IA) — on LIT ce que fait le pipeline (taux de produits hors catalogue, usage de L1.5, où part la latence), rien de décoratif.
+- **Observabilité** : 4 golden signals Prometheus + dashboards Grafana, logs structurés JSON corrélés par `request_id`. **Logs métier inspectables** : `identify_done` (statut, candidats, score top-1, catégorie fine, passe raisonnée, réordonnancement, produit absent du catalogue, ancre prix, question, complétude, timings extraction/raisonnement) et `price_done` (niveau de cascade réellement utilisé, méthode, prix suggéré, présence d'une ancre IA) - on LIT ce que fait le pipeline (taux de produits hors catalogue, usage de L1.5, où part la latence), rien de décoratif.
 - **Livraison** : images Docker construites en CI, publiées sur GHCR avec tag semver.
 
 ---
@@ -270,13 +270,15 @@ Un projet honnête nomme ce qu'il n'a *pas* fait et pourquoi :
 On les nomme telles quelles plutôt que de survendre :
 
 - **Photo seule, modèle exact** : la perception du **modèle précis** est limitée pour un produit dont le marquage n'est **pas visible** sur les photos envoyées (ex. un Sennheiser Momentum 3 dont le logo est sur l'étui). Le modèle peut alors choisir un sosie avec aplomb. C'est **mitigé** par trois garde-fous : (a) la **priorité au texte vendeur** (la métadonnée fixe le produit quand il EST au catalogue), (b) le bandeau **« Modèle à confirmer »**, (c) le bouton **« Ce n'est pas le bon ? »** sur la fiche.
-- **Sous-déclenchement du signalement « absent du catalogue »** : le modèle rapide colle parfois à un sosie d'une autre génération au lieu de signaler l'absence (iPhone 14 lu comme un 13, RTX 4080 comme une 3080). Un modèle jugé plus fort ferait mieux — option **non activée par défaut**.
+- **Sous-déclenchement du signalement « absent du catalogue »** : le modèle rapide colle parfois à un sosie d'une autre génération au lieu de signaler l'absence (iPhone 14 lu comme un 13, RTX 4080 comme une 3080). Un modèle jugé plus fort ferait mieux - option **non activée par défaut**.
 - **Garde-fou anti sous-évaluation surtout défensif** : c'est le niveau **L1.5** (ancre prix neuf estimée par IA) qui fait le vrai travail face aux médianes de voisins polluées par accessoires, coques et lots ; le plancher anti sous-évaluation n'est qu'un filet de sécurité.
 
-> Important : l'ancre prix L1.5 est une **estimation** explicitement étiquetée « Prix neuf estimé par IA », jamais affirmée comme un fait catalogue ; la **décote** appliquée (état + dépréciation d'âge) reste **100 % déterministe et transparente** — « pas de pricing ML opaque » demeure vrai.
+> Important : l'ancre prix L1.5 est une **estimation** explicitement étiquetée « Prix neuf estimé par IA », jamais affirmée comme un fait catalogue ; la **décote** appliquée (état + dépréciation d'âge) reste **100 % déterministe et transparente** - « pas de pricing ML opaque » demeure vrai.
 
 ---
 
 ## Licence
 
-MIT
+MIT (voir [LICENSE](LICENSE)). Le jeu de données Amazon Reviews 2023 (McAuley Lab) n'est **pas
+redistribué** dans ce dépôt : il est retéléchargé depuis sa source et reste soumis à ses propres
+conditions d'utilisation (usage académique).

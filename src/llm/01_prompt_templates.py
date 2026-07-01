@@ -1,4 +1,4 @@
-"""Cycle 6.1 — Prompt templates LLM rédacteur grounded.
+"""Cycle 6.1 - Prompt templates LLM rédacteur grounded.
 
 Templates Jinja2 pour le LLM rédacteur (llm-writer) : génération titre annonce +
 description en français pour vendeur particulier sur le périmètre 4 cat
@@ -41,7 +41,7 @@ Phrases tirées de vraies reviews acheteurs (à utiliser comme inspiration de to
 Contraintes :
 - Français impeccable, ton vendeur particulier (pas marketing pro)
 - Inclure marque + modèle + caractéristique distinctive si pertinente
-- Si tu mentionnes l'état, utilise EXACTEMENT « {seller_condition} » — jamais un autre
+- Si tu mentionnes l'état, utilise EXACTEMENT « {seller_condition} » - jamais un autre
 - Pas d'émojis, pas de MAJUSCULES INTÉGRALES
 - Pas d'invention de spécifications absentes du contexte ci-dessus
 

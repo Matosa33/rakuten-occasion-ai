@@ -1,4 +1,4 @@
-"""Étape 1/5 du cleaning — Enrichir meta avec agrégats de ses reviews.
+"""Étape 1/5 du cleaning - Enrichir meta avec agrégats de ses reviews.
 
 Pour chaque produit (`parent_asin`) du périmètre actif (15 cat D-008), on
 agrège les reviews qui le concernent en features descriptives, puis on
@@ -10,7 +10,7 @@ Pourquoi product-level (vs review-level)
 Les 8 modèles ML internes (knn-faiss à pricing-cascade) du projet sont **product-level** :
 classifier la catégorie d'un produit, retrouver un produit dans le
 catalogue (FAISS), prédire son prix. La granularité review-level n'est
-utile qu'au RAG (Cycle 6) qui aura besoin du texte des reviews — ce
+utile qu'au RAG (Cycle 6) qui aura besoin du texte des reviews - ce
 besoin est servi séparément par `data/raw/full/reviews/` (déjà sur
 disque) + un index split-aware produit en étape 06.
 

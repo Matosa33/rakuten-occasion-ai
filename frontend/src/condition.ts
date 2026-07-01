@@ -1,4 +1,4 @@
-// Cycle 17.3 (D-035) — pré-qualification de l'état : les « bābā » d'une annonce
+// Cycle 17.3 (D-035) - pré-qualification de l'état : les « bābā » d'une annonce
 // parfaite. Checklist UNIVERSELLE + questions SPÉCIFIQUES par type de produit
 // (mapping statique curé, décision humaine 2026-06-11).
 //
@@ -32,7 +32,7 @@ export interface ChecklistQuestion {
   options: string[]; // la 1ʳᵉ option = la plus favorable
 }
 
-/** Socle universel — vaut pour tout objet d'occasion. */
+/** Socle universel - vaut pour tout objet d'occasion. */
 export const UNIVERSAL_CHECKLIST: ChecklistQuestion[] = [
   { key: "works", label: "Fonctionne parfaitement ?", options: ["Oui", "Non testé", "Non / panne"] },
   { key: "box", label: "Boîte d'origine ?", options: ["Oui", "Non"] },
@@ -40,8 +40,8 @@ export const UNIVERSAL_CHECKLIST: ChecklistQuestion[] = [
   { key: "invoice", label: "Facture / preuve d'achat ?", options: ["Oui", "Non"] },
 ];
 
-/** Questions spécifiques par type (2 max — vitesse avant exhaustivité).
- * 17.4b : clés PRÉFIXÉES par le type — bug jugé par l'humain : la clé `battery`
+/** Questions spécifiques par type (2 max - vitesse avant exhaustivité).
+ * 17.4b : clés PRÉFIXÉES par le type - bug jugé par l'humain : la clé `battery`
  * partagée laptop/tool écrasait le label affiché (« Batterie(s) incluse(s) :
  * Bonne » au lieu d'« Autonomie batterie : Bonne »). */
 export const KIND_CHECKLIST: Record<ProductKind, ChecklistQuestion[]> = {
@@ -69,7 +69,7 @@ export const KIND_CHECKLIST: Record<ProductKind, ChecklistQuestion[]> = {
 };
 
 // Labels SANS la ponctuation de question (17.4b : « Fonctionne parfaitement ? : Oui »
-// devenait illisible dans l'annonce — on strip le « ? » à l'affichage).
+// devenait illisible dans l'annonce - on strip le « ? » à l'affichage).
 const CHECKLIST_LABELS: Record<string, string> = Object.fromEntries(
   [...UNIVERSAL_CHECKLIST, ...Object.values(KIND_CHECKLIST).flat()].map((q) => [
     q.key,

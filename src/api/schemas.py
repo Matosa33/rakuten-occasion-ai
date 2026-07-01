@@ -1,4 +1,4 @@
-"""Cycle 9.2 — Pydantic v2 schemas pour l'API FastAPI.
+"""Cycle 9.2 - Pydantic v2 schemas pour l'API FastAPI.
 
 Tous les contrats request/response du pipeline `/identify`, `/price`,
 `/describe`, `/observe` sont définis ici. Source unique de vérité.
@@ -40,7 +40,7 @@ class ConfidenceLevelEnum(StrEnum):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /auth/login — JWT auth stub démo (Cycle 15.1, D-032)
+# /auth/login - JWT auth stub démo (Cycle 15.1, D-032)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -54,7 +54,7 @@ class TokenResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /upload — photos vendeur (Cycle 17.1, D-035)
+# /upload - photos vendeur (Cycle 17.1, D-035)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -66,7 +66,7 @@ class UploadResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /identify — pipeline complet (retrieval + VLM validate + Akinator si ambig)
+# /identify - pipeline complet (retrieval + VLM validate + Akinator si ambig)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -129,7 +129,9 @@ class AssembledListingOut(BaseModel):
 
     level: str  # N1_catalog | N2_category_photo | N3_observed
     fields: list[ListingFieldOut] = Field(default_factory=list)
-    completeness: float = Field(default=0.0, description="part des facettes attendues qui sont remplies")
+    completeness: float = Field(
+        default=0.0, description="part des facettes attendues qui sont remplies"
+    )
     missing: list[str] = Field(default_factory=list, description="facettes attendues non remplies")
 
 
@@ -184,7 +186,7 @@ class IdentifyResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /price — pricing transparent (cascade L1-L4)
+# /price - pricing transparent (cascade L1-L4)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -204,7 +206,10 @@ class PriceRequest(BaseModel):
     # Cycle 36 : ancre prix NEUF estimée par IA (issue de /identify.reasoned, repassée par le front)
     # → niveau L1.5. None = pas d'ancre (cascade inchangée).
     reference_new_price_usd: float | None = Field(
-        None, gt=0, le=1_000_000, allow_inf_nan=False,
+        None,
+        gt=0,
+        le=1_000_000,
+        allow_inf_nan=False,
         description="Prix neuf de référence estimé par IA (USD) → L1.5",
     )
     reference_new_confidence: float = Field(0.0, ge=0.0, le=1.0)
@@ -221,7 +226,7 @@ class PriceResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /describe — LLM rédacteur grounded (RAG)
+# /describe - LLM rédacteur grounded (RAG)
 # ─────────────────────────────────────────────────────────────────────────────
 
 

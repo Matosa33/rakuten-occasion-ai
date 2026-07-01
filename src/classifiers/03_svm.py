@@ -1,4 +1,4 @@
-"""svm-embed — LinearSVC + Platt sur embeddings text (Cycle 3.1 / C12).
+"""svm-embed - LinearSVC + Platt sur embeddings text (Cycle 3.1 / C12).
 
 LinearSVC sur les embeddings text Arctic (1024 dim) avec calibration Platt
 pour avoir des probabilités. Comparable à tfidf-svm (TF-IDF + LinearSVC) mais
@@ -121,6 +121,9 @@ def main() -> None:
         ),
         cv=CALIBRATION_CV,
         method="sigmoid",
+        # Plis de calibration en parallèle (résultats identiques : mêmes plis, même seed ;
+        # joblib memmappe X → pas de duplication mémoire du gros tableau d'embeddings).
+        n_jobs=CALIBRATION_CV,
     )
     clf.fit(X_train, y_train)
     duration_train = time.time() - t_train
@@ -198,7 +201,9 @@ def main() -> None:
         n_train=int(X_train.shape[0]),
         duration_train_sec=duration_train,
         cycle="3",
-        register=True,
+        # Tracé dans MLflow (métriques + commit) mais HORS registre : seul le challenger
+        # officiel (tfidf-svm) y est versionné - un « latest » déterministe pour la gate.
+        register=False,
     )
 
     log.info("\nM2 LinearSVC OK.")

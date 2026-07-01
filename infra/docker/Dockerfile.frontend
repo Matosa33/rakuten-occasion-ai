@@ -1,11 +1,11 @@
-# Image frontend Rakuten — SPA React + Vite, servie par nginx (Cycle 13.1).
+# Image frontend Rakuten - SPA React + Vite, servie par nginx (Cycle 13.1).
 # Multi-stage : Node compile la SPA → nginx sert les fichiers statiques + proxy /api.
 #
 # Build depuis la racine du repo :
 #   docker build -f infra/docker/Dockerfile.frontend -t rakuten/frontend:dev .
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Stage 1 — builder : `npm ci` + `vite build` → dossier dist/ optimisé.
+# Stage 1 - builder : `npm ci` + `vite build` → dossier dist/ optimisé.
 # ─────────────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -20,7 +20,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Stage 2 — runtime : nginx alpine, sert dist/ + SPA fallback + proxy /api.
+# Stage 2 - runtime : nginx alpine, sert dist/ + SPA fallback + proxy /api.
 # ─────────────────────────────────────────────────────────────────────────────
 FROM nginx:1.27-alpine AS runtime
 

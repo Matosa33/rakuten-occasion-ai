@@ -1,4 +1,4 @@
-"""Identification raisonnée (Cycle 36) — le LLM/VLM JUGE le top-15 du retriever.
+"""Identification raisonnée (Cycle 36) - le LLM/VLM JUGE le top-15 du retriever.
 
 Le retriever apporte la connaissance (top-15 fiches réelles), le VLM apporte le jugement :
 à partir de la/des photo(s) vendeur + la métadonnée + les 15 fiches candidates RÉSUMÉES (texte),
@@ -48,8 +48,22 @@ TITLE_TRUNC = 140
 
 # Mots-clés d'accessoire/bundle : leurs prix NE SONT PAS le prix du produit → exclus de l'ancre.
 ACCESSORY_KEYWORDS = (
-    "case", "cover", "screen protector", "charger", "cable", "strap", "band", "mount",
-    "skin", "sleeve", "adapter", "bundle", "lot", "pack", "accessory", "kit",
+    "case",
+    "cover",
+    "screen protector",
+    "charger",
+    "cable",
+    "strap",
+    "band",
+    "mount",
+    "skin",
+    "sleeve",
+    "adapter",
+    "bundle",
+    "lot",
+    "pack",
+    "accessory",
+    "kit",
 )
 
 IDENTIFY_PROMPT = (
@@ -59,35 +73,35 @@ IDENTIFY_PROMPT = (
     "STRICT GROUNDING RULES (zero invention):\n"
     "- Decide ONLY from the candidate records below + what is visible in the seller photo(s) + the "
     "observed attributes. Do NOT use outside knowledge to assert facts.\n"
-    "- Every facet you output MUST cite its source: an integer candidate index, or \"observed\" "
-    "(seen on the photo), or \"analogy\" (inferred from comparable candidates when the exact "
+    '- Every facet you output MUST cite its source: an integer candidate index, or "observed" '
+    '(seen on the photo), or "analogy" (inferred from comparable candidates when the exact '
     "product is missing).\n"
     "- For the REFERENCE NEW PRICE: ALWAYS output your best estimate of the product-only NEW price "
-    "in USD (reference_new_price_usd) — NEVER null or 0 once you can name the family. Anchor it on "
+    "in USD (reference_new_price_usd) - NEVER null or 0 once you can name the family. Anchor it on "
     "the new/clean price_usd of the REAL product candidates and list those indices in "
-    "\"price_anchor_evidence\"; if no candidate has a clean price, estimate from the closest "
+    '"price_anchor_evidence"; if no candidate has a clean price, estimate from the closest '
     "comparable product and STILL output the price. Asking a question does NOT exempt you from "
     "giving your best price now.\n"
     "- EXCLUDE from the price anchor any candidate that is an accessory or bundle (title/leaf with: "
     "case, cover, screen protector, charger, cable, strap, band, mount, skin, sleeve, adapter, "
     "bundle, lot, pack, accessory, kit). Their prices are NOT the product price.\n"
-    "- CATALOG MISS: if NONE of the candidates is the actual product — INCLUDING when they are all a "
+    "- CATALOG MISS: if NONE of the candidates is the actual product - INCLUDING when they are all a "
     "DIFFERENT model, generation or variant than what you SEE (e.g. you see 'RTX 4080' but every "
-    "candidate is 'RTX 3080'; or you see 'iPhone 14' but all are 'iPhone 13') — then set "
-    "\"catalog_miss\": true, set \"chosen_parent_asin\" to \"\", set \"product_family\" to the "
+    "candidate is 'RTX 3080'; or you see 'iPhone 14' but all are 'iPhone 13') - then set "
+    '"catalog_miss": true, set "chosen_parent_asin" to "", set "product_family" to the '
     "product you ACTUALLY SEE (not the closest candidate), and estimate reference_new_price_usd BY "
     "ANALOGY: take the comparable candidates' prices and ADJUST for the difference (a newer/higher "
     "model is worth MORE, an older/lower one LESS). Still fill price_anchor_evidence with the analog "
     "indices.\n"
     "- If a single discriminating facet (capacity, color, exact model variant) would change the "
-    "family or the price, set \"ask_question\": true and put ONE short buyer-facing question in "
-    "\"facet_question\".\n"
+    'family or the price, set "ask_question": true and put ONE short buyer-facing question in '
+    '"facet_question".\n'
     "- GROUND TRUTH: the seller's stated model and any text you can READ on the item OVERRIDE the "
     "candidates. If they name a model (e.g. 'iPhone 14', 'RTX 4080') that NO candidate matches, it "
-    "IS a catalog miss — never silently downgrade to a look-alike candidate of another generation.\n"
-    "- FACETS: be COMPREHENSIVE — extract every relevant product spec you can ground (e.g. brand, "
+    "IS a catalog miss - never silently downgrade to a look-alike candidate of another generation.\n"
+    "- FACETS: be COMPREHENSIVE - extract every relevant product spec you can ground (e.g. brand, "
     "model, capacity, color, size, connectivity, waterproof, battery, power, material, certification, "
-    "form_factor). EACH facet MUST cite its source (a candidate index, \"observed\", or \"analogy\"). "
+    'form_factor). EACH facet MUST cite its source (a candidate index, "observed", or "analogy"). '
     "Do NOT invent a spec you cannot ground in a candidate or see on the photo.\n\n"
     "CANDIDATES (index | summary):\n{candidate_lines}\n\n"
     "OBSERVED ON PHOTO (VLM) + SELLER TEXT:\n{observed_block}\n\n"
@@ -180,7 +194,7 @@ def _clamp01(x: object) -> float:
 
 
 def _loads_tolerant(raw: str) -> object:
-    """Parse JSON tolérant (JSON pur, fences markdown, 1er objet {...}) — calque sur _parse VLM."""
+    """Parse JSON tolérant (JSON pur, fences markdown, 1er objet {...}) - calque sur _parse VLM."""
     candidates = [raw]
     if "```" in raw:
         candidates.insert(0, raw.split("```")[1].removeprefix("json").strip())
@@ -217,7 +231,7 @@ def _parse(raw: str, candidates: list[Candidate]) -> ReasonedIdentification | No
         chosen = ""  # légitime : le LLM affirme qu'aucun candidat n'est le produit
     else:
         # ASIN halluciné (hors catalogue) SANS catalog-miss déclaré : on retombe sur le top-1
-        # retrieval (R19) MAIS on NE recopie PAS la confiance — le LLM n'a pas endossé ce
+        # retrieval (R19) MAIS on NE recopie PAS la confiance - le LLM n'a pas endossé ce
         # candidat, donc en aval match_reliable ne doit pas le traiter comme un fait certain.
         chosen = candidates[0].parent_asin if candidates else ""
         family_conf = 0.0
@@ -280,7 +294,7 @@ def reason_identify(
     observed: dict[str, str] | None = None,
     seller_text: str = "",
 ) -> ReasonedIdentification | None:
-    """Passe d'identification raisonnée. None (best-effort) si indisponible/échec — JAMAIS bloquant.
+    """Passe d'identification raisonnée. None (best-effort) si indisponible/échec - JAMAIS bloquant.
 
     Args:
         user_photo_paths: photos vendeur locales (1-2 envoyées en data-url).
@@ -317,6 +331,6 @@ def reason_identify(
         if ri is None:
             _log.warning("reasoned_identify_parse_failed", raw_preview=raw[:120])
         return ri
-    except Exception as e:  # noqa: BLE001 — best-effort, ne doit JAMAIS casser /identify (R15)
+    except Exception as e:  # noqa: BLE001 - best-effort, ne doit JAMAIS casser /identify (R15)
         _log.warning("reasoned_identify_failed", error=str(e))
         return None

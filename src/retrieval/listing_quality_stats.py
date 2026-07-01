@@ -1,7 +1,7 @@
 """Stats appariées du bench qualité de fiche (Cycle 34.6, protocole D-042).
 
 Design **within-product** → tests APPARIÉS (chaque produit passe toutes les conditions). On fournit :
-- **Page's L** (monotonie ORDONNÉE des conditions de richesse) — `scipy.stats.page_trend_test`.
+- **Page's L** (monotonie ORDONNÉE des conditions de richesse) - `scipy.stats.page_trend_test`.
 - **Wilcoxon apparié** (comparaison de 2 conditions) + différence médiane.
 - **TOST** (équivalence, pour le NON-effet prédit multi-photo≈multi-photo-meta) avec SESOI métier.
 - **Bootstrap CLUSTERISÉ par famille de produit** (gère les doublons iPhone14×2, PS4×… → N_eff).

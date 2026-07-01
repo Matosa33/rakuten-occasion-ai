@@ -127,7 +127,7 @@ l'entrée par photo est pleinement active.
    d'afficher une mauvaise correspondance (voir la fonction « Garde-fous contre l'inconnu »).
 
 Mesure réelle de bout en bout. Plutôt que de se fier à des impressions, on a mesuré ce parcours
-sur un panel de 94 vrais produits photographiés (le nom du dossier de chaque produit servant de
+sur un panel de 93 vrais produits photographiés (le nom du dossier de chaque produit servant de
 vérité de référence), à partir de la photo seule, sans précisions texte. Le taux d'identification
 atteint 90,3 % (on considère un produit identifié quand au moins la moitié des mots clés de son
 nom se retrouvent dans la famille jugée par l'IA et dans le titre du premier candidat), avec un

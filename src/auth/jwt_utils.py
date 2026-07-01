@@ -16,7 +16,7 @@ ALGORITHM = "HS256"
 
 # Lecture lazy de l'env : permet aux tests de monkeypatch avant `create_access_token()`
 # (sinon le secret serait figé au moment de l'import).
-_DEFAULT_DEV_SECRET = "dev-secret-change-me-in-prod"  # noqa: S105 — stub démo, jamais en .env prod (R2)
+_DEFAULT_DEV_SECRET = "dev-secret-change-me-in-prod"  # noqa: S105 - stub démo, jamais en .env prod (R2)
 _DEFAULT_EXPIRE_MINUTES = 60
 
 
@@ -35,7 +35,7 @@ def _secret() -> str:
 
         get_logger(__name__).warning(
             "jwt_secret_default_in_use",
-            hint="JWT_SECRET non défini — tokens signés avec le secret DEV committé. "
+            hint="JWT_SECRET non défini - tokens signés avec le secret DEV committé. "
             "Inacceptable hors développement local.",
         )
     return secret

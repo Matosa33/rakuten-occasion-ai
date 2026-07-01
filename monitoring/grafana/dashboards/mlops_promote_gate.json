@@ -1,6 +1,6 @@
 {
   "uid": "rakuten-mlops-promote",
-  "title": "Rakuten — MLOps Promote Gate (Champion / Challenger)",
+  "title": "Rakuten - MLOps Promote Gate (Champion / Challenger)",
   "tags": ["rakuten", "mlops", "promote", "registry"],
   "timezone": "browser",
   "schemaVersion": 39,
@@ -23,7 +23,7 @@
         "defaults": {
           "mappings": [
             {"type": "value", "options": {"1": {"text": "ACTIVE", "color": "blue"}}},
-            {"type": "value", "options": {"0": {"text": "—", "color": "text"}}}
+            {"type": "value", "options": {"0": {"text": "-", "color": "text"}}}
           ],
           "color": {"mode": "thresholds"},
           "thresholds": {

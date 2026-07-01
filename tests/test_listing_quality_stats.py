@@ -1,4 +1,4 @@
-"""Tests des stats appariées (Cycle 34.6) — fonctions pures sur données synthétiques."""
+"""Tests des stats appariées (Cycle 34.6) - fonctions pures sur données synthétiques."""
 
 from __future__ import annotations
 

@@ -37,8 +37,8 @@ from PIL import Image, ImageChops
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-import src.config  # noqa: E402, F401 — charge .env (OPENROUTER_API_KEY)
-from src.config import CATEGORIES  # noqa: E402 — source de vérité des 4 macros
+import src.config  # noqa: E402, F401 - charge .env (OPENROUTER_API_KEY)
+from src.config import CATEGORIES  # noqa: E402 - source de vérité des 4 macros
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
@@ -245,7 +245,7 @@ def main() -> None:
     for p in todo:
         try:
             log.info("✓ %s", ingest_one(p))
-        except Exception as e:  # noqa: BLE001 — un PDF cassé ne doit pas arrêter le lot
+        except Exception as e:  # noqa: BLE001 - un PDF cassé ne doit pas arrêter le lot
             log.warning("✗ %s : %s", p.name, e)
 
 

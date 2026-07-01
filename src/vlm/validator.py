@@ -1,4 +1,4 @@
-"""VLM validateur top-1 (F0.4, Cycle 17.2, D-035 — spécifié dès D-009).
+"""VLM validateur top-1 (F0.4, Cycle 17.2, D-035 - spécifié dès D-009).
 
 « La photo du vendeur montre-t-elle bien le candidat top-1 ? » Le VLM compare
 les photos UTILISATEUR à l'image CATALOGUE du candidat → `{match, confidence,
@@ -6,7 +6,7 @@ reason}`. Garde-fou anti-hallucination : un badge de confiance visuelle dans
 l'UI, jamais une décision automatique (l'humain valide, R19).
 
 Dégradation propre : toute erreur (pas de clé, VLM down, image catalogue
-morte) → `None` — la validation est un BONUS, jamais un bloqueur du flow.
+morte) → `None` - la validation est un BONUS, jamais un bloqueur du flow.
 """
 
 from __future__ import annotations
@@ -97,13 +97,13 @@ def validate_top1(
         msg = r.json()["choices"][0]["message"]
         raw = (msg.get("content") or msg.get("reasoning") or "").strip()
         return _parse(raw) if raw else None
-    except Exception as e:  # noqa: BLE001 — la validation est best-effort (R15)
+    except Exception as e:  # noqa: BLE001 - la validation est best-effort (R15)
         _log.warning("vlm_validation_failed", error=str(e))
         return None
 
 
 def _parse(raw: str) -> VLMValidation | None:
-    """Parse tolérant (JSON pur / fences / noyé) — None si inexploitable."""
+    """Parse tolérant (JSON pur / fences / noyé) - None si inexploitable."""
     candidates = [raw]
     if "```" in raw:
         candidates.insert(0, raw.split("```")[1].removeprefix("json").strip())

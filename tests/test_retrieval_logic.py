@@ -1,4 +1,4 @@
-"""Tests de la logique retrieval pure (Cycle 15.3, D-034 — modules aveugles audit 15.0).
+"""Tests de la logique retrieval pure (Cycle 15.3, D-034 - modules aveugles audit 15.0).
 
 Données synthétiques uniquement (aucun artefact lourd) : OOD guardrails 3 niveaux
 (D-012/D-017), fusion RRF (Cormack 2009), Akinator backend (entropie discriminante).
@@ -87,7 +87,7 @@ def test_akinator_ambiguite_et_clarification_seuils():
 
 def test_attribut_identique_partout_entropie_zero():
     """Un attribut où tous les candidats partagent la valeur ne discrimine RIEN
-    (entropie 0) — il ne doit jamais être proposé comme observation."""
+    (entropie 0) - il ne doit jamais être proposé comme observation."""
     candidates = [
         {"brand": "Apple", "color": "Black"},
         {"brand": "Apple", "color": "Red"},

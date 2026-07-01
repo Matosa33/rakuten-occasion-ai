@@ -1,4 +1,4 @@
-"""Tests Pandera schemas (sous-todo 1.4) — vérifications structurelles + sample.
+"""Tests Pandera schemas (sous-todo 1.4) - vérifications structurelles + sample.
 
 Stratégie hybride :
 - Tests sans données (rapides, toujours actifs en CI) :

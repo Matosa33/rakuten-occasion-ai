@@ -1,4 +1,4 @@
-"""Cycle 6.2 — RAG grounding sur reviews du produit identifié.
+"""Cycle 6.2 - RAG grounding sur reviews du produit identifié.
 
 Pour chaque produit identifié par Cycle 4 (FAISS top-1 + VLM validateur
 Cycle 5), on récupère les **N phrases vendeur les plus utiles** dans
@@ -12,7 +12,7 @@ Pipeline RAG (Lewis 2020)
    pas duplicate, vote_up > seuil).
 2. **Augment** : injecter ces phrases dans le prompt template comme
    `grounding_sentences`.
-3. **Generate** : appel LLM (llm-writer = Gemini, Llama, OpenRouter — stub mock
+3. **Generate** : appel LLM (llm-writer = Gemini, Llama, OpenRouter - stub mock
    ici, vraie impl en Cycle 9).
 
 Évaluation
@@ -118,7 +118,7 @@ def extract_useful_sentences(
     - Coupe les `text` en phrases (split sur `.`, `!`, `?`)
     - Filtre par longueur (≥ MIN_SENTENCE_CHARS)
     - Filtre les phrases sans verbe (heuristique : ≥ 1 mot terminant en
-      `e`, `er`, `é`, `it`, `s`, `ont` — proxy verbe français/anglais)
+      `e`, `er`, `é`, `it`, `s`, `ont` - proxy verbe français/anglais)
     - Trie par longueur décroissante, prend top_n
     - Déduplique (lower + strip)
 
@@ -218,7 +218,7 @@ def generate_listing(
 
 
 def main() -> None:
-    log.info("=== Cycle 6.2 — RAG grounded writer (mock LLM pour pipeline) ===")
+    log.info("=== Cycle 6.2 - RAG grounded writer (mock LLM pour pipeline) ===")
     REPORTS_RAG.mkdir(parents=True, exist_ok=True)
 
     val_products_path = DATA_PROCESSED_PRODUCTS / "val.parquet"

@@ -16,7 +16,7 @@ signals C14.2) et éviter tout conflit futur. Voir D-031 pour la liste complète
 Dégradation propre
 ------------------
 Si le Pushgateway n'est pas joignable (smoke standalone, env. soutenance sans
-docker compose up), on log et on retourne (R15) — JAMAIS faire échouer la
+docker compose up), on log et on retourne (R15) - JAMAIS faire échouer la
 batch métier à cause d'un push obs raté.
 """
 
@@ -163,7 +163,7 @@ def _push(stage: str, registry: CollectorRegistry) -> bool:
         )
         _log.info("pushgateway_push_ok", stage=stage, url=PUSHGATEWAY_URL)
         return True
-    except Exception as e:  # noqa: BLE001 — robust to network / DNS issues
+    except Exception as e:  # noqa: BLE001 - robust to network / DNS issues
         _log.warning(
             "pushgateway_push_failed",
             stage=stage,

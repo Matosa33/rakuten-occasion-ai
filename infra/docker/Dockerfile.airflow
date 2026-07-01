@@ -1,4 +1,4 @@
-# Image Airflow + projet Rakuten — orchestration de la boucle de ré-entraînement.
+# Image Airflow + projet Rakuten - orchestration de la boucle de ré-entraînement.
 # Cf. ADR D-022 : l'orchestrateur n'exécute PAS le GPU.
 # Extra [train] = CPU strict (sklearn + polars + mlflow), pas de torch.
 #

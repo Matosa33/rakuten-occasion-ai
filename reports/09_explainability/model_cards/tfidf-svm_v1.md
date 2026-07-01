@@ -1,4 +1,4 @@
-# Model Card — tfidf-svm_v1
+# Model Card - tfidf-svm_v1
 
 **Type** : TF-IDF (word 1-2gram + char 3-5gram) + LinearSVC + Platt
 **Tâche** : Classification multi-catégories (4 catégories)
@@ -24,8 +24,8 @@
 - **top_1_accuracy** : 0.9503
 - **top_3_accuracy** : 0.9985
 - **ece** : 0.0092
-- **duration_eval_sec** : 110.7000
+- **duration_eval_sec** : 106.25 (test)
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/tfidf-svm_v1.json`
+`reports/04_classifiers_bench/m5_tfidf_linsvc_v1.json`

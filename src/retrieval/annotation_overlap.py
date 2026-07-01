@@ -1,4 +1,4 @@
-"""Recouvrement texte-vendeur ↔ cible d'annotation (Cycle 34.3 — garde-fou anti-fuite, D-042).
+"""Recouvrement texte-vendeur ↔ cible d'annotation (Cycle 34.3 - garde-fou anti-fuite, D-042).
 
 `seller_metadata` (entrée légitime de production) et `true_name` (cible) proviennent de la MÊME
 annonce → recouvrement possible. Si le texte vendeur **contient déjà** le nom du produit, un gain

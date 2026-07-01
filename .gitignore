@@ -57,9 +57,9 @@ data/raw/*.jsonl
 data/raw/*.json
 data/raw/cache/
 data/raw/full/
-# Photos vendeur uploadées — jamais committées (vie privée).
+# Photos vendeur uploadées - jamais committées (vie privée).
 data/uploads/
-# Dataset photos d'éval — vraies photos = privé, jamais committées.
+# Dataset photos d'éval - vraies photos = privé, jamais committées.
 data/photos_eval/*
 !data/photos_eval/.gitkeep
 data/processed/*.parquet
@@ -85,7 +85,7 @@ models/
 # === HuggingFace cache (téléchargements lourds, hors data/raw/cache) ===
 ~/.cache/huggingface/
 
-# === Audit reports — on garde les .md commit (synthèse humaine), mais pas
+# === Audit reports - on garde les .md commit (synthèse humaine), mais pas
 # les artefacts lourds régénérables. *_inventory.json reste commité pour
 # figer la trace des décisions.
 reports/**/figures/*.png
@@ -151,21 +151,20 @@ catboost_info/
 *.sqlite
 *.sqlite3
 
-# === Interne (non public, gardé en local) ===
+# === Sorties du retrain automatisé (régénérées par le DAG Airflow) ===
+reports/04_classifiers_bench/tfidf-svm_v1.json
+reports/04_classifiers_bench/svm-embed_v1.json
+reports/04_classifiers_bench/mlp-embed_v1.json
+
+# === Notes et documents de travail locaux (non versionnés) ===
 BRAIN/
 docs/soutenance/
 docs/formation/
 tests/test_brain_structure.py
-
-# === docs internes (non public) ===
 docs/decouverte/
 docs/architecture.md
 docs/modeles.md
 docs/README.md
 reports/10_audit_app/
-
-# prep soutenance perso (local, non public)
 documentation/SOUTENANCE_PLAN.*
-
-# Audits internes (non publics)
 auditV2/

@@ -2,7 +2,7 @@
 
 Reference = échantillon `train.parquet` ; current = échantillon `test.parquet`
 (*proxy démo* du flux de production réel ; en prod réelle, current viendrait du
-log des entrées récentes de l'API — pas encore loggées). Features comparées :
+log des entrées récentes de l'API - pas encore loggées). Features comparées :
 longueur du titre, longueur de la description, distribution de `_source_category`.
 
 Si la **part de features driftées (DataDriftPreset.share)** dépasse le seuil

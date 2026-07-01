@@ -1,4 +1,4 @@
-"""Module `pricing` — placeholder.
+"""Module `pricing` - placeholder.
 
 Ce module sera implémenté lors du cycle correspondant (cf. le plan projet).
 """

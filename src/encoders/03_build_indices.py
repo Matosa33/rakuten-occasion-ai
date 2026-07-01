@@ -1,4 +1,4 @@
-"""Sous-todo 2.4 — Build indices FAISS sur les embeddings vision + texte.
+"""Sous-todo 2.4 - Build indices FAISS sur les embeddings vision + texte.
 
 Crée les indices FAISS qui permettront le retrieval rapide en Cycle 4.
 
@@ -138,7 +138,7 @@ def _sanity_check(index, embeddings: np.ndarray, name: str) -> dict:
 
 
 def main() -> None:
-    log.info("=== Sous-todo 2.4 — Build indices FAISS + sanity check ===")
+    log.info("=== Sous-todo 2.4 - Build indices FAISS + sanity check ===")
 
     DATA_INDEX.mkdir(parents=True, exist_ok=True)
 

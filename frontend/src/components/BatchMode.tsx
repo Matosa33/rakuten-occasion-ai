@@ -1,4 +1,4 @@
-// Cycle 17.5 (D-035, lève D-016) — UI du mode « mitrailler » :
+// Cycle 17.5 (D-035, lève D-016) - UI du mode « mitrailler » :
 // capture à la chaîne (photos → Objet suivant → photos → …), analyses en
 // arrière-plan (1 à la fois pour ménager le VLM), tableau de bord cliquable.
 
@@ -92,7 +92,7 @@ export function BatchMode() {
       {/* Capture à la chaîne */}
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <p className="text-sm font-semibold text-slate-700">
-          🔥 Mode déménagement — photographiez, ajoutez, passez au suivant
+          🔥 Mode déménagement - photographiez, ajoutez, passez au suivant
         </p>
         <div className="mt-3">
           <PhotoUploader photos={photos} onChange={setPhotos} />

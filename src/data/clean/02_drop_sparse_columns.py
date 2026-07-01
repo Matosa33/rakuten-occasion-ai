@@ -1,4 +1,4 @@
-"""Étape 2/5 du cleaning — Drop colonnes sparses, sauf cas spéciaux Books.
+"""Étape 2/5 du cleaning - Drop colonnes sparses, sauf cas spéciaux Books.
 
 Drop par défaut :
 - `subtitle` (~85 % NaN au full D-008)

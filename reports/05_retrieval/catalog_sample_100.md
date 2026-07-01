@@ -1,4 +1,4 @@
-# Catalogue — échantillon diversifié (100 produits)
+# Catalogue - échantillon diversifié (100 produits)
 
 > Guide de scraping : couvre les 4 macro-catégories × un max de **catégories fines**
 > distinctes. Les titres sont des exemples Amazon → trouve l'équivalent réel sur

@@ -1,4 +1,4 @@
-// Cycle 15 (D-032) — page de connexion JWT stub démo.
+// Cycle 15 (D-032) - page de connexion JWT stub démo.
 // Style cohérent avec le flow vendeur (rose/slate, carte blanche).
 
 import { useState } from "react";

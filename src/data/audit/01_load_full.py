@@ -1,4 +1,4 @@
-"""Étape 1/4 — Télécharger les N catégories COMPLÈTES du périmètre actif D-008.
+"""Étape 1/4 - Télécharger les N catégories COMPLÈTES du périmètre actif D-008.
 
 Source : McAuley-Lab/Amazon-Reviews-2023 (HuggingFace).
 Doc    : https://amazon-reviews-2023.github.io/data_loading/huggingface.html
@@ -7,7 +7,7 @@ POURQUOI le full (et pas un sample)
 -----------------------------------
 Un sample (premier N lignes) introduit deux biais qui rendent l'audit non-concluant :
   - les `parent_asin` du sample reviews et du sample meta sont disjoints (~99 % NaN
-    après merge — finding majeur de l'audit v1 sample superseded D-007/D-008) ;
+    après merge - finding majeur de l'audit v1 sample superseded D-007/D-008) ;
   - les premières lignes sont concentrées sur peu d'utilisateurs et peu d'années,
     donc les distributions calculées ne reflètent pas la réalité du dataset.
 

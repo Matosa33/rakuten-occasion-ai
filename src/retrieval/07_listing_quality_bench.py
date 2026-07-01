@@ -1,4 +1,4 @@
-"""Bench qualité de fiche & richesse d'entrée — NOYAU (Cycle 34.4+, protocole D-042).
+"""Bench qualité de fiche & richesse d'entrée - NOYAU (Cycle 34.4+, protocole D-042).
 
 Évalue **la fiche produite** (pas un proxy) sous un design factoriel d'entrées, sur les vraies
 annonces (`data/photos_eval/`). Ce fichier (34.4) produit les **sorties brutes** par
@@ -6,14 +6,14 @@ annonces (`data/photos_eval/`). Ce fichier (34.4) produit les **sorties brutes**
 s'appuieront dessus.
 
 Conditions (richesse d'entrée croissante, design factoriel) :
-- **text-only**  : texte vendeur seul (FR), 0 photo            — baseline texte
-- **text-fr-en** : texte vendeur traduit EN                    — isole la LANGUE
-- **one-photo**  : 1 photo                                      — base photo (extraction VLM)
-- **multi-photo**  : N photos (≤4)                                — multi-vues
-- **multi-photo-meta**  : N photos + texte vendeur (FR brut)          — + métadonnée
-- **multi-photo-meta-fr-en** : N photos + texte vendeur traduit            — + traduction
+- **text-only**  : texte vendeur seul (FR), 0 photo            - baseline texte
+- **text-fr-en** : texte vendeur traduit EN                    - isole la LANGUE
+- **one-photo**  : 1 photo                                      - base photo (extraction VLM)
+- **multi-photo**  : N photos (≤4)                                - multi-vues
+- **multi-photo-meta**  : N photos + texte vendeur (FR brut)          - + métadonnée
+- **multi-photo-meta-fr-en** : N photos + texte vendeur traduit            - + traduction
 
-Garde-fous de VALIDITÉ : extraction VLM **mise en cache** (multi-photo/multi-photo-meta/multi-photo-meta-fr-en partagent UNE extraction —
+Garde-fous de VALIDITÉ : extraction VLM **mise en cache** (multi-photo/multi-photo-meta/multi-photo-meta-fr-en partagent UNE extraction -
 sinon on confond métadonnée et tirage VLM) ; **anti-fuite** = on logge `seller_meta_overlap` par
 produit pour stratifier (gain métadonnée crédible sur les produits SANS recouvrement).
 
@@ -42,7 +42,14 @@ DATASET_DIR = REPO_ROOT / "data" / "photos_eval"
 REPORT_DIR = REPO_ROOT / "reports" / "05_retrieval"
 CACHE_PATH = DATASET_DIR / "_cache" / "extractions.jsonl"
 RAW_OUT = REPORT_DIR / "listing_quality_raw.jsonl"
-CONDITIONS = ["text-only", "text-fr-en", "one-photo", "multi-photo", "multi-photo-meta", "multi-photo-meta-fr-en"]
+CONDITIONS = [
+    "text-only",
+    "text-fr-en",
+    "one-photo",
+    "multi-photo",
+    "multi-photo-meta",
+    "multi-photo-meta-fr-en",
+]
 LIMIT = int(os.environ.get("PHOTO_BENCH_LIMIT", "0"))
 RELIABLE = 0.60  # seuil match fiable (= IDENTIFIED_THRESHOLD)
 
@@ -104,7 +111,7 @@ def run() -> None:
         cond_label = CONDITION_FR.get(meta.get("condition_key", "bon_etat"), "Bon état")
         try:
             conds = _conditions_for(meta, photos, cache)
-        except Exception as e:  # noqa: BLE001 — un produit en échec n'arrête pas le run
+        except Exception as e:  # noqa: BLE001 - un produit en échec n'arrête pas le run
             log.warning("skip %s (extraction VLM) : %s", d.name, e)
             continue
 
@@ -153,7 +160,7 @@ def run() -> None:
                     ],
                 }
             )
-        log.info("[%d/%d] %s — 6 conditions OK", k, len(products), d.name[:34])
+        log.info("[%d/%d] %s - 6 conditions OK", k, len(products), d.name[:34])
 
     with RAW_OUT.open("w", encoding="utf-8") as f:
         for r in raw_records:
@@ -169,7 +176,7 @@ def _smoke_print(rows: list[dict]) -> None:
         log.warning("Aucune ligne (dataset vide ?)")
         return
     first = rows[0]["product"]
-    log.info("=== SMOKE — produit %s ===", first)
+    log.info("=== SMOKE - produit %s ===", first)
     log.info(
         "%-5s %-9s %-26s %-5s %-5s %s", "cond", "status", "leaf prédite", "conf", "compl", "niveau"
     )
@@ -180,7 +187,7 @@ def _smoke_print(rows: list[dict]) -> None:
             "%-5s %-9s %-26s %-5.2f %-5.2f %s",
             r["condition"],
             r["status"],
-            (r["pred_leaf"] or "—")[:26],
+            (r["pred_leaf"] or "-")[:26],
             r["confidence"],
             r["completeness"],
             r["cascade_level"],

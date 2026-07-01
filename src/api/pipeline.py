@@ -1,4 +1,4 @@
-"""Cycle 9.3a — Pipeline orchestrator RAG-grounded (serving).
+"""Cycle 9.3a - Pipeline orchestrator RAG-grounded (serving).
 
 Câble les briques locales (text-only MVP, cf. D-014) en services
 consommés par les endpoints FastAPI :
@@ -12,7 +12,7 @@ R19 grounded-avant-génératif : l'identification est retrieval-first.
 R7 assertions dims : Arctic = 1024, vérifié au runtime.
 
 Les modèles génératifs (VLM validateur, LLM rédacteur) restent hors de ce
-module — ils interviennent en aval (Cycle 9.3b /describe via OpenRouter).
+module - ils interviennent en aval (Cycle 9.3b /describe via OpenRouter).
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ ARCTIC_QUERY_PROMPT = "query"  # Arctic Embed v2 prompt key pour les requêtes
 HNSW_EF_SEARCH = 64
 TOP_K_RETRIEVAL = 30  # candidats retournés, triés par similarité (scroll UI)
 
-# Seuils de confiance — 3 niveaux (D-017).
+# Seuils de confiance - 3 niveaux (D-017).
 # Le seuil F0.5=0.600 (D-012) était calibré sur item↔item (texte complet). En usage
 # réel, la requête vendeur est courte → cosine systématiquement plus bas. On passe
 # donc à 3 niveaux et on montre TOUJOURS les candidats (humain = validateur, R19).
@@ -61,6 +61,7 @@ def status_from_score(top1_score: float) -> str:
     if top1_score >= CONFIRM_THRESHOLD:
         return "to_confirm"
     return "uncertain"
+
 
 # Akinator backend (import dynamique : module préfixé par un chiffre)
 _akinator = importlib.import_module("src.retrieval.04_akinator_backend")
@@ -205,11 +206,11 @@ class IdentificationService:
             columns=["parent_asin", "title", "store", "_source_category", "price_num"],
         )
         # Garde-fou : l'index et les métadonnées train doivent être alignés 1:1 (même ordre,
-        # même longueur) — sinon `_train_meta[i]` renvoie le mauvais produit (corruption silencieuse).
+        # même longueur) - sinon `_train_meta[i]` renvoie le mauvais produit (corruption silencieuse).
         if len(self._train_meta) != self._index.ntotal:
             raise RuntimeError(
                 f"Désync index ({self._index.ntotal}) vs métadonnées train ({len(self._train_meta)}) "
-                "— rebuild de l'index requis après un re-split."
+                "- rebuild de l'index requis après un re-split."
             )
         self._train_labels = self._train_meta["_source_category"].to_numpy()
         self._train_prices = self._train_meta["price_num"].to_numpy()  # prix catalogue (F4)
@@ -295,7 +296,7 @@ class IdentificationService:
             normalize_embeddings=True,
             convert_to_numpy=True,
         ).astype(np.float32)
-        # R7 garde dimension — `raise` plutôt qu'`assert` : survit à `python -O`
+        # R7 garde dimension - `raise` plutôt qu'`assert` : survit à `python -O`
         # (les asserts y sont strippés, le serving prod perdrait le garde-fou).
         if emb.shape[-1] != ARCTIC_EMBED_DIM:
             raise ValueError(f"Expected {ARCTIC_EMBED_DIM} dim, got {emb.shape[-1]}")
@@ -306,7 +307,7 @@ class IdentificationService:
 
         Décalage cross-lingue mesuré : une requête FR score ~0.08 plus bas qu'EN
         (catalogue Amazon US). Fallback gracieux sur la requête brute si pas de clé
-        ou si l'appel échoue — l'identification reste fonctionnelle (Arctic est
+        ou si l'appel échoue - l'identification reste fonctionnelle (Arctic est
         multilingue, juste un peu moins précis sans traduction).
         """
         openrouter = importlib.import_module("src.llm.openrouter_client")
@@ -316,7 +317,7 @@ class IdentificationService:
             translated = openrouter.translate_to_english(text_query)
             log.info("Requête traduite FR→EN : %r → %r", text_query, translated)
             return translated or text_query
-        except Exception as e:  # noqa: BLE001 — la traduction ne doit jamais casser l'identification
+        except Exception as e:  # noqa: BLE001 - la traduction ne doit jamais casser l'identification
             log.warning("Traduction échouée (fallback requête brute) : %s", e)
             return text_query
 
@@ -382,7 +383,7 @@ class IdentificationService:
 
         if not candidates:
             return IdentificationResult(
-                "uncertain", [], None, "Aucun candidat trouvé — saisie manuelle."
+                "uncertain", [], None, "Aucun candidat trouvé - saisie manuelle."
             )
 
         top1 = candidates[0]
@@ -416,7 +417,7 @@ class IdentificationService:
         if is_ambiguous:
             explanation += (
                 f" Variantes proches (écart top1-top2 {top1.score - top2_score:.3f})"
-                " — une observation peut préciser."
+                " - une observation peut préciser."
             )
 
         pred_fine, pred_conf, pred_path = weighted_fine_vote(candidates)

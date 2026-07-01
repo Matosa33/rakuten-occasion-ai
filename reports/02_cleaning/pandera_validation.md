@@ -1,7 +1,7 @@
 # Rapport validation Pandera
 
-> Version 1.0 — 2026-05-03
-> Statut : terminé — schemas définis et validation complète passée sur 6/6 splits.
+> Version 1.0 - 2026-05-03
+> Statut : terminé - schemas définis et validation complète passée sur 6/6 splits.
 > Tous les chiffres sont mesurés, aucun n'est inventé.
 
 ## 1. Objectif
@@ -28,8 +28,8 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 | Colonne | Type | Nullable | Check |
 |---|---|:---:|---|
 | `parent_asin` | str | ❌ | non-null |
-| `asin` | str | ✅ | — |
-| `user_id` | str | ✅ | — |
+| `asin` | str | ✅ | - |
+| `user_id` | str | ✅ | - |
 | `timestamp` | str | ✅ | format mixte Int64 ms / String ISO toléré |
 | `_source_category` | str | ❌ | appartenance aux 15 catégories du périmètre |
 | `_split` | str | ❌ | isin {train, val, test} |
@@ -38,14 +38,14 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 
 | Split | Schema | Statut | n_rows / n_sample | Durée |
 |---|---|:---:|---:|---:|
-| products/train | ProductSchema (full) | ✅ ok | 18 458 346 | 1,8 s |
-| products/val | ProductSchema (full) | ✅ ok | 3 955 355 | 1,8 s |
-| products/test | ProductSchema (full) | ✅ ok | 3 955 377 | 1,8 s |
-| reviews_index/train | ReviewIndexSchema (sample 100k / 242M) | ✅ ok | 100 000 | 8,3 s |
-| reviews_index/val | ReviewIndexSchema (sample 100k / 53M) | ✅ ok | 100 000 | 1,8 s |
-| reviews_index/test | ReviewIndexSchema (sample 100k / 53M) | ✅ ok | 100 000 | 1,5 s |
+| products/train | ProductSchema (full) | ✅ ok | 3 156 705 | 0,9 s |
+| products/val | ProductSchema (full) | ✅ ok | 676 435 | 0,2 s |
+| products/test | ProductSchema (full) | ✅ ok | 676 441 | 0,2 s |
+| reviews_index/train | ReviewIndexSchema (sample 100k / 67,3M) | ✅ ok | 100 000 | 1,8 s |
+| reviews_index/val | ReviewIndexSchema (sample 100k / 14,5M) | ✅ ok | 100 000 | 0,4 s |
+| reviews_index/test | ReviewIndexSchema (sample 100k / 14,5M) | ✅ ok | 100 000 | 0,4 s |
 
-**Total : 6 / 6 OK en ~17 secondes**.
+**Total : 6 / 6 OK en ~4 secondes**.
 
 ## 4. Stratégie hybride full vs sample
 
@@ -56,7 +56,7 @@ S'applique à : `data/processed/reviews_index/{train,val,test}.parquet`
 
 ## 5. Tests CI
 
-`tests/test_pandera_schemas.py` — 9 tests passent en ~10 sec :
+`tests/test_pandera_schemas.py` - 9 tests passent en ~10 sec :
 
 - **3 tests structurels** (toujours actifs, sans données) :
   - Schemas s'importent

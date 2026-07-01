@@ -1,4 +1,4 @@
-"""Cycle 8.1 — Explainability : SHAP + t-SNE + Model Cards.
+"""Cycle 8.1 - Explainability : SHAP + t-SNE + Model Cards.
 
 Trois livrables d'explainability :
 
@@ -72,7 +72,7 @@ MODEL_CARDS = {
         "input": "Embeddings Arctic Embed L v2 (1024 dim, FP16)",
         "output": "P(catégorie | embedding) calibré Platt",
         "training_data": "Arctic embed du train",
-        "limitations": "Hyperparamètre C non tuné (default). Linéaire — pas d'interactions.",
+        "limitations": "Hyperparamètre C non tuné (default). Linéaire - pas d'interactions.",
     },
     "rf-embed_v1": {
         "type": "RandomForest (300 estimators, max_depth=20)",
@@ -129,7 +129,7 @@ MODEL_CARDS = {
         "source": "google/siglip-base-patch16-224",
         "input": "Image RGB (224×224)",
         "output": "Embedding 768 dim FP16",
-        "limitations": "Frozen — pas d'adaptation aux produits Amazon. Cibler fine-tuning si gap mesuré > 5 pts.",
+        "limitations": "Frozen - pas d'adaptation aux produits Amazon. Cibler fine-tuning si gap mesuré > 5 pts.",
     },
     "arctic_v1": {
         "type": "Snowflake Arctic Embed L v2 (frozen, 1024 dim, multilingue XLM-RoBERTa-large)",
@@ -163,7 +163,7 @@ def _write_model_card(name: str, info: dict) -> Path:
     MODEL_CARDS_DIR.mkdir(parents=True, exist_ok=True)
     path = MODEL_CARDS_DIR / f"{name}.md"
     lines = [
-        f"# Model Card — {name}",
+        f"# Model Card - {name}",
         "",
         f"**Type** : {info.get('type', '?')}",
         f"**Tâche** : {info.get('task', '?')}",
@@ -204,7 +204,7 @@ def _write_model_card(name: str, info: dict) -> Path:
 
 
 def main() -> None:
-    log.info("=== Cycle 8.1 — Explainability (SHAP + t-SNE + Model Cards) ===")
+    log.info("=== Cycle 8.1 - Explainability (SHAP + t-SNE + Model Cards) ===")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # 1. Model Cards (toujours générables)
@@ -300,7 +300,9 @@ def main() -> None:
         except ImportError:
             log.warning("Lib `shap` absente → skip SHAP")
     else:
-        log.info("rf-embed_v1.joblib absent → skip SHAP rf-embed (lance Cycle 3.1 rf-embed d'abord)")
+        log.info(
+            "rf-embed_v1.joblib absent → skip SHAP rf-embed (lance Cycle 3.1 rf-embed d'abord)"
+        )
 
     log.info("Cycle 8.1 explainability OK.")
 

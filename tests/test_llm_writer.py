@@ -1,4 +1,4 @@
-"""Tests du rédacteur RAG grounded (Cycle 15.3, D-034 — modules aveugles audit 15.0).
+"""Tests du rédacteur RAG grounded (Cycle 15.3, D-034 - modules aveugles audit 15.0).
 
 Couvre la logique pure sans LLM réel ni artefact : MockLLMWriter (contrat D-013),
 extract_useful_sentences (heuristique grounding), _extract_json_field (parse robuste
@@ -17,7 +17,7 @@ _templates = importlib.import_module("src.llm.01_prompt_templates")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MockLLMWriter — le fallback D-013 quand OPENROUTER_API_KEY absente
+# MockLLMWriter - le fallback D-013 quand OPENROUTER_API_KEY absente
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -35,7 +35,7 @@ def test_mock_writer_repond_description_sur_prompt_description():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# extract_useful_sentences — heuristique de grounding (pré-RAG embeddings)
+# extract_useful_sentences - heuristique de grounding (pré-RAG embeddings)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -63,7 +63,7 @@ def test_extract_sentences_dataframe_vide_ou_sans_text():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# _extract_json_field — parse robuste des réponses LLM (markdown, prose, JSON pur)
+# _extract_json_field - parse robuste des réponses LLM (markdown, prose, JSON pur)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -77,7 +77,7 @@ def test_extract_json_field_fence_markdown():
 
 
 def test_extract_json_field_noye_dans_prose():
-    raw = 'Bien sûr ! {"description": "Très bon état"} — j\'espère que ça convient.'
+    raw = 'Bien sûr ! {"description": "Très bon état"} - j\'espère que ça convient.'
     assert _writer._extract_json_field(raw, "description") == "Très bon état"
 
 
@@ -87,7 +87,7 @@ def test_extract_json_field_invalide_renvoie_none():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# generate_listing E2E avec mock — le contrat consommé par DescribeService
+# generate_listing E2E avec mock - le contrat consommé par DescribeService
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -119,7 +119,7 @@ class _BrokenWriter(_writer.LLMWriter):
 
 
 def test_generate_listing_writer_casse_degrade_proprement():
-    """Un LLM qui ne respecte pas le format ne doit PAS lever — parse_ok=False
+    """Un LLM qui ne respecte pas le format ne doit PAS lever - parse_ok=False
     + placeholders (le caller décide quoi afficher)."""
     listing = _writer.generate_listing(
         {"parent_asin": "B1"}, pl.DataFrame({"text": []}), _BrokenWriter()
@@ -129,13 +129,13 @@ def test_generate_listing_writer_casse_degrade_proprement():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Templates de prompts — les placeholders attendus par PromptInputs
+# Templates de prompts - les placeholders attendus par PromptInputs
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 def test_templates_contiennent_les_placeholders_canoniques():
     """Si un placeholder est renommé d'un côté (template) sans l'autre
-    (PromptInputs.render_*), le .format() lèvera KeyError au runtime — ce test
+    (PromptInputs.render_*), le .format() lèvera KeyError au runtime - ce test
     le catch statiquement. 17.4b : {seller_condition} est exigé dans les DEUX
     prompts (bug jugé par l'humain : le titre inventait « Très bon état »
     alors que le vendeur avait choisi « bon état »)."""

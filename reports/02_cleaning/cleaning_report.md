@@ -5,8 +5,8 @@
 > Video_Games, Tools_and_Home_Improvement) ; l'entraînement, la recherche et la documentation finale
 > portent sur ces 4 catégories.
 
-> Version 1.0 — 2026-05-03
-> Statut : terminé — chiffres mesurés sur l'exécution réelle du pipeline.
+> Version 1.0 - 2026-05-03
+> Statut : terminé - chiffres mesurés sur l'exécution réelle du pipeline.
 > Tous les chiffres sont mesurés, aucun n'est inventé.
 
 ## 1. Source et périmètre
@@ -74,7 +74,7 @@ Pipeline (prudent, préserve l'information) :
 2. **Collapse whitespace** : `\s+` → ` `, trim leading/trailing
 3. **Empty → null** : `""` après cleanup → vrai NaN (cohérence avec absence)
 4. **PAS de mise en minuscules globale** : préserve les acronymes (USB, Apple, Samsung) qui portent du signal pour les classifieurs et l'identification. La normalisation de casse se fera côté tokenizer de l'encodeur, ou côté TF-IDF, lors des étapes de modélisation.
-5. **NFKC** : non appliqué côté polars (pas de fonction native) — délégué aux tokenizers d'encoders qui le font nativement.
+5. **NFKC** : non appliqué côté polars (pas de fonction native) - délégué aux tokenizers d'encoders qui le font nativement.
 
 ## 7. Cap longueurs + flags qualité (étape 4)
 
@@ -100,7 +100,7 @@ Flags ajoutés :
 | `length_title` | UInt32 | `str.len_chars()` | 75 chars | cohérent audit 76 |
 | `length_description` | UInt32 | idem | 71 chars | cohérent audit 79, post-cap 8192 |
 | `n_reviews_log` | Float64 | `log1p(n_reviews)` | log1p(2)≈1,1 | Absorbe queue longue (max 178 239 reviews/produit) |
-| `years_active` | Int32 | `year_last_review - year_first_review + 1` | 1 an | Mean 2,6 — la majorité des produits ont une vie courte |
+| `years_active` | Int32 | `year_last_review - year_first_review + 1` | 1 an | Mean 2,6 - la majorité des produits ont une vie courte |
 | `recency_year` | Int32 | `2023 - year_last_review` | 4 ans | Mean 4,3, max 27 (1996) |
 
 ## 9. Split stratifié 70/15/15 (étape 6)

@@ -1,6 +1,6 @@
-// Cycle 10 — Client API typé pour le backend FastAPI (Cycle 9).
+// Cycle 10 - Client API typé pour le backend FastAPI (Cycle 9).
 // En dev, les appels passent par le proxy Vite /api → http://localhost:8000.
-// Cycle 15 (D-032) : tous les endpoints métier exigent un Bearer JWT —
+// Cycle 15 (D-032) : tous les endpoints métier exigent un Bearer JWT -
 // injecté ici, point unique de passage de tous les appels.
 
 import { clearToken, getToken } from "./auth";
@@ -12,8 +12,8 @@ const REQUEST_TIMEOUT_MS = 60_000;
 
 function _netError(e: unknown): Error {
   if (e instanceof DOMException && e.name === "TimeoutError")
-    return new Error("Le serveur met trop de temps à répondre — réessayez ou saisissez le produit en texte.");
-  return new Error("Réseau indisponible — vérifiez votre connexion puis réessayez.");
+    return new Error("Le serveur met trop de temps à répondre - réessayez ou saisissez le produit en texte.");
+  return new Error("Réseau indisponible - vérifiez votre connexion puis réessayez.");
 }
 
 export type Condition = "neuf" | "tres_bon_etat" | "bon_etat" | "correct" | "pour_pieces";
@@ -94,7 +94,7 @@ export interface IdentifyResponse {
   vlm_validation: VLMValidation | null;
   next_observation: ObservationToRequest | null;
   explanation: string;
-  // Catégorie fine VOTÉE (vote pondéré des voisins) + confiance + breadcrumb — la classification
+  // Catégorie fine VOTÉE (vote pondéré des voisins) + confiance + breadcrumb - la classification
   // finale robuste, à afficher (plus fiable que la catégorie du seul candidat choisi).
   predicted_category_fine: string;
   predicted_category_confidence: number;
@@ -141,7 +141,7 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   if (res.status === 401) {
     // Token absent/expiré/invalide → purge → App re-render vers LoginPage.
     clearToken();
-    throw new Error("Session expirée — reconnectez-vous.");
+    throw new Error("Session expirée - reconnectez-vous.");
   }
   if (!res.ok) {
     const detail = await res.json().catch(() => ({ detail: res.statusText }));
@@ -172,7 +172,7 @@ export async function uploadPhoto(file: File): Promise<UploadResponse> {
   }
   if (res.status === 401) {
     clearToken();
-    throw new Error("Session expirée — reconnectez-vous.");
+    throw new Error("Session expirée - reconnectez-vous.");
   }
   if (!res.ok) {
     const detail = await res.json().catch(() => ({ detail: res.statusText }));

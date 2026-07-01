@@ -1,4 +1,4 @@
-"""Étape 6/6 du cleaning — Split stratifié 70/15/15 GroupKFold(parent_asin).
+"""Étape 6/6 du cleaning - Split stratifié 70/15/15 GroupKFold(parent_asin).
 
 À ce stade :
 - Input : `data/processed/intermediate/05_meta_features.parquet`
@@ -70,7 +70,7 @@ def _stratified_split_one_category(df: pl.DataFrame, cat: str) -> pl.DataFrame:
     if n == 0:
         return df.with_columns(pl.lit(None).cast(pl.Utf8).alias("_split"))
 
-    # Shuffle déterministe via sample(n, seed) — déjà stratifié par cat car
+    # Shuffle déterministe via sample(n, seed) - déjà stratifié par cat car
     # on opère cat-par-cat
     df_shuffled = df.sample(n=n, seed=SEED, shuffle=True)
     n_train = int(n * TRAIN_FRAC)

@@ -1,10 +1,10 @@
-# Cycle 11.3 — Pipeline DVC reproductible (C35).
+# Cycle 11.3 - Pipeline DVC reproductible (C35).
 #
 # Déclare le DAG de production des artefacts ML à partir des données processed.
 # `dvc repro` ré-exécute les stages dont les deps ont changé (reproductibilité
 # bit-à-bit avec dvc.lock + seeds fixes, cf. docs/PROJECT.md §7).
 #
-# NB : non exécuté en CI (heures de compute GPU/CPU) — c'est la DÉFINITION du
+# NB : non exécuté en CI (heures de compute GPU/CPU) - c'est la DÉFINITION du
 # pipeline. Lancer manuellement `dvc repro <stage>` sur la machine de dev.
 # Les outs sont gérés par DVC (gitignorés, versionnés via .dvc/cache + remote).
 

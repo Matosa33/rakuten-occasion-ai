@@ -1,4 +1,4 @@
-"""Cycle 10.x / D-018 — Lookup d'affichage produit (vignette + catégorie fine).
+"""Cycle 10.x / D-018 - Lookup d'affichage produit (vignette + catégorie fine).
 
 Les colonnes riches (`images`, `categories`) ont été droppées du processed au
 cleaning (D-006). L'UI a besoin de :
@@ -124,7 +124,7 @@ def _extract_category_leaf(categories_str: str | None) -> str | None:
 
 
 def _extract_category_path(categories_str: str | None) -> str | None:
-    """Breadcrumb COMPLET « A > B > C » (17.4b, D-035) — la preuve visible que
+    """Breadcrumb COMPLET « A > B > C » (17.4b, D-035) - la preuve visible que
     chaque annonce est rattachée à un rangement marketplace parfait.
 
     Ex: "['Electronics', 'Computers', 'Laptops']" → "Electronics > Computers > Laptops".
@@ -165,7 +165,7 @@ def _brand_from_details(d: dict) -> str | None:
 def _facets_from_details(d: dict) -> dict[str, str]:
     """Extrait les facettes discriminantes curées présentes (FACET_KEYS).
 
-    Retourne {nom_canonique: valeur} pour les seules facettes présentes — base
+    Retourne {nom_canonique: valeur} pour les seules facettes présentes - base
     de la sélection Akinator par entropie côté requête.
     """
     facets: dict[str, str] = {}

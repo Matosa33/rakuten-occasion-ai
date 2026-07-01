@@ -1,4 +1,4 @@
-"""Auth stub démo (Cycle 15.1, D-032) — JWT HS256 + bcrypt.
+"""Auth stub démo (Cycle 15.1, D-032) - JWT HS256 + bcrypt.
 
 Exports
 -------
@@ -8,7 +8,7 @@ Exports
 - `authenticate(username, password)` : vérifie le user stub demo.
 
 Cf. D-032 : 1 seul user `demo` hardcodé, password `demo` (bcrypt). HS256
-secret partagé via env `JWT_SECRET`. Stub de démonstration soutenance —
+secret partagé via env `JWT_SECRET`. Stub de démonstration soutenance -
 DB users + signup + RS256 = post-soutenance.
 """
 

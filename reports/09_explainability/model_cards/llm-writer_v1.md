@@ -1,4 +1,4 @@
-# Model Card — llm-writer_v1
+# Model Card - llm-writer_v1
 
 **Type** : LLM frontier rédacteur grounded (Gemini Flash via OpenRouter)
 **Tâche** : Génération titre + description annonce vendeur particulier
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/llm-writer_v1.json`
+`reports/05_retrieval/listing_quality_report.json` (qualité des fiches générées, mesures dures)

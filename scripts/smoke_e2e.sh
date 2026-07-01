@@ -9,7 +9,7 @@
 #   bash scripts/smoke_e2e.sh                 # cible http://127.0.0.1:${API_PORT:-8010}
 #   API_BASE=http://127.0.0.1:8010 bash scripts/smoke_e2e.sh
 #
-# Note : on PIPE directement curl → python (pas de fichier /tmp intermédiaire) —
+# Note : on PIPE directement curl → python (pas de fichier /tmp intermédiaire) -
 # le mélange chemins Git-Bash / Python Windows casse les temp files.
 # Le parsing JSON est fait par python (stdin).
 
@@ -31,7 +31,7 @@ ko()   { echo "  [FAIL] $1"; FAIL=$((FAIL+1)); }
 hdr()  { echo ""; echo "── $1"; }
 
 echo "================================================================"
-echo " Smoke E2E Rakuten — cible : $API_BASE"
+echo " Smoke E2E Rakuten - cible : $API_BASE"
 echo "================================================================"
 
 # --- 0. Health ---
@@ -74,7 +74,7 @@ hdr "3. Identify (retrieval grounded + validateur VLM)"
 IDENT=$(curl -s --max-time 120 -X POST "$API_BASE/identify" -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" -d "{\"image_ids\":[\"$IMGID\"],\"text\":\"\"}")
 # On extrait top1 (asin, cat) + nb candidats + validation + prix catalogue top1
-# + prix des voisins MÊME TYPE (comme le frontend) — pour un /price niveau L1.
+# + prix des voisins MÊME TYPE (comme le frontend) - pour un /price niveau L1.
 read -r NCAND TOP1_ASIN TOP1_CAT VLM_MATCH TOP1_PRICE NEIGHBORS < <(echo "$IDENT" | python -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -91,7 +91,7 @@ print(len(c), top.get('parent_asin','-'), (top.get('category') or '-'),
 if [ "${NCAND:-0}" -gt 0 ]; then
   ok "POST /identify → $NCAND candidats · top1=$TOP1_ASIN ($TOP1_CAT) · vlm_match=$VLM_MATCH"
 else
-  ko "POST /identify (aucun candidat — artefacts FAISS/lookup présents ?)"
+  ko "POST /identify (aucun candidat - artefacts FAISS/lookup présents ?)"
   echo "$IDENT" | head -c 300; echo ""; echo "Abandon."; exit 1
 fi
 

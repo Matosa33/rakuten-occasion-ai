@@ -28,19 +28,25 @@ def test_dag_compile():
 
 
 def test_dag_id_et_taches_presentes():
-    """Le DAG expose l'id attendu et les 5 tâches du graphe (12.1 + 12.3)."""
+    """Le DAG expose l'id attendu et les 7 tâches (3 entraînements parallèles)."""
     src = _source()
     assert 'dag_id="rakuten_retrain"' in src
     for task_id in (
         "check_new_data",
-        "train_classifiers",
+        "train_tfidf_svm",  # les 3 têtes s'entraînent en parallèle (LocalExecutor)
+        "train_svm_embed",
+        "train_mlp_embed",
         "evaluate_gate",
-        "promote_gate",  # 12.3 (D-024) — champion/challenger
-        "reimport_bento",  # 12.3 — API hot reload (BentoML)
+        "promote_gate",  # champion/challenger
+        "reimport_bento",  # API hot reload (BentoML)
     ):
         assert f'task_id="{task_id}"' in src, f"tâche manquante : {task_id}"
-    # dépendances chaînées (graphe complet 5 tâches)
-    assert "t_check >> t_train >> t_gate >> t_promote >> t_reimport" in src
+    # dépendances : tfidf ∥ (svm → mlp) - les deux lecteurs du gros .npy sont chaînés
+    # (deux lectures 13 Go concurrentes via le bind-mount hôte échouent), puis gate.
+    assert "t_check >> [t_train_tfidf, t_train_svm]" in src
+    assert "t_train_svm >> t_train_mlp" in src
+    assert "[t_train_tfidf, t_train_mlp] >> t_gate" in src
+    assert "t_gate >> t_promote >> t_reimport" in src
 
 
 def test_retrain_modules_sont_les_tetes_cpu():

@@ -1,4 +1,4 @@
-# Airflow — orchestration de la boucle de ré-entraînement
+# Airflow - orchestration de la boucle de ré-entraînement
 
 Orchestrateur du retrain Rakuten via **Docker Compose**.
 Principe : **l'orchestrateur orchestre, il ne calcule pas le GPU**. Le DAG ré-entraîne

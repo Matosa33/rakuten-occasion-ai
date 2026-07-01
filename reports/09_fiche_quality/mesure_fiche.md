@@ -101,4 +101,3 @@
 | 91_bosch_electric_hedge_trimmer | 100% | ✅ | 1.0 | 25.81 € | L1.5 |
 | 92_microsoft_xbox_series_s_carbon_black_800 | 17% | ❌ | 1.0 | 60.32 € | L1.5 |
 | 93_microsoft_xbox_series_s | 100% | ✅ | 0.625 | 121.04 € | L1.5 |
-| _cache | — | no_photo | — | — | — |

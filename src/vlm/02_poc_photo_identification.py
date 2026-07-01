@@ -1,13 +1,13 @@
-"""PoC A (Cycle 17.0) — Identification produit depuis une PHOTO via VLM-extraction.
+"""PoC A (Cycle 17.0) - Identification produit depuis une PHOTO via VLM-extraction.
 
-Protocole (induction, pas déduction — exigence humaine 2026-06-11) :
+Protocole (induction, pas déduction - exigence humaine 2026-06-11) :
 1. Échantillonne N produits du catalogue Electronics ayant ≥ 2 images ET présents
    dans le train (= dans l'index FAISS de l'API).
 2. Pour chaque produit : la 2ᵉ image (vue différente de la MAIN = meilleur proxy
    disponible d'une « photo utilisateur ») est envoyée au VLM OpenRouter avec un
    prompt d'extraction orientée recherche.
 3. La description extraite alimente `POST /identify` de l'API réelle (index
-   complet 3,16 M produits) — le chemin de prod exact.
+   complet 3,16 M produits) - le chemin de prod exact.
 4. Mesure : rang du parent_asin source dans les candidats → hit@1 / hit@5 / hit@30,
    latences VLM + retrieval, et échantillon des descriptions pour inspection.
 
@@ -49,7 +49,7 @@ VLM_MODEL = os.environ.get("POC_VLM_MODEL", "google/gemma-4-31b-it")
 # Amazon (l'espace dans lequel l'index a été encodé).
 VLM_PROMPT = (
     "Look at this product photo. Write the most likely Amazon product listing title "
-    "for it: brand, model name/number, key specs, color — exactly as a seller would "
+    "for it: brand, model name/number, key specs, color - exactly as a seller would "
     "title it. Use any text visible in the image. Reply with the title only."
 )
 
@@ -158,7 +158,7 @@ def main() -> None:
             rank = (
                 candidates.index(p["parent_asin"]) + 1 if p["parent_asin"] in candidates else None
             )
-        except Exception as e:  # noqa: BLE001 — un échec réseau ne tue pas le bench
+        except Exception as e:  # noqa: BLE001 - un échec réseau ne tue pas le bench
             log.warning("produit %s en erreur : %s", p["parent_asin"], e)
             desc, t_vlm, candidates, t_ret, rank = f"(error: {e})", None, [], None, None
         results.append(
@@ -198,7 +198,7 @@ def main() -> None:
         n_ok,
         out,
     )
-    # Sortie programme JSON (pipe/jq) — R6 ok (D-029).
+    # Sortie programme JSON (pipe/jq) - R6 ok (D-029).
     print(json.dumps({k: v for k, v in summary.items() if k != "results"}, indent=2))
 
 

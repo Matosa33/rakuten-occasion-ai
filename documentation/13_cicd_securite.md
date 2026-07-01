@@ -283,7 +283,7 @@ les seuls produits possibles, le modèle ne fait que choisir parmi eux).
   fichiers (notamment l'anti-traversée de chemin), et `tests/test_github_workflows.py`
   pour la conformité des pipelines.
 
-> Drapeau slide. Chiffres à afficher : "Intégration continue à quatre tâches (qualité,
+> Chiffres clés à retenir : "Intégration continue à quatre tâches (qualité,
 > tests, audit pip-audit, construction Docker), au vert" ; "Images publiées sur GHCR avec
 > versionnage SemVer" ; "Zéro secret dans tout l'historique du code" ; "Authentification
 > JWT, protection anti-traversée de chemin, URLs imprévisibles" ; "Entrées du pipeline
@@ -317,9 +317,9 @@ les seuls produits possibles, le modèle ne fait que choisir parmi eux).
 **Limites assumées (par rapport à l'état de l'art le plus exigeant).**
 
 - **Pas de signature des images** (un outil comme Cosign permettrait de prouver
-  l'origine d'une image) ni de **scan de vulnérabilités des images construites** (avec un
-  outil comme Trivy ou Grype). Seules les dépendances sont auditées, pas les images
-  elles-mêmes.
+  l'origine d'une image). Les images construites sont en revanche **scannées avec Trivy**
+  (sévérités hautes et critiques) à chaque publication, mais ce scan reste informatif,
+  non bloquant, à ce stade.
 - **Pas d'authentification OIDC** : elle n'aurait de sens qu'avec un déploiement cloud,
   qui n'est pas dans le périmètre ici.
 - L'**authentification est une brique de démonstration** : un seul utilisateur, pas

@@ -1,4 +1,4 @@
-# Model Card — arctic_v1
+# Model Card - arctic_v1
 
 **Type** : Snowflake Arctic Embed L v2 (frozen, 1024 dim, multilingue XLM-RoBERTa-large)
 **Tâche** : Encodage texte → embedding L2-normalized
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/arctic_v1.json`
+`reports/05_retrieval/faiss_bench.json` (retrieval sur embeddings Arctic) et `reports/04_classifiers_bench/bench_v1.json`

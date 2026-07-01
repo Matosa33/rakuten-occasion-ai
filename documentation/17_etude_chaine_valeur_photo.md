@@ -318,7 +318,7 @@ expérience honnête pour le vendeur.
   quinze candidats : s'il cite une fiche inexistante, on retombe sur le premier résultat de la
   recherche **et** on remet sa confiance à zéro (il n'a pas endossé ce choix). Une caractéristique
   dont la source est invalide est jetée. Et surtout, tout cela est **non bloquant** : pas de clé
-  d'API, modèle indisponible, réponse illisible — la fonction renvoie « rien » et le pipeline garde
+  d'API, modèle indisponible, réponse illisible - la fonction renvoie « rien » et le pipeline garde
   le classement de la recherche et la cascade de prix. Le système ne plante jamais et ne montre
   jamais de fiche vide.
 - **Le texte vendeur fait foi quand il est présent.** Si le vendeur nomme un produit qui figure parmi

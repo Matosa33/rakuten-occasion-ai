@@ -31,8 +31,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-import src.config  # noqa: E402, F401 — son import charge .env (OPENROUTER_API_KEY) dans l'env
-from src.config import CATEGORIES  # noqa: E402 — source de vérité des 4 macros
+import src.config  # noqa: E402, F401 - son import charge .env (OPENROUTER_API_KEY) dans l'env
+from src.config import CATEGORIES  # noqa: E402 - source de vérité des 4 macros
 from src.llm import openrouter_client as orc  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -112,7 +112,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if not DATASET_DIR.exists():
-        log.error("%s absent — saisis d'abord des produits via app.py.", DATASET_DIR)
+        log.error("%s absent - saisis d'abord des produits via app.py.", DATASET_DIR)
         return
     dirs = sorted(d for d in DATASET_DIR.iterdir() if d.is_dir() and (d / "meta.json").exists())
     if not orc.is_available():

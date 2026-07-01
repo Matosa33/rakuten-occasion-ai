@@ -25,7 +25,7 @@ export function facetLabel(key: string): string {
 }
 
 // Priorité sémantique : le TYPE de produit (téléphone vs coque) est la
-// désambiguation la plus utile pour le vendeur — bien plus que la marque.
+// désambiguation la plus utile pour le vendeur - bien plus que la marque.
 // On pondère le score d'entropie pour que `category` passe en premier quand
 // les types sont mixtes, sans écraser les autres facettes.
 const FACET_PRIORITY: Record<string, number> = {

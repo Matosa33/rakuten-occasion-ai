@@ -179,7 +179,7 @@ export function CandidatePicker({
         </ul>
       ) : (
         <div className="mt-4 text-sm text-slate-600">
-          Aucun candidat avec ces critères — retirez un filtre ou saisissez manuellement.
+          Aucun candidat avec ces critères - retirez un filtre ou saisissez manuellement.
         </div>
       )}
 

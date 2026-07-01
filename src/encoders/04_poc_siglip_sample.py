@@ -1,6 +1,6 @@
-"""PoC B (Cycle 17.0) — Matching visuel pur SigLIP sur ÉCHANTILLON catalogue.
+"""PoC B (Cycle 17.0) - Matching visuel pur SigLIP sur ÉCHANTILLON catalogue.
 
-Protocole (induction — pendant du PoC A) :
+Protocole (induction - pendant du PoC A) :
 1. Échantillonne ~2 000 produits Electronics avec ≥ 2 images (mêmes critères que A).
 2. Télécharge l'image MAIN de chacun (mesure le débit CDN réel) → index visuel.
 3. Pour ~100 d'entre eux, télécharge la 2ᵉ vue (proxy « photo utilisateur »).
@@ -79,7 +79,7 @@ def _download(url: str) -> Image.Image | None:
         r = requests.get(url, timeout=15)
         r.raise_for_status()
         return Image.open(io.BytesIO(r.content)).convert("RGB")
-    except Exception:  # noqa: BLE001 — image manquante = skip, pas crash
+    except Exception:  # noqa: BLE001 - image manquante = skip, pas crash
         return None
 
 

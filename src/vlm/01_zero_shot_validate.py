@@ -1,4 +1,4 @@
-"""Cycle 5.1 — VLM zero-shot validateur (anti-hallucination en aval).
+"""Cycle 5.1 - VLM zero-shot validateur (anti-hallucination en aval).
 
 Une fois le retrieval Cycle 4 a renvoyé un top-1 candidat, on demande à
 un VLM frontier (Gemini Flash via OpenRouter) :
@@ -128,7 +128,7 @@ class MockVLMValidator(VLMValidator):
 class OpenRouterVLMValidator(VLMValidator):
     """VLM frontier via OpenRouter (Gemini 2.0 Flash par défaut, paramétrable).
 
-    Nécessite OPENROUTER_API_KEY dans l'env. Stub pour Cycle 9 — la vraie
+    Nécessite OPENROUTER_API_KEY dans l'env. Stub pour Cycle 9 - la vraie
     implémentation HTTP sera codée quand on basculera l'API en prod.
     """
 
@@ -145,7 +145,7 @@ class OpenRouterVLMValidator(VLMValidator):
     def validate(
         self, query_img_url: str, candidate_img_url: str, candidate_meta: dict
     ) -> VLMResponse:
-        # Voie de PRODUCTION : src/vlm/validator.py (Cycle 17.2, D-035) — l'appel
+        # Voie de PRODUCTION : src/vlm/validator.py (Cycle 17.2, D-035) - l'appel
         # OpenRouter multi-image (photo user × image catalogue) y est implémenté et
         # branché dans /identify. Cette classe reste le scaffold zero-shot du Cycle 5
         # (contrat + parse + mock, couverts par tests/test_vlm_validator.py).
@@ -177,7 +177,7 @@ def parse_vlm_response(raw: str) -> VLMResponse:
 
 
 def main() -> None:
-    log.info("=== Cycle 5.1 — VLM zero-shot validateur (mock pour pipeline) ===")
+    log.info("=== Cycle 5.1 - VLM zero-shot validateur (mock pour pipeline) ===")
     REPORTS_VLM.mkdir(parents=True, exist_ok=True)
 
     text_index_path = DATA_INDEX / "text_arctic_hnsw.index"

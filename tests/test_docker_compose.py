@@ -37,7 +37,7 @@ def test_compose_les_6_services_attendus():
 
 def test_api_volumes_data_en_lecture_seule():
     """L'API monte data + mlflow.db + mlartifacts en READ-ONLY (sécurité D-025),
-    SAUF le sous-dossier uploads (volume nommé writable, C17.4 D-035 — sans lui :
+    SAUF le sous-dossier uploads (volume nommé writable, C17.4 D-035 - sans lui :
     OSError 30 sur POST /upload, attrapé au smoke)."""
     api = _load(COMPOSE)["services"]["api"]
     vols = api.get("volumes", [])
@@ -59,7 +59,7 @@ def test_healthchecks_sur_services_exposes():
 
 
 def test_ports_lies_localhost_seulement():
-    """Les ports exposés en dev sont sur 127.0.0.1 (pas 0.0.0.0) — D-025 sécurité."""
+    """Les ports exposés en dev sont sur 127.0.0.1 (pas 0.0.0.0) - D-025 sécurité."""
     services = _load(COMPOSE)["services"]
     for name in ("api", "frontend", "airflow-webserver"):
         ports = services[name].get("ports", [])
@@ -108,7 +108,7 @@ def test_pas_d_ancien_compose_oublie():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cycle 13.3 — Traefik gateway (D-026).
+# Cycle 13.3 - Traefik gateway (D-026).
 # Tests qui catchent des régressions réelles (pas de padding) :
 #   1. service traefik présent
 #   2. routing host-based déclaré pour les 3 backends
@@ -158,7 +158,7 @@ def test_routing_host_based_pour_chaque_backend():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cycle 13.4 — MinIO + MLflow tracking server (D-027).
+# Cycle 13.4 - MinIO + MLflow tracking server (D-027).
 # 2 tests qui catchent les vraies régressions de D-027 (sans padding).
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -192,7 +192,7 @@ def test_airflow_pointe_sur_mlflow_server_http_pas_sqlite():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cycle 14.2 — Prometheus + Grafana (D-030).
+# Cycle 14.2 - Prometheus + Grafana (D-030).
 # Sans padding : chaque test attrape une régression réelle observable LIVE.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -261,7 +261,7 @@ def test_dashboard_datasource_uid_match_le_provisioning():
 
 
 def test_dashboard_couvre_4_golden_signals():
-    """4 panels obligatoires (Latency, Traffic, Errors, Saturation) — sans ça
+    """4 panels obligatoires (Latency, Traffic, Errors, Saturation) - sans ça
     la D-030 n'est pas honorée (SRE book § Monitoring distributed systems)."""
     import json
 
@@ -278,7 +278,7 @@ def test_dashboard_couvre_4_golden_signals():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Finding test interface (post-C14.99) — vrais bugs détectés en smoke E2E :
+# Finding test interface (post-C14.99) - vrais bugs détectés en smoke E2E :
 #   1. .env hôte non propagé au container API → /describe en mock silencieux
 #   2. nginx `proxy_pass http://$var/;` ne strip pas /api/ (variable désactive
 #      le rewrite auto) → frontend /api/health → 404 silencieux
@@ -327,7 +327,7 @@ def test_identify_request_image_url_optional():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cycle 15.3 (D-034) — garde-fou command base ↔ overlay prod.
+# Cycle 15.3 (D-034) - garde-fou command base ↔ overlay prod.
 # L'audit 15.0 a trouvé que le command Traefik prod (C13.3) avait perdu les
 # flags metrics ajoutés en C14.2 au command de base : un `command:` overlay
 # REMPLACE (ne merge pas) → régression d'observabilité invisible en prod.
@@ -335,7 +335,7 @@ def test_identify_request_image_url_optional():
 
 
 class _ComposeLoader(yaml.SafeLoader):
-    """SafeLoader qui tolère les tags Compose custom (`!reset`, `!override`) —
+    """SafeLoader qui tolère les tags Compose custom (`!reset`, `!override`) -
     PyYAML pur lèverait ConstructorError sur l'overlay prod."""
 
 
@@ -346,7 +346,7 @@ _ComposeLoader.add_multi_constructor(
 
 
 def _load_prod() -> dict:
-    return yaml.load(PROD.read_text(encoding="utf-8"), Loader=_ComposeLoader)  # noqa: S506 — loader dérivé de SafeLoader
+    return yaml.load(PROD.read_text(encoding="utf-8"), Loader=_ComposeLoader)  # noqa: S506 - loader dérivé de SafeLoader
 
 
 def test_traefik_command_overlay_prod_garde_les_flags_critiques():
@@ -361,7 +361,7 @@ def test_traefik_command_overlay_prod_garde_les_flags_critiques():
     missing = [flag for flag in base if flag not in prod and flag not in intentionally_dropped]
     assert not missing, (
         f"Flags du command Traefik de base absents de l'overlay prod : {missing}. "
-        "Un command overlay REMPLACE le command de base — resynchroniser "
+        "Un command overlay REMPLACE le command de base - resynchroniser "
         "docker-compose.prod.yml (cf. erreur compose-overlay-command-remplace)."
     )
 

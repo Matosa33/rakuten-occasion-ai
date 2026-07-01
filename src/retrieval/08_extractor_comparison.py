@@ -1,8 +1,8 @@
 """Comparaison d'extracteurs VLM (Cycle 34.8, protocole D-042).
 
 Quelle VLM lit le mieux les photos pour produire une bonne fiche ? Pour 4 extracteurs **VISION
-vérifiés sur OpenRouter** (tous bon marché), sur la condition **multi-photo (N photos)** — celle qui dépend
-du modèle — on produit la fiche et on mesure la qualité (métriques dures 34.5) + la latence.
+vérifiés sur OpenRouter** (tous bon marché), sur la condition **multi-photo (N photos)** - celle qui dépend
+du modèle - on produit la fiche et on mesure la qualité (métriques dures 34.5) + la latence.
 
 Index chargé **UNE fois** (on boucle les modèles dessus). Cache d'extraction **keyé par modèle**
 → sans collision, incrémental (Gemma déjà en cache via le run baseline). Coût ~centimes.
@@ -161,7 +161,11 @@ def run() -> dict:
     (REPORT_DIR / "extractor_comparison_raw.jsonl").write_text(
         "\n".join(json.dumps(r, ensure_ascii=False) for r in raw_records) + "\n", encoding="utf-8"
     )
-    summary = {"by_model": results, "condition": "multi-photo (N photos)", "n_products": len(products)}
+    summary = {
+        "by_model": results,
+        "condition": "multi-photo (N photos)",
+        "n_products": len(products),
+    }
     _log_mlflow(summary)
     _write_report(summary)
     return summary
@@ -198,7 +202,7 @@ def _write_report(summary: dict) -> None:
         "price_usd_per_mtok_in",
     ]
     lines = [
-        "# Comparaison d'extracteurs VLM — condition multi-photo (N photos)",
+        "# Comparaison d'extracteurs VLM - condition multi-photo (N photos)",
         "",
         f"- **{summary['n_products']} produits** · métriques dures · cache keyé par modèle.",
         "",
@@ -206,7 +210,7 @@ def _write_report(summary: dict) -> None:
         "|---|" + "---|" * len(cols),
     ]
     for model, m in summary["by_model"].items():
-        lines.append(f"| {model} | " + " | ".join(str(m.get(c, "—")) for c in cols) + " |")
+        lines.append(f"| {model} | " + " | ".join(str(m.get(c, "-")) for c in cols) + " |")
     lines += [
         "",
         "> `entity_match` = identification du bon produit ; `completeness` = remplissage ;",

@@ -215,7 +215,7 @@ des groupes de catégories bien séparés est cohérent avec un bon score de cla
 - **SHAP sur la forêt aléatoire** : les variables les plus influentes sont représentées dans
   l'image récapitulative `shap_m3_summary.png`.
 
-> Drapeau slide. Chiffres à afficher : « 12 fiches modèle pour la gouvernance », « t-SNE :
+> Chiffres clés à retenir : « 12 fiches modèle pour la gouvernance », « t-SNE :
 > catégories visuellement séparées, ce qui confirme le score F1 », « SHAP : variables les plus
 > influentes par décision ». Capture à montrer : le nuage t-SNE coloré par catégorie (très parlant,
 > on voit que le modèle sépare bien), accompagné de l'image récapitulative SHAP et d'une fiche
@@ -385,7 +385,7 @@ est **actionnable** : il reprend, si elle existe, la question précise formulée
 préciser le nom du modèle ou à ajouter une photo de l'étiquette ou de la boîte. C'est de
 l'explicabilité utile : on dit au vendeur **pourquoi** on doute et **comment** lever le doute.
 
-À côté de ce drapeau, le **bandeau catalog-miss** (« Produit *estimé* … — absent du catalogue. Prix
+À côté de ce drapeau, le **bandeau catalog-miss** (« Produit *estimé* … - absent du catalogue. Prix
 et caractéristiques à vérifier. ») prévient quand le produit n'a pas été retrouvé au catalogue et que
 la fiche est donc une estimation d'ensemble, pas une recopie de fiche existante.
 

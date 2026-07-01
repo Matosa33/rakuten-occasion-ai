@@ -242,7 +242,7 @@ Une revue adverse a conduit à plusieurs corrections de robustesse, visibles dan
     catalog-miss ("Produit estimé, absent du catalogue"), et une étiquette honnête "Prix neuf estimé
     par IA" accompagne le niveau de prix L1.5.
 
-> 📊 **Chiffres et faits pour la slide** : lecture des photos par Qwen 3.5 Flash (champion d'une
+> 📊 **Chiffres et faits à retenir** : lecture des photos par Qwen 3.5 Flash (champion d'une
 > comparaison de quatre modèles, retenu pour sa complétude et son coût), jusqu'à 4 vues en un seul
 > appel, sortie JSON, raisonnement désactivé, déterminisme à température 0 avec graine fixe pour
 > l'extraction et température 0,4 pour la rédaction ; identification raisonnée = le modèle

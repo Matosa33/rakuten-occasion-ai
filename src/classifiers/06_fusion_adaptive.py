@@ -1,4 +1,4 @@
-"""fusion — Fusion adaptive multimodale (Cycle 3.4 / C15).
+"""fusion - Fusion adaptive multimodale (Cycle 3.4 / C15).
 
 Méta-modèle qui combine les sorties des classifieurs les modèles de base pour produire
 une prédiction finale plus robuste qu'un seul modèle.
@@ -91,7 +91,9 @@ def _get_proba_or_skip(model_name: str, X_input, fallback_shape) -> np.ndarray |
 
 def main() -> None:
     log.info("=== fusion Fusion adaptive multimodale (Cycle 3.4 / C15) ===")
-    log.info("Cherche grid α sur (knn-faiss, svm-embed, rf-embed, mlp-embed, tfidf-svm) prob fusion par moyenne pondérée")
+    log.info(
+        "Cherche grid α sur (knn-faiss, svm-embed, rf-embed, mlp-embed, tfidf-svm) prob fusion par moyenne pondérée"
+    )
 
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
@@ -115,7 +117,7 @@ def main() -> None:
     )
 
     log.info("Collecte des probas les modèles de base sur val + test…")
-    # knn-faiss (k-NN) skipped — placeholder ne charge pas
+    # knn-faiss (k-NN) skipped - placeholder ne charge pas
     # tfidf-svm (TF-IDF) prend texte brut
     probas_val = {}
     probas_test = {}

@@ -1,4 +1,4 @@
-"""Invariants de similarity_utils — propriétés mathématiques fondamentales.
+"""Invariants de similarity_utils - propriétés mathématiques fondamentales.
 
 Ces tests garantissent que les briques de similarité respectent les invariants
 attendus. Si l'un casse, tous les modules ML aval (encoders, classifieurs,

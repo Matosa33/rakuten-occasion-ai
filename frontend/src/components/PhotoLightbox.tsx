@@ -1,4 +1,4 @@
-// Cycle 17.4 (D-035) — visionneuse plein écran réutilisable :
+// Cycle 17.4 (D-035) - visionneuse plein écran réutilisable :
 // photos catalogue des candidats (étape 2) ET photos vendeur de l'annonce (étape 3).
 // Navigation ←/→ + clavier, fermeture Échap/clic fond, compteur.
 

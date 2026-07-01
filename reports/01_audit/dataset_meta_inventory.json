@@ -7,8 +7,8 @@
     "Total reviews JSONL (GB)": 256.4888434605673,
     "Total meta JSONL (GB)": 94.43261826690286,
     "Total brut (GB)": 350.92146172747016,
-    "Reviews estimés (M) — Range HTTP": 501.28623840583157,
-    "Items meta estimés (M) — Range HTTP": 32.099326283196994,
+    "Reviews estimés (M) - Range HTTP": 501.28623840583157,
+    "Items meta estimés (M) - Range HTTP": 32.099326283196994,
     "Reviews officiel paper (M)": 571.54,
     "Items officiel paper (M)": 48.0,
     "Parquet attendu si full (GB)": 87.73036543186754

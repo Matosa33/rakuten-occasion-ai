@@ -5,7 +5,7 @@
 
 ## Comparaison
 
-| Index | Recall@1 | Recall@5 | Recall@10 | Latence p99 (ms) | Taille fichier |
+| Index | Recall@1 | Recall@5 | Recall@10 | Latence moyenne (ms) | Taille fichier |
 |---|---:|---:|---:|---:|---:|
 | FLAT | 1.0000 | 1.0000 | 1.0000 | 23.03 | 12330.9 MB |
 | HNSW | 0.9480 | 0.9722 | 0.9755 | 0.29 | 13150.1 MB |

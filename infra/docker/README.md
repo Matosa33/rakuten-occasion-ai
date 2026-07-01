@@ -1,4 +1,4 @@
-# Images Docker — Rakuten
+# Images Docker - Rakuten
 
 Toutes les images sont **multi-stage** (build isolé du runtime) et **CPU-only** :
 la promesse « `make up` sur VM vierge » cible une machine sans GPU,
@@ -28,7 +28,7 @@ docker build -f infra/docker/Dockerfile.airflow  -t rakuten/airflow:dev  .
 
 Cibles Makefile équivalentes : `make api-build`, `make frontend-build`.
 
-## Dockerfile.api — détails
+## Dockerfile.api - détails
 
 **Stage 1 (builder)** : `python:3.12-slim` + `build-essential` + `git`. Crée un
 venv `/opt/venv` et y installe `pip install ".[api,ml]"`. Torch en CPU explicite
@@ -40,9 +40,9 @@ le venv prêt-à-l'emploi du builder + le code source. Pas de toolchain de compi
 dans le runtime → image finale plus petite et surface d'attaque réduite.
 
 Healthcheck : `curl /health` (l'endpoint `src/api/main.py` expose l'état des
-services chargés — utilisable par Traefik et Kubernetes sans modif de code).
+services chargés - utilisable par Traefik et Kubernetes sans modif de code).
 
-## Dockerfile.frontend — détails
+## Dockerfile.frontend - détails
 
 **Stage 1 (builder)** : `node:20-alpine` + `npm ci` (lockfile reproductible) +
 `vite build` → `dist/` optimisé (hash de cache sur les assets, gzip-friendly).
@@ -72,7 +72,7 @@ ce sont les VOLUMES qui rendent l'API fonctionnelle, pas l'image seule.
 
 ## Note premier load API sous Windows Docker Desktop
 
-L'API charge au démarrage l'index FAISS HNSW (~**13,8 Go**) monté en read-only.
+L'API charge au démarrage l'index FAISS HNSW (~**13,2 Go**) monté en read-only.
 Sous **Windows + Docker Desktop (WSL2)**, le bind-mount lit séquentiellement
 via la traduction NTFS↔ext4 → premier `faiss.read_index` prend **5 à 15 min**
 (pas un bug, caractéristique connue). Sous **Linux natif (VM soutenance)** :

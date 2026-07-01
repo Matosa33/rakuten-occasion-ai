@@ -1,7 +1,7 @@
-// Cycle 17.5 (D-035, lève D-016) — mode « mitrailler » déménagement :
+// Cycle 17.5 (D-035, lève D-016) - mode « mitrailler » déménagement :
 // l'utilisateur photographie N objets À LA CHAÎNE sans attendre ; les
 // identifications tournent en arrière-plan ; un tableau de bord liste les
-// annonces à valider / prêtes. La queue survit au refresh (localStorage —
+// annonces à valider / prêtes. La queue survit au refresh (localStorage -
 // les photos, elles, sont déjà sur le serveur via /upload).
 
 import {

@@ -1,4 +1,4 @@
-"""Tests 17.2 (D-035) — images multiples candidats + VLM validateur F0.4.
+"""Tests 17.2 (D-035) - images multiples candidats + VLM validateur F0.4.
 
 Sans padding : extraction N vues (pure), parse verdict, branchement /identify
 (vlm_validation peuplé avec photos / absent sans), images[] dans la réponse.
@@ -29,7 +29,7 @@ TINY_JPEG = bytes.fromhex(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# _extract_all_image_urls — extraction pure des N vues
+# _extract_all_image_urls - extraction pure des N vues
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -60,7 +60,7 @@ def test_extract_all_images_malformed():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# validator._parse — robustesse verdicts VLM
+# validator._parse - robustesse verdicts VLM
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -79,7 +79,7 @@ def test_parse_verdict_inexploitable_none():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /identify — images[] exposées + vlm_validation peuplé
+# /identify - images[] exposées + vlm_validation peuplé
 # ─────────────────────────────────────────────────────────────────────────────
 
 

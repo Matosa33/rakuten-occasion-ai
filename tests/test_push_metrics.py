@@ -112,7 +112,7 @@ def test_push_drift_construit_les_7_gauges_attendues():
         "n_current": 10000,
     }
     # Réutilise la logique du helper sans push (en clonant le code des 7 gauges).
-    # Si la liste change côté src/, ce test sera à mettre à jour — c'est voulu.
+    # Si la liste change côté src/, ce test sera à mettre à jour - c'est voulu.
     Gauge("rakuten_drift_share", "", registry=registry).set(fake["drift_share"])
     Gauge("rakuten_drift_columns_count", "", registry=registry).set(fake["drifted_columns_count"])
     Gauge("rakuten_drift_detected", "", registry=registry).set(int(fake["drift_detected"]))
@@ -135,7 +135,7 @@ def test_push_drift_construit_les_7_gauges_attendues():
 
 def test_push_degrade_proprement_si_pushgateway_injoignable(monkeypatch):
     """Si le Pushgateway n'est pas joignable (smoke standalone), le helper doit
-    retourner False mais NE PAS lever — R15 dégradation propre, sinon les DAGs
+    retourner False mais NE PAS lever - R15 dégradation propre, sinon les DAGs
     Airflow plantent pour un problème obs et perdent tout le calcul amont.
 
     Audit 2026-06-05 (P1) : os.environ muté + importlib.reload laissaient le

@@ -11,7 +11,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Versions pinnées : MLflow 3.x pour aligner le serveur sur le client (3.x) — sinon
+# Versions pinnées : MLflow 3.x pour aligner le serveur sur le client (3.x) - sinon
 # la nouvelle API « logged-models » du client renvoie 404 sur un serveur 2.x (C32.1).
 # psycopg2 pour Postgres backend, boto3 pour S3 (MinIO via MLFLOW_S3_ENDPOINT_URL).
 RUN pip install --no-cache-dir \

@@ -1,4 +1,4 @@
-"""Cycle 36 — tests de l'identification raisonnée (src/vlm/reasoned_identification.py).
+"""Cycle 36 - tests de l'identification raisonnée (src/vlm/reasoned_identification.py).
 
 Best-effort, non bloquant : pas de réseau réel (post_with_retry + _to_data_url monkeypatchés).
 On vérifie la sérialisation des fiches, le grounding (anti-hallucination ASIN), le rejet d'ancre
@@ -40,8 +40,14 @@ class FakeResponse:
 
 def _cands() -> list[FakeCandidate]:
     return [
-        FakeCandidate("A1", "Coros Pace 2 GPS Watch", "Coros", "Running GPS Units", 150.0,
-                      {"capacity": "", "color": "black"}),
+        FakeCandidate(
+            "A1",
+            "Coros Pace 2 GPS Watch",
+            "Coros",
+            "Running GPS Units",
+            150.0,
+            {"capacity": "", "color": "black"},
+        ),
         FakeCandidate("A2", "Coros Pace 2 Nylon Band strap", "Coros", "Watch Bands", 13.0),
         FakeCandidate("A3", "Garmin Forerunner 55", "Garmin", "Running GPS Units", 199.0),
     ]
@@ -75,19 +81,23 @@ def test_build_prompt_contains_candidates_and_exclusion_rules() -> None:
 
 
 def test_parse_valid_json_returns_dataclass() -> None:
-    raw = json.dumps({
-        "product_family": "Coros Pace 2 GPS watch",
-        "family_confidence": 0.9,
-        "chosen_parent_asin": "A1",
-        "catalog_miss": False,
-        "reference_new_price_usd": 150,
-        "reference_new_confidence": 0.7,
-        "price_anchor_evidence": [0, 2],
-        "ask_question": False,
-        "facet_question": "",
-        "facets": [{"key": "color", "value": "black", "source": "observed"},
-                   {"key": "brand", "value": "Coros", "source": "0"}],
-    })
+    raw = json.dumps(
+        {
+            "product_family": "Coros Pace 2 GPS watch",
+            "family_confidence": 0.9,
+            "chosen_parent_asin": "A1",
+            "catalog_miss": False,
+            "reference_new_price_usd": 150,
+            "reference_new_confidence": 0.7,
+            "price_anchor_evidence": [0, 2],
+            "ask_question": False,
+            "facet_question": "",
+            "facets": [
+                {"key": "color", "value": "black", "source": "observed"},
+                {"key": "brand", "value": "Coros", "source": "0"},
+            ],
+        }
+    )
     out = _parse(raw, _cands())
     assert out is not None
     assert out.chosen_parent_asin == "A1"
@@ -97,8 +107,14 @@ def test_parse_valid_json_returns_dataclass() -> None:
 
 
 def test_parse_rejects_hallucinated_asin() -> None:
-    raw = json.dumps({"chosen_parent_asin": "ZZZ", "reference_new_price_usd": 150,
-                      "price_anchor_evidence": [0], "facets": []})
+    raw = json.dumps(
+        {
+            "chosen_parent_asin": "ZZZ",
+            "reference_new_price_usd": 150,
+            "price_anchor_evidence": [0],
+            "facets": [],
+        }
+    )
     out = _parse(raw, _cands())
     assert out is not None
     assert out.chosen_parent_asin == "A1"  # retombe sur le top-1 (grounded)
@@ -107,8 +123,9 @@ def test_parse_rejects_hallucinated_asin() -> None:
 def test_parse_resets_confidence_on_hallucinated_asin() -> None:
     # ASIN invalide SANS catalog_miss → fallback top-1 MAIS family_confidence remis à 0 (le LLM n'a
     # pas endossé ce candidat → en aval match_reliable ne doit pas l'afficher comme fait certain).
-    raw = json.dumps({"chosen_parent_asin": "ZZZ", "family_confidence": 0.9,
-                      "catalog_miss": False, "facets": []})
+    raw = json.dumps(
+        {"chosen_parent_asin": "ZZZ", "family_confidence": 0.9, "catalog_miss": False, "facets": []}
+    )
     out = _parse(raw, _cands())
     assert out.chosen_parent_asin == "A1"
     assert out.family_confidence == 0.0
@@ -116,8 +133,15 @@ def test_parse_resets_confidence_on_hallucinated_asin() -> None:
 
 def test_parse_keeps_confidence_on_legit_catalog_miss() -> None:
     # catalog_miss légitime (chosen="") → on GARDE la confiance (elle porte sur le produit observé).
-    raw = json.dumps({"chosen_parent_asin": "", "family_confidence": 0.9, "catalog_miss": True,
-                      "reference_new_price_usd": 100, "facets": []})
+    raw = json.dumps(
+        {
+            "chosen_parent_asin": "",
+            "family_confidence": 0.9,
+            "catalog_miss": True,
+            "reference_new_price_usd": 100,
+            "facets": [],
+        }
+    )
     out = _parse(raw, _cands())
     assert out.chosen_parent_asin == ""
     assert out.family_confidence == 0.9
@@ -125,9 +149,16 @@ def test_parse_keeps_confidence_on_legit_catalog_miss() -> None:
 
 def test_parse_keeps_estimated_anchor_even_without_evidence() -> None:
     # Politique Cycle 36 : l'ancre est une ESTIMATION étiquetée (« estimé par IA »), on la garde
-    # même sans evidence — bien mieux que retomber sur la médiane catégorie polluée.
-    raw = json.dumps({"chosen_parent_asin": "A1", "reference_new_price_usd": 150,
-                      "price_anchor_evidence": [], "catalog_miss": False, "facets": []})
+    # même sans evidence - bien mieux que retomber sur la médiane catégorie polluée.
+    raw = json.dumps(
+        {
+            "chosen_parent_asin": "A1",
+            "reference_new_price_usd": 150,
+            "price_anchor_evidence": [],
+            "catalog_miss": False,
+            "facets": [],
+        }
+    )
     out = _parse(raw, _cands())
     assert out is not None
     assert out.reference_new_price_usd == 150.0
@@ -137,8 +168,15 @@ def test_parse_keeps_estimated_anchor_even_without_evidence() -> None:
 
 
 def test_parse_keeps_anchor_for_catalog_miss_by_analogy() -> None:
-    raw = json.dumps({"chosen_parent_asin": "", "reference_new_price_usd": 150,
-                      "price_anchor_evidence": [], "catalog_miss": True, "facets": []})
+    raw = json.dumps(
+        {
+            "chosen_parent_asin": "",
+            "reference_new_price_usd": 150,
+            "price_anchor_evidence": [],
+            "catalog_miss": True,
+            "facets": [],
+        }
+    )
     out = _parse(raw, _cands())
     assert out is not None
     assert out.reference_new_price_usd == 150.0  # analogie tolérée en catalog-miss
@@ -147,17 +185,27 @@ def test_parse_keeps_anchor_for_catalog_miss_by_analogy() -> None:
 def test_parse_handles_fences_and_prose() -> None:
     fenced = "```json\n" + json.dumps({"chosen_parent_asin": "A1", "facets": []}) + "\n```"
     assert _parse(fenced, _cands()) is not None
-    prose = "Here is the answer: " + json.dumps({"chosen_parent_asin": "A1", "facets": []}) + " done."
+    prose = (
+        "Here is the answer: " + json.dumps({"chosen_parent_asin": "A1", "facets": []}) + " done."
+    )
     assert _parse(prose, _cands()) is not None
     assert _parse("not json at all", _cands()) is None
 
 
 def test_parse_clamps_confidence_and_drops_invalid_facet_source() -> None:
-    raw = json.dumps({"chosen_parent_asin": "A1", "family_confidence": 1.7,
-                      "reference_new_confidence": -0.2, "price_anchor_evidence": [0],
-                      "reference_new_price_usd": 10,
-                      "facets": [{"key": "k", "value": "v", "source": "99"},  # index hors borne
-                                 {"key": "ok", "value": "v", "source": "1"}]})
+    raw = json.dumps(
+        {
+            "chosen_parent_asin": "A1",
+            "family_confidence": 1.7,
+            "reference_new_confidence": -0.2,
+            "price_anchor_evidence": [0],
+            "reference_new_price_usd": 10,
+            "facets": [
+                {"key": "k", "value": "v", "source": "99"},  # index hors borne
+                {"key": "ok", "value": "v", "source": "1"},
+            ],
+        }
+    )
     out = _parse(raw, _cands())
     assert out is not None
     assert out.family_confidence == 1.0
@@ -191,16 +239,27 @@ def test_reason_identify_happy_path(monkeypatch) -> None:
 
     def fake_post(payload, key, timeout=90):
         payload_seen.update(payload)
-        return FakeResponse(json.dumps({
-            "product_family": "Coros Pace 2 GPS watch", "family_confidence": 0.9,
-            "chosen_parent_asin": "A1", "catalog_miss": False,
-            "reference_new_price_usd": 150, "reference_new_confidence": 0.7,
-            "price_anchor_evidence": [0], "ask_question": False, "facet_question": "",
-            "facets": [{"key": "color", "value": "black", "source": "observed"}],
-        }))
+        return FakeResponse(
+            json.dumps(
+                {
+                    "product_family": "Coros Pace 2 GPS watch",
+                    "family_confidence": 0.9,
+                    "chosen_parent_asin": "A1",
+                    "catalog_miss": False,
+                    "reference_new_price_usd": 150,
+                    "reference_new_confidence": 0.7,
+                    "price_anchor_evidence": [0],
+                    "ask_question": False,
+                    "facet_question": "",
+                    "facets": [{"key": "color", "value": "black", "source": "observed"}],
+                }
+            )
+        )
 
     monkeypatch.setattr(ri_mod, "post_with_retry", fake_post)
-    out = reason_identify(["/fake.jpg"], _cands(), observed={"color": "black"}, seller_text="montre")
+    out = reason_identify(
+        ["/fake.jpg"], _cands(), observed={"color": "black"}, seller_text="montre"
+    )
     assert out is not None
     assert out.chosen_parent_asin == "A1"
     assert out.reference_new_price_usd == 150.0

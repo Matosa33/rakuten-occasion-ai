@@ -1,4 +1,4 @@
-# CI Rakuten (Cycle 15.2, D-033 — étend la version minimale C0/C1).
+# CI Rakuten (Cycle 15.2, D-033 - étend la version minimale C0/C1).
 # Lint + tests sur chaque push et pull_request → main.
 # Cible : feedback PR < 5 min. Les tests qui exigent des artefacts ML lourds
 # (FAISS HNSW 13,8 Go, M8 joblib, train.parquet) skipent automatiquement via
@@ -117,10 +117,13 @@ jobs:
 
       - name: pip-audit (CVE scan)
         # D-034 : échoue sur toute CVE fixable. Ignorées avec justification :
-        #   CVE-2025-69872 (diskcache, dep transitive DVC) — AUCUNE version de
+        #   CVE-2025-69872 (diskcache, dep transitive DVC) - AUCUNE version de
         #   fix publiée à ce jour (vérifié audit 2026-06-05) ; risque accepté.
+        #   CVE-2025-3000 (torch) - aucune version corrigée publiée à ce jour
+        #   (vérifié 2026-07-01) ; risque accepté : torch sert à l'encodage local,
+        #   jamais exposé au réseau.
         run: |
-          pip-audit --skip-editable --ignore-vuln CVE-2025-69872
+          pip-audit --skip-editable --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2025-3000
 
   docker-build:
     name: Docker build check (${{ matrix.image }})
@@ -147,7 +150,7 @@ jobs:
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Build (no push)
-        # D-034 : vérifie que le Dockerfile compile sur PR — avant ce job, un
+        # D-034 : vérifie que le Dockerfile compile sur PR - avant ce job, un
         # Dockerfile cassé n'était détecté qu'au push main (workflow ghcr).
         # Cache partagé avec ghcr.yml (mêmes scopes) → build incrémental.
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6

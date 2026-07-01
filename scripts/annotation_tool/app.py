@@ -1,8 +1,8 @@
-"""Interface d'annotation RAPIDE des photos d'éval (Phase 2 — richesse d'entrée).
+"""Interface d'annotation RAPIDE des photos d'éval (Phase 2 - richesse d'entrée).
 
 Saisie minimale côté humain : **photos + texte brut de l'annonce réelle** (titre + description).
 Les métadonnées structurées (macro, taxonomie, seller_metadata) sont **dérivées ensuite** par
-`derive_meta.py` (LLM) puis relues — pas de formulaire à remplir champ par champ.
+`derive_meta.py` (LLM) puis relues - pas de formulaire à remplir champ par champ.
 
 Rangement automatique (aucune manip de fichiers) :
 
@@ -29,7 +29,7 @@ DATASET_DIR = REPO_ROOT / "data" / "photos_eval"
 TARGET_TOTAL = 100
 ALLOWED_EXT = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
 
-app = FastAPI(title="Annotation rapide — photos d'éval Rakuten")
+app = FastAPI(title="Annotation rapide - photos d'éval Rakuten")
 
 
 def _slugify(name: str) -> str:
@@ -103,7 +103,7 @@ async def api_save(
         if Path(p.filename).suffix.lower() not in ALLOWED_EXT:
             raise HTTPException(400, f"Extension non supportée : {p.filename}.")
 
-    # photo principale en premier (= 01) — condition C1 (une seule photo)
+    # photo principale en premier (= 01) - condition C1 (une seule photo)
     if 0 <= main_index < len(photos):
         photos.insert(0, photos.pop(main_index))
 
@@ -140,7 +140,7 @@ def index() -> str:
 
 _PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Annotation rapide — photos d'éval</title>
+<title>Annotation rapide - photos d'éval</title>
 <style>
   :root{--bg:#0f172a;--card:#1e293b;--ink:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--ok:#22c55e;--warn:#f59e0b}
   *{box-sizing:border-box} body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
@@ -169,7 +169,7 @@ _PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
 </style></head><body>
 <div class="wrap">
   <div>
-    <h1>📸 Annotation rapide — Phase 2</h1>
+    <h1>📸 Annotation rapide - Phase 2</h1>
     <p class="sub">Tu mets les <b>photos</b> + le <b>texte de l'annonce</b>. Je dérive les métadonnées (macro, taxo…) ensuite. La 1ʳᵉ photo (bordure verte) = principale (sert seule en C1). Astuce : <kbd>Ctrl/Cmd + Entrée</kbd> pour enregistrer.</p>
     <div class="card">
       <div id="drop" class="drop">Glisse les photos ici, ou clique pour choisir (3-5 par produit)</div>
@@ -177,7 +177,7 @@ _PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
       <div id="thumbs" class="thumbs"></div>
 
       <label>Titre de l'annonce <span class="req">*</span></label>
-      <input id="listing_title" placeholder="ex: iPhone 13 128 Go noir — très bon état">
+      <input id="listing_title" placeholder="ex: iPhone 13 128 Go noir - très bon état">
       <label>Description de l'annonce (copie-colle l'annonce réelle)</label>
       <textarea id="listing_description" placeholder="Colle ici la description Leboncoin/Vinted… (marque, modèle, état, specs). Plus c'est riche, mieux je dérive la catégorie."></textarea>
       <button id="save" disabled>Enregistrer le produit</button>
@@ -193,7 +193,7 @@ _PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
     </div>
     <div class="card">
       <h1 style="font-size:16px">Produits saisis</h1>
-      <div id="list" class="list">—</div>
+      <div id="list" class="list">-</div>
     </div>
   </div>
 </div>
@@ -247,7 +247,7 @@ async function refresh(){
   $("prog").style.width=Math.min(100,100*j.total/TARGET)+"%";
   const f=[]; if(j.thin) f.push(j.thin+" produit(s) avec <2 photos (ajoute des vues pour le test N>1)");
   $("flags").textContent=f.join(" · ");
-  $("list").innerHTML=j.entries.length? j.entries.map(e=>`<div>${e.dir} — ${e.n_photos}📷 ${e.annotated?("✓ "+e.macro):"⏳ à dériver"}</div>`).join("") : "—";
+  $("list").innerHTML=j.entries.length? j.entries.map(e=>`<div>${e.dir} - ${e.n_photos}📷 ${e.annotated?("✓ "+e.macro):"⏳ à dériver"}</div>`).join("") : "-";
 }
 refresh();
 </script></body></html>"""

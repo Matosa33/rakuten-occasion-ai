@@ -398,7 +398,7 @@ produits du panel, 93 ont été mesurés (1 écarté car sans photo) :
 Cette mesure remplace les anecdotes par un chiffre défendable, conformément à la doctrine du projet
 (mesurer sur de vraies sorties, jamais sur des comptes de lignes ou des pourcentages abstraits).
 
-> Drapeau slide. Chiffres à retenir : « HNSW retrouve le bon produit avec un taux de 0,948 en
+> Chiffres clés à retenir : « HNSW retrouve le bon produit avec un taux de 0,948 en
 > 0,29 ms sur 3,16 millions de produits » (le chiffre qui impressionne), « bonne catégorie en
 > premier résultat dans 94,2 % des cas », « seuil OOD à 0,600 donnant une précision de 0,95 et un
 > rappel de 0,99 », et « identification bout-en-bout sur photos réelles à 90,3 % avec une complétude

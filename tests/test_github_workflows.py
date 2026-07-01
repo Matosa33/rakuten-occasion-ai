@@ -24,7 +24,7 @@ def _load(p: Path) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ci.yml — lint + tests + brain-structure
+# ci.yml - lint + tests + brain-structure
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -83,7 +83,7 @@ def test_ci_docker_build_les_4_images_sans_push():
 
 
 def test_ci_test_depends_on_lint():
-    """`test` doit attendre `lint` — évite de gaspiller des minutes Actions sur
+    """`test` doit attendre `lint` - évite de gaspiller des minutes Actions sur
     du code non-formaté qui aurait de toute façon échoué au lint."""
     jobs = _load(CI)["jobs"]
     needs = jobs["test"].get("needs")
@@ -110,7 +110,7 @@ def test_ci_concurrence_cancel_pour_economiser_minutes():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ghcr.yml — build + push 4 images au GitHub Container Registry
+# ghcr.yml - build + push 4 images au GitHub Container Registry
 # ─────────────────────────────────────────────────────────────────────────────
 
 

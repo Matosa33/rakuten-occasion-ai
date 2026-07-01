@@ -87,7 +87,7 @@ def test_ingress_route_les_3_hotes_attendus():
 
 
 def test_images_locales_imagepullpolicy_ifnotpresent():
-    """Les 3 images `rakuten/*:dev` sont locales (kind load) — pullPolicy IfNotPresent
+    """Les 3 images `rakuten/*:dev` sont locales (kind load) - pullPolicy IfNotPresent
     obligatoire, sinon K8s tente un `docker pull` et échoue."""
     pods_specs = []
     for o in _all_manifests():

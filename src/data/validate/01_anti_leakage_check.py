@@ -1,4 +1,4 @@
-"""Sous-todo 1.3 — Vérification anti-leakage 5 patterns canoniques.
+"""Sous-todo 1.3 - Vérification anti-leakage 5 patterns canoniques.
 
 À ce stade, le split est :
 - 70/15/15 stratifié par `_source_category` (anti-B1 déséquilibre)
@@ -9,29 +9,29 @@ findings L1/L2/L3 du rapport 01_audit/audit_v1_amazon_reviews_2023.md).
 
 Patterns vérifiés
 -----------------
-P1 — Doublons parent_asin train/test
+P1 - Doublons parent_asin train/test
     Doit être 0 (groupé par parent_asin au split). Si > 0 → bug split.
 
-P2 — Métadonnées qui contiennent le label
+P2 - Métadonnées qui contiennent le label
     Vérifier que les champs textuels (title, description) ne contiennent
     pas systématiquement le nom de la catégorie (`_source_category`).
     Mesure : pour chaque cat, % de title/description contenant le mot
     de la cat. Si > 80 %, alerte.
 
-P3 — Fuite temporelle
+P3 - Fuite temporelle
     Pour un split product-level, ce n'est pas critique (les produits
     n'ont pas de "date de création" stricte). On vérifie que les
     distributions temporelles (year_first_review, year_last_review)
-    sont similaires entre splits — KL divergence ou écart de médianes.
+    sont similaires entre splits - KL divergence ou écart de médianes.
 
-P4 — Fuite de groupe user_id (sur reviews_index)
+P4 - Fuite de groupe user_id (sur reviews_index)
     Au product-level, c'est sans objet. Au reviews_index, on mesure
     l'overlap users train ∩ test. **C'est attendu d'avoir overlap** car
     le split est anti-L1, pas anti-L2. À documenter explicitement
     comme limitation : pour les modèles qui apprennent les préférences
     user, refaire un split GroupKFold(user_id) en C07.
 
-P5 — Fuite feature engineering
+P5 - Fuite feature engineering
     Vérifier que toutes les features dérivées (log_price, n_reviews_log,
     price_band, etc.) sont **stateless** : leur calcul ne dépend pas
     du dataset (juste de la valeur de la ligne). On grep le code source
@@ -70,8 +70,8 @@ SOURCE_FE = REPO_ROOT / "src" / "data" / "clean" / "05_feature_engineering.py"
 
 
 def check_p1_parent_asin_overlap() -> dict:
-    """P1 — Doublons parent_asin train/test (cible : 0)."""
-    log.info("P1 — Doublons parent_asin train/test…")
+    """P1 - Doublons parent_asin train/test (cible : 0)."""
+    log.info("P1 - Doublons parent_asin train/test…")
     train_pa = (
         pl.scan_parquet(DATA_PROCESSED_PRODUCTS / "train.parquet")
         .select("parent_asin")
@@ -97,7 +97,7 @@ def check_p1_parent_asin_overlap() -> dict:
     overlap_val_test = len(val_set & test_set)
 
     return {
-        "label": "P1 — Doublons parent_asin train/test",
+        "label": "P1 - Doublons parent_asin train/test",
         "severity": "critical" if overlap_train_test > 0 else "ok",
         "overlap_train_test": overlap_train_test,
         "overlap_train_val": overlap_train_val,
@@ -109,13 +109,13 @@ def check_p1_parent_asin_overlap() -> dict:
 
 
 def check_p2_metadata_contains_label() -> dict:
-    """P2 — Le titre/description contient-il systématiquement le nom de la catégorie ?
+    """P2 - Le titre/description contient-il systématiquement le nom de la catégorie ?
 
     Mesure par cat : % de titles contenant n'importe lequel des mots-clés
     significatifs de la cat (ex: "book" pour Books, "phone" pour
     Cell_Phones, etc.). Si > 80 %, alerte (le classifier triche).
     """
-    log.info("P2 — Metadata contient le label…")
+    log.info("P2 - Metadata contient le label…")
 
     # Mots-clés discriminants par cat (case-insensitive search)
     CAT_KEYWORDS = {
@@ -178,7 +178,7 @@ def check_p2_metadata_contains_label() -> dict:
 
     n_alerts = sum(1 for v in by_cat.values() if v["alert_title"] or v["alert_description"])
     return {
-        "label": "P2 — Metadata contient le label",
+        "label": "P2 - Metadata contient le label",
         "severity": "high" if n_alerts > 5 else ("medium" if n_alerts > 0 else "ok"),
         "n_alerts": n_alerts,
         "by_cat": by_cat,
@@ -191,8 +191,8 @@ def check_p2_metadata_contains_label() -> dict:
 
 
 def check_p3_temporal_distribution() -> dict:
-    """P3 — Distributions temporelles similaires entre splits ?"""
-    log.info("P3 — Distribution temporelle train vs val vs test…")
+    """P3 - Distributions temporelles similaires entre splits ?"""
+    log.info("P3 - Distribution temporelle train vs val vs test…")
     stats_per_split = {}
     for split_name in ("train", "val", "test"):
         df = (
@@ -219,7 +219,7 @@ def check_p3_temporal_distribution() -> dict:
     median_spread = max(medians) - min(medians) if medians else 0
 
     return {
-        "label": "P3 — Fuite temporelle (médianes year_last_review entre splits)",
+        "label": "P3 - Fuite temporelle (médianes year_last_review entre splits)",
         "severity": "ok" if median_spread < 1 else ("medium" if median_spread < 3 else "high"),
         "stats_per_split": stats_per_split,
         "median_spread_years": median_spread,
@@ -231,13 +231,13 @@ def check_p3_temporal_distribution() -> dict:
 
 
 def check_p4_user_overlap_reviews_index() -> dict:
-    """P4 — Overlap user_id train/test dans reviews_index.
+    """P4 - Overlap user_id train/test dans reviews_index.
 
     LIMITATION ATTENDUE et documentée : le split est product-level
     (anti-L1), pas user-level. Pour les modèles préférence user (futurs
     cycles), refaire GroupKFold(user_id) explicit.
     """
-    log.info("P4 — Overlap user_id train/test sur reviews_index…")
+    log.info("P4 - Overlap user_id train/test sur reviews_index…")
     train_users = (
         pl.scan_parquet(DATA_PROCESSED_REVIEWS_INDEX / "train.parquet")
         .select(pl.col("user_id").unique())
@@ -258,7 +258,7 @@ def check_p4_user_overlap_reviews_index() -> dict:
     pct_test_users_in_train = round(100 * overlap / n_test_users, 1) if n_test_users else 0
 
     return {
-        "label": "P4 — Overlap user_id train/test (reviews_index)",
+        "label": "P4 - Overlap user_id train/test (reviews_index)",
         "severity": "expected" if pct_test_users_in_train > 0 else "n/a",
         "n_train_users_unique": n_train_users,
         "n_test_users_unique": n_test_users,
@@ -275,8 +275,8 @@ def check_p4_user_overlap_reviews_index() -> dict:
 
 
 def check_p5_feature_engineering_stateless() -> dict:
-    """P5 — Feature engineering stateless (pas d'agrégat global)."""
-    log.info("P5 — Feature engineering stateless (grep dans script 05)…")
+    """P5 - Feature engineering stateless (pas d'agrégat global)."""
+    log.info("P5 - Feature engineering stateless (grep dans script 05)…")
     source = SOURCE_FE.read_text(encoding="utf-8")
 
     # Patterns à chercher (statefuls forbidden)
@@ -294,7 +294,7 @@ def check_p5_feature_engineering_stateless() -> dict:
             found.append(pat)
 
     return {
-        "label": "P5 — Feature engineering stateless (pas d'agrégat global)",
+        "label": "P5 - Feature engineering stateless (pas d'agrégat global)",
         "severity": "high" if found else "ok",
         "statefuls_found_in_source": found,
         "source_file": str(SOURCE_FE.relative_to(REPO_ROOT)),
@@ -307,7 +307,7 @@ def check_p5_feature_engineering_stateless() -> dict:
 
 
 def main() -> None:
-    log.info("=== Sous-todo 1.3 — Vérification anti-leakage 5 patterns ===")
+    log.info("=== Sous-todo 1.3 - Vérification anti-leakage 5 patterns ===")
 
     REPORTS_CLEANING.mkdir(parents=True, exist_ok=True)
 
@@ -324,7 +324,7 @@ def main() -> None:
 
     log.info("\n=== Synthèse anti-leakage ===")
     for pid, f in findings.items():
-        log.info("  [%s] %s — %s", f.get("severity", "?"), pid, f.get("label"))
+        log.info("  [%s] %s - %s", f.get("severity", "?"), pid, f.get("label"))
 
     log.info("\nSous-todo 1.3 OK.")
 

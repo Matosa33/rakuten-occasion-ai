@@ -83,7 +83,7 @@ def write(df: pl.DataFrame) -> None:
             )
     # MD lisible
     lines = [
-        f"# Catalogue — échantillon diversifié ({df.height} produits)",
+        f"# Catalogue - échantillon diversifié ({df.height} produits)",
         "",
         "> Guide de scraping : couvre les 4 macro-catégories × un max de **catégories fines**",
         "> distinctes. Les titres sont des exemples Amazon → trouve l'équivalent réel sur",

@@ -1,4 +1,4 @@
-"""Cycle 36 — le texte vendeur fait FOI (déterministe) sur le choix du candidat.
+"""Cycle 36 - le texte vendeur fait FOI (déterministe) sur le choix du candidat.
 
 Quand le vendeur nomme un produit présent dans les candidats, on le retient sans dépendre du LLM
 rapide (qui ignore parfois la consigne). Match fort exigé (≥2 tokens + ≥50 % couverture).

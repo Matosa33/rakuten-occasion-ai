@@ -1,4 +1,4 @@
-"""Audit pipeline — Phase P02, sous-todo 1.1.
+"""Audit pipeline - Phase P02, sous-todo 1.1.
 
 4 scripts numérotés (R1) à exécuter dans l'ordre :
 
@@ -19,7 +19,7 @@ Chaque script lit dans `data/raw/full/{reviews,meta}/` et écrit dans
 `reports/01_audit/` (cf. `src/config.py` pour les chemins centralisés).
 """
 
-# Périmètre actif D-011 — 4 catégories MVP focused (high-tech + outils).
+# Périmètre actif D-011 - 4 catégories MVP focused (high-tech + outils).
 # Voir ADR D-011 (supersede partiel D-008).
 # Volume mesuré : ~4,5 M items meta + ~96 M reviews (~17 % du périmètre D-008).
 # Justification : focus sur cat où la vision est cruciale et le marché occasion

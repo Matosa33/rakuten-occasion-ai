@@ -1,4 +1,4 @@
-// Cycle 17.3 (D-035) — upload photos OBLIGATOIRE : la photo est la preuve
+// Cycle 17.3 (D-035) - upload photos OBLIGATOIRE : la photo est la preuve
 // acheteur et l'entrée du pipeline d'identification.
 // Drag&drop desktop + capture caméra mobile (capture=environment).
 
@@ -58,7 +58,7 @@ export function PhotoUploader({
       <span className="text-sm font-medium text-slate-700">
         Photos de votre objet <span className="text-rose-600">*</span>
         <span className="ml-1 font-normal text-slate-400">
-          (au moins 1 — c'est la preuve pour l'acheteur)
+          (au moins 1 - c'est la preuve pour l'acheteur)
         </span>
       </span>
 
@@ -111,7 +111,7 @@ export function PhotoUploader({
             <>
               📷 Prenez une photo ou glissez-la ici
               <span className="mt-0.5 block text-xs text-slate-400">
-                JPEG, PNG, WebP — {MAX_PHOTOS - photos.length} restante(s)
+                JPEG, PNG, WebP - {MAX_PHOTOS - photos.length} restante(s)
               </span>
             </>
           )}

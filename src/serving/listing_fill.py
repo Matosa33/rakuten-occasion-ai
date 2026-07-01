@@ -4,7 +4,7 @@ Quand le produit n'est PAS (ou mal) présent au catalogue, on **ne s'ancre pas s
 voisin** : on remplit les champs structurés de la fiche depuis les **faits observés sur la photo**
 (extraction VLM) + la **catégorie votée** + la **métadonnée vendeur**. Chaque champ porte sa
 **provenance**, et on mesure la **complétude**. Anti-hallucination préservé : aucune valeur non
-vérifiée n'est affirmée — les valeurs « typiques » imputées des voisins sont marquées *à vérifier*.
+vérifiée n'est affirmée - les valeurs « typiques » imputées des voisins sont marquées *à vérifier*.
 
 Cascade de complétude (même esprit que le pricing L1-L4) :
 - **N1_catalog**        : match catalogue fiable → specs du produit réel.
@@ -20,13 +20,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 # Provenances possibles d'un champ (affichables tel quel sur la fiche).
-SRC_OBSERVED = "observé"  # lu sur la photo (VLM) — le plus fiable pour CET objet
+SRC_OBSERVED = "observé"  # lu sur la photo (VLM) - le plus fiable pour CET objet
 SRC_CATALOG = "catalogue"  # spec du produit catalogue matché (fiable si match correct)
 SRC_TYPICAL = "typique-à-vérifier"  # imputé des voisins, NON affirmé
 SRC_CATEGORY = "catégorie"  # déduit de la catégorie votée
 SRC_SELLER = "vendeur"  # saisi/choisi par le vendeur
 
-# Seuil de match fiable — aligné sur IDENTIFIED_THRESHOLD du pipeline (0.60).
+# Seuil de match fiable - aligné sur IDENTIFIED_THRESHOLD du pipeline (0.60).
 RELIABLE_MATCH_THRESHOLD = 0.60
 
 FIELD_LABELS = {
@@ -48,7 +48,7 @@ FIELD_LABELS = {
 }
 
 # Au-delà des facettes du schéma, on affiche aussi les attributs RICHES observés/catalogue (le
-# vendeur veut une fiche complète) — valeurs longues tronquées pour éviter le bruit (listes Amazon).
+# vendeur veut une fiche complète) - valeurs longues tronquées pour éviter le bruit (listes Amazon).
 _MAX_FACET_VALUE = 80
 
 
@@ -90,7 +90,7 @@ def assemble_listing(
         category_confidence: confiance du vote (part).
         condition_label: état choisi par le vendeur (« Bon état »).
         photo_attributes: attributs lus sur la photo par le VLM (brand, color, capacity…).
-        seller_metadata: texte vendeur (titre) — repli pour le titre.
+        seller_metadata: texte vendeur (titre) - repli pour le titre.
         match_brand / match_attributes: marque + facettes du meilleur candidat catalogue.
         match_reliable: True si le candidat est jugé fiable (score ≥ seuil).
         expected_facets: facettes attendues pour cette catégorie (dénominateur de complétude).
@@ -139,8 +139,11 @@ def assemble_listing(
         fields.append(brand_f)
 
     # Facettes attendues pour la catégorie (schéma) → remplies par photo/catalogue.
-    facets = expected_facets or sorted(set(photo) | set(match_attrs))
-    # `visible_text` = OCR brut (souvent le titre ou un watermark « leboncoin ») → bruit, non affiché.
+    # `visible_text` = OCR brut (titre ou watermark) et `category` (doublon du Type de produit) :
+    # exclus AUSSI du fallback sans schéma, sinon ils s'affichent comme facettes.
+    facets = expected_facets or sorted(
+        (set(photo) | set(match_attrs)) - {"visible_text", "category", "brand"}
+    )
     shown_keys = {"brand", "category", "visible_text"}
     for key in facets:
         if key in ("brand",):  # déjà traité

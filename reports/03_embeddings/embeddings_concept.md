@@ -1,6 +1,6 @@
-# Rapport — Embeddings : concepts et utilitaires de similarité
+# Rapport - Embeddings : concepts et utilitaires de similarité
 
-> Version 1.0 — 2026-05-03
+> Version 1.0 - 2026-05-03
 > Statut : terminé. Aucune donnée externe consommée (travail conceptuel et pédagogique).
 
 ## En une phrase
@@ -9,9 +9,9 @@ On pose les **briques mathématiques de base** (normalisation L2, similarité co
 
 ## Livrables
 
-- `src/encoders/similarity_utils.py` — module importable (5 fonctions : `l2_normalize`, `cosine_similarity`, `inner_product`, `l2_distance`, `top_k_similar`)
-- `tests/test_similarity_utils.py` — 22 tests d'invariants mathématiques (norme=1, cosine ∈ [-1,1], symétrie, triangle, équivalences L2 ↔ cosine sur normalisés…)
-- `notebooks/03_embeddings_concept.ipynb` — démo pédagogique en 6 sections (concept 2D → 3 métriques → normalisation → t-SNE → top-k retrieval)
+- `src/encoders/similarity_utils.py` - module importable (5 fonctions : `l2_normalize`, `cosine_similarity`, `inner_product`, `l2_distance`, `top_k_similar`)
+- `tests/test_similarity_utils.py` - 22 tests d'invariants mathématiques (norme=1, cosine ∈ [-1,1], symétrie, triangle, équivalences L2 ↔ cosine sur normalisés…)
+- `notebooks/03_embeddings_concept.ipynb` - démo pédagogique en 6 sections (concept 2D → 3 métriques → normalisation → t-SNE → top-k retrieval)
 
 ## Décisions techniques
 

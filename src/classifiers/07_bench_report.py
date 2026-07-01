@@ -1,4 +1,4 @@
-"""Cycle 3 — Bench global les 6 modèles.
+"""Cycle 3 - Bench global les 6 modèles.
 
 Agrège les JSON de métriques produits par les modèles de base + fusion fusion en un rapport
 markdown comparatif. Permet la sélection du modèle vainqueur pour MLflow
@@ -62,7 +62,7 @@ def _format_row(model_metrics: dict) -> dict:
 
 
 def main() -> None:
-    log.info("=== Cycle 3 — Bench global les 6 modèles ===")
+    log.info("=== Cycle 3 - Bench global les 6 modèles ===")
 
     REPORTS_CLASSIFIERS.mkdir(parents=True, exist_ok=True)
 
@@ -86,7 +86,7 @@ def main() -> None:
 
     # Format markdown
     lines = [
-        "# Bench classifieurs Cycle 3 — les 6 modèles",
+        "# Bench classifieurs Cycle 3 - les 6 modèles",
         "",
         "> Synthèse comparative des 6 modèles entraînés en Cycle 3 (P04, C12-C15).",
         "> Tri par F1_weighted_test décroissant. Vainqueur en haut → MLflow alias `@Production` (Cycle 11).",

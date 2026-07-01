@@ -1,4 +1,4 @@
-// Cycle 15 (D-032) — gestion du token JWT côté client.
+// Cycle 15 (D-032) - gestion du token JWT côté client.
 //
 // Pattern minimal sans router ni Context : un store externe (localStorage +
 // listeners) consommé par App via `useSyncExternalStore`. Le 401 intercepté

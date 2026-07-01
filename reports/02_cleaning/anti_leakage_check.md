@@ -1,57 +1,46 @@
 # Rapport anti-leakage
 
-> Version 1.0 — 2026-05-03
-> Statut : terminé — chiffres mesurés sur les splits products + reviews_index générés à l'étape de nettoyage et de split.
+> Version 1.0 - 2026-05-03
+> Statut : terminé - chiffres mesurés sur les splits products + reviews_index générés à l'étape de nettoyage et de split.
 > Tous les chiffres sont mesurés, aucun n'est inventé.
 
 ## En une phrase
 
-Sur les 5 patterns canoniques de fuite de données (data leakage), **4 sont OK** (P1, P2, P3, P5) et **1 est attendu et explicitement documenté** (P4 — chevauchement des user_id dans le reviews_index). Le pipeline de nettoyage et de split est protégé contre les fuites **au niveau produit** (protection contre les variantes d'un même produit, et stratification par catégorie contre le déséquilibre catégoriel). Pour de futurs modèles de "préférence utilisateur", un split dédié GroupKFold(user_id) sera nécessaire.
+Sur les 5 patterns canoniques de fuite de données (data leakage), **4 sont OK** (P1, P2, P3, P5) et **1 est attendu et explicitement documenté** (P4 - chevauchement des user_id dans le reviews_index). Le pipeline de nettoyage et de split est protégé contre les fuites **au niveau produit** (protection contre les variantes d'un même produit, et stratification par catégorie contre le déséquilibre catégoriel). Pour de futurs modèles de "préférence utilisateur", un split dédié GroupKFold(user_id) sera nécessaire.
 
-## Pattern 1 — Doublons parent_asin train/test ✅
+## Pattern 1 - Doublons parent_asin train/test ✅
 
 | Métrique | Valeur | Verdict |
 |---|---:|---|
 | Overlap parent_asin train ∩ test | **0** | ✅ |
 | Overlap parent_asin train ∩ val | **0** | ✅ |
 | Overlap parent_asin val ∩ test | **0** | ✅ |
-| n_unique parent_asin train | 18 458 346 | — |
-| n_unique parent_asin val | 3 955 355 | — |
-| n_unique parent_asin test | 3 955 377 | — |
+| n_unique parent_asin train | 3 156 705 | - |
+| n_unique parent_asin val | 676 435 | - |
+| n_unique parent_asin test | 676 441 | - |
 
 GroupKFold(parent_asin) trivial à respecter au niveau produit (1 ligne = 1 parent_asin). Strict 0 partout : split parfait pour empêcher qu'un même produit (et ses variantes) se retrouve dans deux splits.
 
-## Pattern 2 — Métadonnées qui contiennent le label ✅
+## Pattern 2 - Métadonnées qui contiennent le label ✅
 
-Vérification : pour chaque catégorie, % de produits dont le `title` ou la `description` contient un mot-clé évident de la catégorie (ex: "phone" pour Cell_Phones, "book" pour Books). Si > 80 %, alerte (le classifier triche).
+Vérification : pour chaque catégorie, % de produits dont le `title` ou la `description` contient un mot-clé évident de la catégorie (ex: "phone" pour Cell_Phones, "game" pour Video_Games). Si > 80 %, alerte (le classifier triche).
 
 | Catégorie | n_train | % title contient kw | % description contient kw | Alerte |
 |---|---:|---:|---:|:---:|
-| Clothing_Shoes_and_Jewelry | 5 052 936 | 32,2 % | 19,6 % | — |
-| Home_and_Kitchen | 2 614 908 | 20,1 % | 16,7 % | — |
-| Books | 3 113 726 | 12,2 % | 28,3 % | — |
-| Electronics | 1 127 008 | 2,0 % | 10,5 % | — |
-| Tools_and_Home_Improvement | 1 031 666 | 9,3 % | 9,7 % | — |
-| Automotive | 1 402 190 | 23,9 % | 31,8 % | — |
-| Sports_and_Outdoors | 1 111 194 | 11,0 % | 10,2 % | — |
-| **Cell_Phones_and_Accessories** | 901 943 | **51,3 %** | 30,6 % | — (sous le seuil 80 %) |
-| Movies_and_TV | 523 756 | 14,7 % | 18,6 % | — |
-| Toys_and_Games | 623 611 | 29,0 % | 20,3 % | — |
-| CDs_and_Vinyl | 491 371 | 2,3 % | 30,9 % | — |
-| **Baby_Products** | 152 406 | **46,9 %** | 30,6 % | — (sous le seuil 80 %) |
-| Video_Games | 96 088 | 24,4 % | 34,2 % | — |
-| Musical_Instruments | 149 515 | 32,9 % | 27,6 % | — |
-| **Appliances** | 66 028 | **47,1 %** | 27,4 % | — (sous le seuil 80 %) |
+| Electronics | 1 127 008 | 2,0 % | 10,5 % | - |
+| **Cell_Phones_and_Accessories** | 901 943 | **51,3 %** | 30,6 % | - (sous le seuil 80 %) |
+| Video_Games | 96 088 | 24,4 % | 34,2 % | - |
+| Tools_and_Home_Improvement | 1 031 666 | 9,2 % | 9,7 % | - |
 
-**Verdict P2** : `n_alerts = 0`. Aucune cat ne dépasse 80 %. Le maximum est Cell_Phones à 51,3 % (parce que "phone" est littéralement dans le nom commercial de chaque smartphone) — acceptable et représentatif du monde réel. Le classifier ne pourra pas tricher juste en cherchant un mot-clé évident.
+**Verdict P2** : `n_alerts = 0`. Aucune cat ne dépasse 80 %. Le maximum est Cell_Phones à 51,3 % (parce que "phone" est littéralement dans le nom commercial de chaque smartphone) - acceptable et représentatif du monde réel. Le classifier ne pourra pas tricher juste en cherchant un mot-clé évident.
 
-## Pattern 3 — Fuite temporelle (médianes year_last_review entre splits) ✅
+## Pattern 3 - Fuite temporelle (médianes year_last_review entre splits) ✅
 
 | Split | min_year | max_year | median_year | mean_year |
 |---|---:|---:|---:|---:|
-| train | 1996 | 2023 | **2019,0** | 2018,73 |
-| val | 1996 | 2023 | **2019,0** | 2018,73 |
-| test | 1997 | 2023 | **2019,0** | 2018,73 |
+| train | 1999 | 2023 | **2020,0** | 2019,23 |
+| val | 1999 | 2023 | **2020,0** | 2019,23 |
+| test | 1999 | 2023 | **2020,0** | 2019,23 |
 
 | Métrique | Valeur | Verdict |
 |---|---:|---|
@@ -59,14 +48,14 @@ Vérification : pour chaque catégorie, % de produits dont le `title` ou la `des
 
 La stratification cat-par-cat préserve naturellement la distribution temporelle (les produits d'une cat ont la même distribution dans les 3 splits). Aucun risque de bias temporel dans les modèles.
 
-## Pattern 4 — Overlap user_id train/test (reviews_index) ⚠️ EXPECTED
+## Pattern 4 - Overlap user_id train/test (reviews_index) ⚠️ EXPECTED
 
 | Métrique | Valeur |
 |---|---:|
-| n_unique users train (reviews_index) | 43 987 212 |
-| n_unique users test (reviews_index) | 22 605 023 |
-| n_overlap users (test ∩ train) | **19 935 467** |
-| **% test_users dans train** | **88,2 %** |
+| n_unique users train (reviews_index) | 24 181 207 |
+| n_unique users test (reviews_index) | 9 296 795 |
+| n_overlap users (test ∩ train) | **6 844 830** |
+| **% test_users dans train** | **73,6 %** |
 
 ⚠️ **Verdict P4** : sévérité = attendu. **C'est attendu et documenté comme limitation de conception**.
 
@@ -81,7 +70,7 @@ La stratification cat-par-cat préserve naturellement la distribution temporelle
 
 **Documentation** : ce point est inscrit comme condition aval dans `reports/02_cleaning/cleaning_report.md` §11. À rappeler dès la première étape qui voudrait apprendre des préférences utilisateur.
 
-## Pattern 5 — Feature engineering stateless ✅
+## Pattern 5 - Feature engineering stateless ✅
 
 Vérification : grep dans `src/data/clean/05_feature_engineering.py` des opérations stateful (`mean()`, `std()`, `quantile()`, `min()`, `max()`, `median()`) qui dériveraient une feature de l'ensemble du dataset (au lieu du seul train).
 
@@ -94,7 +83,7 @@ Toutes les features dérivées en étape 5 sont **purement pointwise** (calculé
 - `log_price` : `log1p(price_num)` (ligne par ligne)
 - `price_band` : seuils constants 50 / 200 (pas dérivés du dataset)
 - `length_title`, `length_description` : `str.len_chars()` (ligne par ligne)
-- `n_reviews_log` : `log1p(n_reviews)` (ligne par ligne — `n_reviews` est lui-même un agrégat des reviews par produit, donc déjà au niveau produit, pas global)
+- `n_reviews_log` : `log1p(n_reviews)` (ligne par ligne - `n_reviews` est lui-même un agrégat des reviews par produit, donc déjà au niveau produit, pas global)
 - `years_active` = `year_last_review - year_first_review + 1` (ligne par ligne)
 - `recency_year` = `2023 - year_last_review` avec **2023 = constante hardcodée** (`DATASET_LAST_YEAR`), pas dérivée du dataset → OK
 
@@ -107,7 +96,7 @@ Toutes les features dérivées en étape 5 sont **purement pointwise** (calculé
 | **P1** | Doublons parent_asin train/test | **OK** (0 chevauchement) | aucune |
 | **P2** | Les métadonnées contiennent le label | **OK** (0 alerte > 80 %) | aucune |
 | **P3** | Fuite temporelle | **OK** (écart de 0 an) | aucune |
-| **P4** | Chevauchement des user_id dans le reviews_index | **attendu** (88,2 % de chevauchement, choix de conception) | refaire GroupKFold(user_id) si modèle de préférence utilisateur |
+| **P4** | Chevauchement des user_id dans le reviews_index | **attendu** (73,6 % de chevauchement, choix de conception) | refaire GroupKFold(user_id) si modèle de préférence utilisateur |
 | **P5** | Feature engineering sans état (stateless) | **OK** (0 opération avec état détectée) | maintenir la discipline si nouvelles features |
 
 **Verdict global** : le pipeline de nettoyage et de split est protégé contre les fuites **au niveau requis pour la chaîne de recherche par similarité (FAISS) et de prédiction de prix au niveau produit** (cf. `docs/modeles.md`). La limitation P4 est explicitement documentée et n'impacte pas le périmètre nominal du projet.
@@ -116,7 +105,7 @@ Toutes les features dérivées en étape 5 sont **purement pointwise** (calculé
 
 - Script : `src/data/validate/01_anti_leakage_check.py`
 - Métriques machine-readable : `reports/02_cleaning/anti_leakage_metrics.json` (gitignored, régénérable)
-- Tests CI : `tests/test_anti_leakage.py` (à créer dans le commit suivant) — vérifie P1, P3, P5 (rapides) sans recalculer P2/P4 (lourds)
+- Tests CI : `tests/test_anti_leakage.py` (à créer dans le commit suivant) - vérifie P1, P3, P5 (rapides) sans recalculer P2/P4 (lourds)
 - Règles méthodologiques appliquées : règle anti-leakage, et nettoyage systématique en fin d'étape.
 - Décisions structurantes référencées : architecture cible fondée sur la recherche augmentée par récupération (RAG), et périmètre du projet.
 - Stack : `polars 1.40.1` streaming

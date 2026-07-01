@@ -1,4 +1,4 @@
-# Model Card — svm-embed_v1
+# Model Card - svm-embed_v1
 
 **Type** : LinearSVC + Platt calibration
 **Tâche** : Classification multi-catégories (4 catégories)
@@ -11,7 +11,7 @@
 - Training data : Arctic embed du train
 
 ## Limitations
-- Hyperparamètre C non tuné (default). Linéaire — pas d'interactions.
+- Hyperparamètre C non tuné (default). Linéaire - pas d'interactions.
 
 ## Métriques mesurées (test split)
 
@@ -21,8 +21,8 @@
 - **top_1_accuracy** : 0.9312
 - **top_3_accuracy** : 0.9977
 - **ece** : 0.0145
-- **duration_eval_sec** : 21.8400
+- **duration_eval_sec** : 23.88 (test)
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/svm-embed_v1.json`
+`reports/04_classifiers_bench/m2_svm_v1.json`

@@ -226,7 +226,7 @@ cluster).
   `tests/test_k8s_manifests.py` (la cohérence des manifestes Kubernetes, par exemple les
   bornes de l'autoscaler et les adresses de l'aiguilleur).
 
-> Drapeau slide. Chiffres à montrer : « 14 services orchestrés en une commande »,
+> Chiffres clés à retenir : « 14 services orchestrés en une commande »,
 > « images Docker en deux étapes, légères », « Kubernetes : Deployments + StatefulSets +
 > Ingress + autoscaler sur le serveur applicatif, démontré sur cluster local kind ».
 > Captures : `docker compose ps` (tous les services en bonne santé), le schéma de la stack,

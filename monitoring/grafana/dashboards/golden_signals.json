@@ -1,6 +1,6 @@
 {
   "uid": "rakuten-golden-signals",
-  "title": "Rakuten API — 4 Golden Signals",
+  "title": "Rakuten API - 4 Golden Signals",
   "tags": ["rakuten", "sre", "golden-signals"],
   "timezone": "browser",
   "schemaVersion": 39,
@@ -17,7 +17,7 @@
     {
       "id": 1,
       "type": "timeseries",
-      "title": "Latency — p50 / p95 / p99 (seconds)",
+      "title": "Latency - p50 / p95 / p99 (seconds)",
       "description": "Latence requêtes HTTP API (histogram_quantile sur http_request_duration_seconds). p95 < 5s = cible SLO Cycle 14.2.",
       "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
       "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
@@ -60,7 +60,7 @@
     {
       "id": 2,
       "type": "timeseries",
-      "title": "Traffic — requests / sec",
+      "title": "Traffic - requests / sec",
       "description": "Débit requêtes par endpoint (sum rate http_requests_total / handler).",
       "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
       "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
@@ -82,7 +82,7 @@
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Errors — 5xx ratio (%)",
+      "title": "Errors - 5xx ratio (%)",
       "description": "Taux d'erreurs serveur (status 5xx / total). Cible : < 1% en steady-state.",
       "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
       "datasource": {"type": "prometheus", "uid": "rakuten-prom"},
@@ -116,7 +116,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Saturation — in-progress requests",
+      "title": "Saturation - in-progress requests",
       "description": "Requêtes API en cours de traitement (gauge http_requests_inprogress). Indicateur de charge instantanée.",
       "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
       "datasource": {"type": "prometheus", "uid": "rakuten-prom"},

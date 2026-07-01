@@ -1,7 +1,7 @@
-"""Étape 3/5 du cleaning — Normalisation textuelle title + description.
+"""Étape 3/5 du cleaning - Normalisation textuelle title + description.
 
 Pipeline de normalisation prudent (préserve l'information autant que
-possible — le cleaning ne corrige pas, il prépare) :
+possible - le cleaning ne corrige pas, il prépare) :
 
 1. Strip HTML résiduel : `<br>`, `<p>`, `&amp;`, `&nbsp;` etc. Polars n'a
    pas d'unescape HTML natif, on traite les cas les plus fréquents par
@@ -53,8 +53,8 @@ HTML_ENTITY_REPLACEMENTS = [
     ("&#39;", "'"),
     ("&apos;", "'"),
     ("&nbsp;", " "),
-    ("&mdash;", "—"),
-    ("&ndash;", "–"),
+    ("&mdash;", "-"),
+    ("&ndash;", "-"),
     ("&hellip;", "…"),
 ]
 
@@ -67,7 +67,7 @@ def _normalize_col(col_name: str) -> pl.Expr:
     # 2. HTML entities
     for entity, replacement in HTML_ENTITY_REPLACEMENTS:
         expr = expr.str.replace_all(entity, replacement, literal=True)
-    # 3. NFKC normalization (polars n'a pas de fonction native — on garde la
+    # 3. NFKC normalization (polars n'a pas de fonction native - on garde la
     #    string telle quelle ; la normalisation Unicode complète sera faite
     #    côté encoder qui a son propre tokenizer NFKC. Ici on reste défensif
     #    sur les espaces multiples seulement.)

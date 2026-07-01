@@ -1,4 +1,4 @@
-"""Phase 2 — richesse d'entrée : prouver **1 photo < N photos < N + métadonnée**.
+"""Phase 2 - richesse d'entrée : prouver **1 photo < N photos < N + métadonnée**.
 
 Pour chaque produit d'éval réel (`data/photos_eval/`, ingéré depuis les annonces scrappées),
 on rejoue 3 conditions d'entrée et on mesure la qualité d'identification :
@@ -14,7 +14,7 @@ VLM sont déjà en anglais ; en prod la traduction ajoute un gain connu et sépa
 Mesures (vérité terrain = `meta.json` dérivé des annonces) :
 - **macro_acc** : la macro-catégorie prédite (vote pondéré des voisins) est-elle correcte ;
 - **fine_overlap** : recouvrement (Jaccard de mots) entre le breadcrumb réel et le breadcrumb
-  prédit — score fin robuste aux écarts de formulation entre taxonomies ;
+  prédit - score fin robuste aux écarts de formulation entre taxonomies ;
 - **confidence** : part du vote knn-vote.
 On **stratifie le gain multi-photo-meta−multi-photo par `metadata_quality`** → la métadonnée aide ∝ sa qualité.
 
@@ -97,7 +97,7 @@ def run() -> dict:
         try:
             ext1 = photo_extraction.extract([photos[0]])
             ext2 = photo_extraction.extract(photos) if len(photos) > 1 else ext1
-        except Exception as e:  # noqa: BLE001 — un produit qui échoue ne casse pas le run
+        except Exception as e:  # noqa: BLE001 - un produit qui échoue ne casse pas le run
             log.warning("skip %s (extraction VLM) : %s", d.name, e)
             continue
 
@@ -149,7 +149,9 @@ def run() -> dict:
     # ---- gain métadonnée traduite (multi-photo-metat−multi-photo) stratifié par qualité de métadonnée ----
     by_q: dict[int, list[float]] = defaultdict(list)
     for r in rows:
-        by_q[r["quality"]].append(r["multi-photo-meta-fr-en"]["fine_overlap"] - r["multi-photo"]["fine_overlap"])
+        by_q[r["quality"]].append(
+            r["multi-photo-meta-fr-en"]["fine_overlap"] - r["multi-photo"]["fine_overlap"]
+        )
     strat = {
         str(q): {"gain_c3t_c2": round(_mean(v), 4), "n": len(v)} for q, v in sorted(by_q.items())
     }
@@ -205,7 +207,7 @@ def _write_report(summary: dict, rows: list[dict]) -> None:
         return f"| {label} | {a[c]['macro_acc']:.3f} | {a[c]['fine_overlap']:.3f} | {a[c]['confidence']:.3f} |"
 
     lines = [
-        "# Phase 2 — richesse d'entrée (1 photo < N photos < N + métadonnée)",
+        "# Phase 2 - richesse d'entrée (1 photo < N photos < N + métadonnée)",
         "",
         f"- **{summary['n_products']} produits réels** d'éval · extraction VLM Gemma 4 31B · "
         "retrieval + vote knn-vote.",
@@ -213,10 +215,12 @@ def _write_report(summary: dict, rows: list[dict]) -> None:
         "",
         "| Condition | macro_acc | fine_overlap | confiance |",
         "|---|---|---|---|",
-        _row("one-photo — 1 photo", "one-photo"),
-        _row("multi-photo — N photos", "multi-photo"),
-        _row("multi-photo-meta — N + métadonnée brute (FR)", "multi-photo-meta"),
-        _row("**multi-photo-meta-fr-en — N + métadonnée traduite (prod)**", "multi-photo-meta-fr-en"),
+        _row("one-photo - 1 photo", "one-photo"),
+        _row("multi-photo - N photos", "multi-photo"),
+        _row("multi-photo-meta - N + métadonnée brute (FR)", "multi-photo-meta"),
+        _row(
+            "**multi-photo-meta-fr-en - N + métadonnée traduite (prod)**", "multi-photo-meta-fr-en"
+        ),
         "",
         "## Gain multi-photo-metat−multi-photo (métadonnée traduite) par qualité de métadonnée (`metadata_quality` /5)",
         "",

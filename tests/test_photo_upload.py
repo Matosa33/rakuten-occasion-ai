@@ -1,7 +1,7 @@
-"""Tests photo-first backend (Cycle 17.1, D-035) — upload + extraction + identify.
+"""Tests photo-first backend (Cycle 17.1, D-035) - upload + extraction + identify.
 
 Sans padding : upload (validation type/taille/path-traversal), serve, et le
-branchement /identify avec image_ids (extraction VLM mockée — pas d'appel réseau).
+branchement /identify avec image_ids (extraction VLM mockée - pas d'appel réseau).
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ TINY_JPEG = bytes.fromhex(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# uploads.py — validation pure (sans HTTP)
+# uploads.py - validation pure (sans HTTP)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -80,7 +80,7 @@ def test_upload_puis_serve(tmp_path, monkeypatch):
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["url"] == f"/uploads/{body['image_id']}"
-    # GET public (capability URL) — pas de header auth.
+    # GET public (capability URL) - pas de header auth.
     served = client.get(body["url"])
     assert served.status_code == 200
     assert served.content == TINY_JPEG
@@ -98,7 +98,7 @@ def test_serve_inconnu_404():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# /identify avec image_ids — extraction VLM mockée
+# /identify avec image_ids - extraction VLM mockée
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -187,7 +187,7 @@ def test_identify_extraction_indisponible_503_message_actionnable(tmp_path, monk
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# photo_extraction._parse — robustesse réponses VLM
+# photo_extraction._parse - robustesse réponses VLM
 # ─────────────────────────────────────────────────────────────────────────────
 
 

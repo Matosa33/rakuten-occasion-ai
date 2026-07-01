@@ -1,4 +1,4 @@
-"""Cycle 4.3 — Garde-fous OOD (Out-Of-Distribution).
+"""Cycle 4.3 - Garde-fous OOD (Out-Of-Distribution).
 
 Pour chaque query, déterminer si le top-1 retrieval est suffisamment
 confiant pour accepter l'identification, ou si on doit basculer en mode
@@ -63,7 +63,7 @@ def is_ambiguous_top12(top1_score: float, top2_score: float, gap_threshold: floa
 
 
 def main() -> None:
-    log.info("=== Cycle 4.3 — Calibration OOD seuils ===")
+    log.info("=== Cycle 4.3 - Calibration OOD seuils ===")
     REPORTS_RETRIEVAL.mkdir(parents=True, exist_ok=True)
 
     text_index_path = DATA_INDEX / "text_arctic_hnsw.index"

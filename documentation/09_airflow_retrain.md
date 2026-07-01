@@ -153,7 +153,7 @@ Ce n'est pas un montage théorique. L'historique des exécutions est conservé d
   SVM sur représentation TF-IDF) parce que les nouveaux candidats étaient moins bons. La production a
   donc été protégée d'une dégradation.
 
-> Drapeau slide : « boucle fermée en 5 étapes : entraîner, évaluer, promouvoir, redéployer », « 4
+> À retenir : « boucle fermée en 5 étapes : entraîner, évaluer, promouvoir, redéployer », « 4
 > exécutions programmées et des exécutions manuelles », « les ré-entraînements ont créé les
 > versions 3 à 5, et la barrière a protégé la production ».
 > Capture d'écran : la vue Grid ou Graph du DAG `rakuten_retrain` (les 5 tâches en vert) et

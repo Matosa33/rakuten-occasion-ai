@@ -11,7 +11,7 @@ suggest_price = _pricing.suggest_price
 PricingResult = _pricing.PricingResult
 CONDITION_MULTIPLIER = _pricing.CONDITION_MULTIPLIER
 CATEGORY_DEPRECIATION_RATE = _pricing.CATEGORY_DEPRECIATION_RATE
-# 17.4b (D-036) : entrées USD, sorties EUR — les assertions de valeur
+# 17.4b (D-036) : entrées USD, sorties EUR - les assertions de valeur
 # référencent la constante du module (robustes à un changement de taux).
 USD_TO_EUR = _pricing.USD_TO_EUR
 
@@ -148,7 +148,7 @@ def test_depreciation_per_category(category, age, catalog, expected_min):
 
 
 class TestL15LLMAnchor:
-    """Cycle 36 — niveau L1.5 : prix neuf de référence estimé par IA → décote déterministe."""
+    """Cycle 36 - niveau L1.5 : prix neuf de référence estimé par IA → décote déterministe."""
 
     def test_l15_used_when_anchor_present_and_no_catalog(self):
         r = suggest_price(
@@ -203,7 +203,7 @@ class TestL15LLMAnchor:
 
 
 class TestUnderpricingGuard:
-    """Cycle 36 — garde-fou : une médiane de voisins polluée (6 € pour 150 €) est relevée."""
+    """Cycle 36 - garde-fou : une médiane de voisins polluée (6 € pour 150 €) est relevée."""
 
     def test_floor_lifts_absurd_knn_median(self):
         # Montre ~150 $ neuf, voisins pollués par bracelets/coques à 5-7 $.
@@ -243,7 +243,7 @@ class TestUnderpricingGuard:
 
 
 class TestL1AnchorConsistency:
-    """Cycle 36 — garde-fou : un prix catalogue d'accessoire (top-1 mal apparié) ne pollue pas L1."""
+    """Cycle 36 - garde-fou : un prix catalogue d'accessoire (top-1 mal apparié) ne pollue pas L1."""
 
     def test_l1_skipped_when_catalog_polluted_by_accessory(self):
         # top-1 = coque à 43.6 $ mais l'ancre IA estime l'iPhone à 598 $ → on ignore L1, on prend L1.5.
@@ -282,7 +282,7 @@ class TestL1AnchorConsistency:
 
 
 class TestCatalogOutlierGuard:
-    """Cycle 36 — un prix catalogue ABERRANT (donnée polluée) ne doit pas être gobé par L1."""
+    """Cycle 36 - un prix catalogue ABERRANT (donnée polluée) ne doit pas être gobé par L1."""
 
     def test_absurd_catalog_price_ignored_for_neighbors(self):
         # catalogue 9755 $ (faute de saisie) vs voisins ~240 → on écarte L1, on prend L2.

@@ -1,4 +1,4 @@
-// Cycle 17.3 (D-035) — checklist état rapide. 2-3 taps = les « bābā » d'une annonce parfaite.
+// Cycle 17.3 (D-035) - checklist état rapide. 2-3 taps = les « bābā » d'une annonce parfaite.
 // Cycle 36 : plus de « Type d'objet » MANUEL (le vendeur ne sait pas où ranger une carte
 // graphique). Le type est dérivé de la catégorie IDENTIFIÉE → les questions spécifiques
 // (`kind`, optionnel) s'affichent après l'identification ; ici on ne montre que l'universel.
@@ -58,7 +58,7 @@ export function ConditionChecklist({
 
   return (
     <div className="mt-4 space-y-3">
-      {/* Guidage prises de vue (D-035) — incitatif, pas bloquant */}
+      {/* Guidage prises de vue (D-035) - incitatif, pas bloquant */}
       {kind && (
         <div className="rounded-xl bg-sky-50 p-3 text-xs text-sky-800">
           <span className="font-medium">📸 Photos conseillées pour bien vendre :</span>

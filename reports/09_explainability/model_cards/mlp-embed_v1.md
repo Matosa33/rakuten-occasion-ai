@@ -1,4 +1,4 @@
-# Model Card — mlp-embed_v1
+# Model Card - mlp-embed_v1
 
 **Type** : MLPClassifier hidden=(512, 256), early stopping
 **Tâche** : Classification multi-catégories (4 catégories)
@@ -21,8 +21,8 @@
 - **top_1_accuracy** : 0.9489
 - **top_3_accuracy** : 0.9989
 - **ece** : 0.0013
-- **duration_eval_sec** : 18.8800
+- **duration_eval_sec** : 20.11 (test)
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/mlp-embed_v1.json`
+`reports/04_classifiers_bench/m4_mlp_v1.json`

@@ -1,4 +1,4 @@
-"""Cycle 4.3 — Akinator backend : désambiguation par observations dirigées.
+"""Cycle 4.3 - Akinator backend : désambiguation par observations dirigées.
 
 Quand le retrieval renvoie plusieurs candidats à scores proches
 (top1_score - top2_score < seuil_ambiguïté), on lève l'ambiguïté **par
@@ -8,7 +8,7 @@ observations dirigées** (R19 grounded-avant-génératif) :
    schéma sur leurs métadonnées indexées : storage, color, model_number,
    version, year, dimensions…).
 2. Mapper l'attribut le plus discriminant à un **type d'observation à
-   demander à l'utilisateur** (vue dos, scan étiquette, OCR ciblé…) —
+   demander à l'utilisateur** (vue dos, scan étiquette, OCR ciblé…) -
    PAS de question textuelle au vendeur (cf. golden_rules R19).
 3. Re-scorer les candidats avec la nouvelle observation (côté API).
 4. Boucler jusqu'à `top1_score - top2_score > seuil_clarté` OU épuisement
@@ -246,7 +246,7 @@ def main() -> None:
     """Démo / mesure : combien de queries val seraient déclenchées par
     Akinator (gap top1-top2 < seuil), et quels attributs sont les plus
     discriminants en pratique."""
-    log.info("=== Cycle 4.3 — Akinator backend (mesure déclenchement sur val) ===")
+    log.info("=== Cycle 4.3 - Akinator backend (mesure déclenchement sur val) ===")
     REPORTS_RETRIEVAL.mkdir(parents=True, exist_ok=True)
 
     text_index_path = DATA_INDEX / "text_arctic_hnsw.index"

@@ -1,4 +1,4 @@
-# Model Card — rf-embed_v1
+# Model Card - rf-embed_v1
 
 **Type** : RandomForest (300 estimators, max_depth=20)
 **Tâche** : Classification multi-catégories (4 catégories)
@@ -15,4 +15,4 @@
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/rf-embed_v1.json`
+Pas de fichier de résultats publié : modèle écarté avant le bench agrégé final (5 modèles benchés).

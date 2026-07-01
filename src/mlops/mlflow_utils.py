@@ -1,4 +1,4 @@
-"""Helpers MLflow partagés — instrumentation LIVE des entraînements (Cycle 11, R5).
+"""Helpers MLflow partagés - instrumentation LIVE des entraînements (Cycle 11, R5).
 
 Pattern idéal (vs logging rétroactif) : chaque script d'entraînement (les 6 modèles)
 ouvre un run MLflow et logge **au moment de l'entraînement** ses params, metrics,
@@ -154,7 +154,7 @@ def log_training_run(
                 registered_version = getattr(info, "registered_model_version", None)
             except Exception as e:  # noqa: BLE001
                 # Dégradation propre : params/metrics restent loggés (SQLite), mais le
-                # push d'artefact échoue si le store n'est pas inscriptible — ex. retrain
+                # push d'artefact échoue si le store n'est pas inscriptible - ex. retrain
                 # in-container, dont le chemin d'artefact absolu de l'hôte est invisible
                 # (cf. D-023). Portabilité réelle = MLflow server + MinIO au Cycle 13.4.
                 log.warning(

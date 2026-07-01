@@ -51,7 +51,7 @@ def l2_normalize(
 
     Garde-fou R11 : si ||x|| < eps, retourne un vecteur nul (pas de NaN
     propagé silencieusement). Ce cas indique typiquement un bug amont
-    (embedding non-initialisé, padding, etc.) — à logger en prod.
+    (embedding non-initialisé, padding, etc.) - à logger en prod.
 
     Args:
         x: Tableau numpy 1D ou 2D.
@@ -73,8 +73,8 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 
     Cas supportés :
     - 1D vs 1D : retourne un scalaire ∈ [-1, 1].
-    - 1D vs 2D : retourne un vecteur (N_b,) — similarité du query avec chaque vecteur de b.
-    - 2D vs 2D : retourne une matrice (N_a, N_b) — similarité pairwise.
+    - 1D vs 2D : retourne un vecteur (N_b,) - similarité du query avec chaque vecteur de b.
+    - 2D vs 2D : retourne une matrice (N_a, N_b) - similarité pairwise.
 
     Note : pour les pipelines retrieval (FAISS), il est plus efficace de
     pré-normaliser TOUS les vecteurs UNE FOIS via `l2_normalize`, puis

@@ -1,4 +1,4 @@
-"""Cycle 4.1 — Build et bench FAISS indices (Flat IP / HNSW / IVF_PQ).
+"""Cycle 4.1 - Build et bench FAISS indices (Flat IP / HNSW / IVF_PQ).
 
 Compare 3 types d'index FAISS sur les embeddings text Arctic du train,
 mesure recall@k et latence pour choisir le bon tradeoff au Cycle 4.
@@ -158,7 +158,7 @@ def _bench_index(index, queries: np.ndarray, name: str, ground_truth: np.ndarray
 
 
 def main() -> None:
-    log.info("=== Cycle 4.1 — FAISS indices bench ===")
+    log.info("=== Cycle 4.1 - FAISS indices bench ===")
 
     DATA_INDEX.mkdir(parents=True, exist_ok=True)
     REPORTS_RETRIEVAL.mkdir(parents=True, exist_ok=True)
@@ -234,7 +234,7 @@ def main() -> None:
 
     # Markdown synthèse
     lines = [
-        "# FAISS indices bench — Cycle 4.1",
+        "# FAISS indices bench - Cycle 4.1",
         "",
         f"> Mesure recall@k et latence sur {len(queries):_} queries du val ",
         f"> contre un index de {embeddings_train.shape[0]:_} vecteurs × {embeddings_train.shape[1]} dim.",

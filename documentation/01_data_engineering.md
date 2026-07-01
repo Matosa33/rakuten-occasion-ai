@@ -284,12 +284,12 @@ Deux mécanismes protègent durablement la qualité :
 | Découpage | 70 / 15 / 15, stratifié, graine 42 | les proportions des catégories sont respectées dans chaque jeu |
 | Tests automatiques | tous au vert | quatre suites passent : vérification anti-fuite, contrats de schéma, invariants du nettoyage, invariants de l'audit |
 
-> Drapeau slides, chiffres clés à afficher : « 0 produit partagé entre train et test (découpage par
+> Chiffres clés à retenir : « 0 produit partagé entre train et test (découpage par
 > groupe) », « environ 99,98 % de couverture des métadonnées », « 0 % de valeurs manquantes sur les
 > avis », « découpage 70 / 15 / 15 stratifié, graine 42 », « 5 formes de fuite vérifiées
 > automatiquement ».
 >
-> Drapeau slides, captures à montrer : le tableau des « 0 » de produits partagés issu du rapport
+> Illustrations de référence : le tableau des « 0 » de produits partagés issu du rapport
 > anti-fuite, et un graphique de distribution issu des figures d'audit.
 
 ---

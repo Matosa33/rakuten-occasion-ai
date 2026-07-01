@@ -7,7 +7,7 @@ on mesure des scores honnêtes (pas de vanity metric), on trace chaque bras dans
 et on désigne le meilleur (champion/challenger sur l'accuracy leaf).
 
 Pourquoi par retrieval et pas un classifieur 2 956 classes : l'index EST déjà un
-classifieur fin — un vote k-NN pondéré sur la taxonomie (`category_path`) des voisins
+classifieur fin - un vote k-NN pondéré sur la taxonomie (`category_path`) des voisins
 donne la feuille la plus probable, à chaque niveau, sans entraîner de modèle géant.
 
 Les bras
@@ -18,12 +18,12 @@ Les bras
 - **knn-vote vote k-NN fin**: **vote pondéré** par similarité sur la leaf des top-k voisins
                         (le gain quasi-gratuit), sans gate.
 - **coarse-to-fine coarse-to-fine**: gate macro **+** vote pondéré sur les voisins de la macro prédite
-                        (recherche élargie puis filtrée — approxime des sous-index par macro).
+                        (recherche élargie puis filtrée - approxime des sous-index par macro).
 
 Métriques (par niveau de taxo `category_path` = breadcrumb « A > B > C »)
 - accuracy macro (`_source_category`, 4 cl.), L1/L2/leaf (breadcrumb),
 - **F1 pondéré leaf** (équilibre précision/rappel sans bruit des classes à 1 exemple),
-- **F1 hiérarchique** (crédit partiel le long du chemin) — la courbe de progression,
+- **F1 hiérarchique** (crédit partiel le long du chemin) - la courbe de progression,
 - **recall@k leaf** (la bonne feuille est-elle parmi les voisins votants).
 
 Lancer :
@@ -290,7 +290,7 @@ def run() -> dict:
 
 
 def _log_mlflow(summary: dict) -> None:
-    """Un run MLflow par bras (params = config, metrics = panel) — traçabilité."""
+    """Un run MLflow par bras (params = config, metrics = panel) - traçabilité."""
     try:
         import mlflow
 
@@ -306,7 +306,7 @@ def _log_mlflow(summary: dict) -> None:
                 if arm == summary["champion_by_leaf_acc"]:
                     mlflow.set_tag("champion_by_leaf_acc", "true")
         log.info("Bras tracés dans MLflow (expérience '%s').", EXPERIMENT)
-    except Exception as e:  # noqa: BLE001 — la traçabilité ne doit pas casser le calcul des scores
+    except Exception as e:  # noqa: BLE001 - la traçabilité ne doit pas casser le calcul des scores
         log.warning("MLflow indisponible (scores calculés quand même) : %s", e)
 
 

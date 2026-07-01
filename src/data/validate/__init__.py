@@ -1,4 +1,4 @@
-"""Module `data/validate` — placeholder.
+"""Module `data/validate` - placeholder.
 
 Ce module sera implémenté lors du cycle correspondant (cf. le plan projet).
 """

@@ -1,4 +1,4 @@
-"""Sous-todo 2.3 — Encoder texte Arctic Embed L v2 (multilingue, 1024 dim).
+"""Sous-todo 2.3 - Encoder texte Arctic Embed L v2 (multilingue, 1024 dim).
 
 Encode chaque produit (`title + description`) en un vecteur 1024-dim
 sémantique normalisé L2. Sortie : 1 fichier `.npy` par split + 1 index
@@ -166,7 +166,7 @@ def _build_index_parquet() -> None:
 
 
 def main() -> None:
-    log.info("=== Sous-todo 2.3 — Encoder texte Arctic Embed L v2 ===")
+    log.info("=== Sous-todo 2.3 - Encoder texte Arctic Embed L v2 ===")
     log.info("Modèle : %s (frozen, FP16, normalize_embeddings=True)", MODEL_NAME)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

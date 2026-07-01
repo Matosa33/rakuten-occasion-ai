@@ -1,4 +1,4 @@
-# Bench classifieurs — comparaison des modèles
+# Bench classifieurs - comparaison des modèles
 
 > Synthèse comparative des modèles de classification entraînés.
 > Tri par F1 pondéré (test) décroissant. Le modèle en tête est celui promu en production via l'alias `@Production` du registre MLflow.

@@ -24,7 +24,7 @@ ALLOWED_CONTENT_TYPES = {
     "image/webp": ".webp",
     "image/heic": ".heic",
 }
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 Mo — au-delà c'est un fichier suspect
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 Mo - au-delà c'est un fichier suspect
 
 
 class UploadError(ValueError):

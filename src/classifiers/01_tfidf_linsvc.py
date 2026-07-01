@@ -1,4 +1,4 @@
-"""tfidf-svm — TF-IDF + LinearSVC + Platt calibration (Cycle 3.2 / C13).
+"""tfidf-svm - TF-IDF + LinearSVC + Platt calibration (Cycle 3.2 / C13).
 
 Baseline texte brut, ne nécessite pas les embeddings du Cycle 2.
 
@@ -137,6 +137,8 @@ def main() -> None:
                     ),
                     cv=CALIBRATION_CV,
                     method="sigmoid",  # Platt
+                    # Plis en parallèle : mêmes plis/seed, résultats identiques, ~3× plus vite.
+                    n_jobs=CALIBRATION_CV,
                 ),
             ),
         ]
@@ -232,7 +234,9 @@ def main() -> None:
         duration_train_sec=duration_train,
         cycle="3",
         register=True,
-        promote_production=True,
+        # La promotion @Production est décidée par la gate champion/challenger du DAG
+        # (promote_gate), pas par l'entraînement : séparation entraîner / promouvoir.
+        promote_production=False,
     )
 
     log.info("\nM5 TF-IDF baseline OK.")

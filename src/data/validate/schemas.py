@@ -1,4 +1,4 @@
-"""Sous-todo 1.4 — Schemas Pandera pour les sorties du pipeline 1.2.
+"""Sous-todo 1.4 - Schemas Pandera pour les sorties du pipeline 1.2.
 
 Ces schemas servent de **contrat formel** entre les sous-todos. Toute
 modification du pipeline cleaning/split (sous-todo 1.2) qui casse un de
@@ -15,7 +15,7 @@ Pourquoi Pandera (vs assertions ad hoc)
 - **Déclaratif** : un schema = un objet Python lisible vs N assertions éparpillées.
 - **Reusable** : même schema en CI (sample) et en batch (full).
 - **Erreurs lisibles** : Pandera dit exactement quelle colonne, quelle ligne,
-  quelle règle est cassée — pas un AssertionError opaque.
+  quelle règle est cassée - pas un AssertionError opaque.
 - **Validation lazy avec polars natif** : `schema.validate(lazy_frame)` est
   cohérent avec le moteur d'audit (cf. ADR D-006).
 

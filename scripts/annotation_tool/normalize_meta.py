@@ -5,7 +5,7 @@ or le pricing/condition attend des **clés snake_case** (`neuf`, `tres_bon_etat`
 `correct`). Ce script ajoute un champ `condition_key` (clé canonique) **sans détruire** le libellé
 FR d'origine, et applique le défaut `bon_etat` aux vides.
 
-NB : aucune corruption d'encodage — les fichiers sont du UTF-8 sain (vérifié sur les codepoints ;
+NB : aucune corruption d'encodage - les fichiers sont du UTF-8 sain (vérifié sur les codepoints ;
 le « mojibake » vu en console était un artefact d'affichage du terminal). On ne « répare » donc
 rien, on **mappe** seulement.
 

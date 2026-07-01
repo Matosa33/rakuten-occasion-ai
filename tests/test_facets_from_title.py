@@ -1,4 +1,4 @@
-"""Cycle 36.A — extraction de facettes depuis le TITRE (fondation).
+"""Cycle 36.A - extraction de facettes depuis le TITRE (fondation).
 
 Le build du lookup ne lit que `details` (souvent vide) → « RTX 4080 16GB » avait capacity absente.
 On complète depuis le titre, sans écraser le catalogue, en évitant les faux positifs (bit/MHz/GDDR).

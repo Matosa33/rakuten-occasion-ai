@@ -1,4 +1,4 @@
-"""Cleaning pipeline — Phase P02, sous-todo 1.2.
+"""Cleaning pipeline - Phase P02, sous-todo 1.2.
 
 5 scripts numérotés (R1) à exécuter dans l'ordre :
 

@@ -1,4 +1,4 @@
-"""Étape 4/4 — Audit biais & leakage sur le périmètre actif D-008 (polars lazy + streaming).
+"""Étape 4/4 - Audit biais & leakage sur le périmètre actif D-008 (polars lazy + streaming).
 
 Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet
 Écrit:
@@ -36,7 +36,7 @@ def detect_category_imbalance(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     n_max = int(counts["n"].max() or 1)
     ratio = n_max / max(n_min, 1)
     return {
-        "label": "B1 — déséquilibre catégoriel (reviews FULL)",
+        "label": "B1 - déséquilibre catégoriel (reviews FULL)",
         "severity": "high" if ratio > 5 else ("medium" if ratio > 2 else "low"),
         "max_min_ratio": round(ratio, 2),
         "counts": {row["_source_category"]: int(row["n"]) for row in counts.to_dicts()},
@@ -45,7 +45,7 @@ def detect_category_imbalance(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
 
 def detect_verified_purchase_bias(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     if "verified_purchase" not in reviews_lf.collect_schema().names():
-        return {"label": "B2 — verified_purchase", "severity": "n/a"}
+        return {"label": "B2 - verified_purchase", "severity": "n/a"}
     # Type mixte : bool natif dans certains parquets (polars sink_parquet),
     # string "True"/"False" dans d'autres (fallback pandas chunked qui stringifie tout).
     # Le concat diagonal_relaxed promeut en string → on parse comme string truthy.
@@ -67,7 +67,7 @@ def detect_verified_purchase_bias(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     n_true = int(stats["n_true"] or 0)
     pct = round(100 * n_true / n_total, 1) if n_total else 0
     return {
-        "label": "B2 — biais de validation (verified_purchase, reviews FULL)",
+        "label": "B2 - biais de validation (verified_purchase, reviews FULL)",
         "severity": "medium" if pct < 70 else "low",
         "pct_verified_true": pct,
         "n_true": n_true,
@@ -77,7 +77,7 @@ def detect_verified_purchase_bias(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
 
 def detect_price_bias(meta_lf: pl.LazyFrame) -> dict[str, Any]:
     if "price" not in meta_lf.collect_schema().names():
-        return {"label": "B3 — prix", "severity": "n/a"}
+        return {"label": "B3 - prix", "severity": "n/a"}
     valid = meta_lf.with_columns(
         pl.col("price")
         .cast(pl.Utf8, strict=False)
@@ -88,7 +88,7 @@ def detect_price_bias(meta_lf: pl.LazyFrame) -> dict[str, Any]:
     n_valid = valid.select(pl.len()).collect(engine="streaming").item()
     if n_valid == 0:
         return {
-            "label": "B3 — prix",
+            "label": "B3 - prix",
             "severity": "high",
             "reason": "aucun prix exploitable",
             "n_valid_prices": 0,
@@ -98,7 +98,7 @@ def detect_price_bias(meta_lf: pl.LazyFrame) -> dict[str, Any]:
     )
     pct = round(100 * n_below_50 / n_valid, 1)
     return {
-        "label": "B3 — biais de prix (concentration low-end, meta FULL)",
+        "label": "B3 - biais de prix (concentration low-end, meta FULL)",
         "severity": "medium" if pct > 75 else "low",
         "pct_below_50_dollars": pct,
         "n_valid_prices": int(n_valid),
@@ -107,7 +107,7 @@ def detect_price_bias(meta_lf: pl.LazyFrame) -> dict[str, Any]:
 
 def detect_temporal_bias(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     if "timestamp" not in reviews_lf.collect_schema().names():
-        return {"label": "B4 — temporel", "severity": "n/a"}
+        return {"label": "B4 - temporel", "severity": "n/a"}
     # Format mixte (cf. 03_audit_distributions.py temporal_distribution).
     ts_str = pl.col("timestamp").cast(pl.Utf8, strict=False)
     year_expr = pl.coalesce(
@@ -125,13 +125,13 @@ def detect_temporal_bias(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     )
     rows = [r for r in by_year.to_dicts() if r["year"] is not None]
     if not rows:
-        return {"label": "B4 — temporel", "severity": "n/a"}
+        return {"label": "B4 - temporel", "severity": "n/a"}
     total = sum(r["n"] for r in rows)
     last_3y_threshold = max(r["year"] for r in rows) - 2
     last_3 = sum(r["n"] for r in rows if r["year"] >= last_3y_threshold)
     pct = round(100 * last_3 / total, 1) if total else 0
     return {
-        "label": "B4 — biais temporel (concentration récente, reviews FULL)",
+        "label": "B4 - biais temporel (concentration récente, reviews FULL)",
         "severity": "medium" if pct > 70 else "low",
         "pct_last_3_years": pct,
         "min_year": min(r["year"] for r in rows),
@@ -152,7 +152,7 @@ def detect_parent_asin_leakage(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     n_unique = int(stats["n_unique_parent"])
     factor = round(n_total / max(n_unique, 1), 2)
     return {
-        "label": "L1 — variantes (reviews/parent_asin)",
+        "label": "L1 - variantes (reviews/parent_asin)",
         "severity": "high" if n_unique < 0.5 * n_total else "low",
         "n_total": n_total,
         "n_unique_parent_asin": n_unique,
@@ -162,7 +162,7 @@ def detect_parent_asin_leakage(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
 
 def detect_user_leakage(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     if "user_id" not in reviews_lf.collect_schema().names():
-        return {"label": "L2 — user_id", "severity": "n/a"}
+        return {"label": "L2 - user_id", "severity": "n/a"}
     n_total = reviews_lf.select(pl.len()).collect(engine="streaming").item()
     n_unique_users = (
         reviews_lf.select(pl.col("user_id").n_unique()).collect(engine="streaming").item()
@@ -177,7 +177,7 @@ def detect_user_leakage(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
         .item()
     )
     return {
-        "label": "L2 — leakage de groupe (user_id répétés, reviews FULL)",
+        "label": "L2 - leakage de groupe (user_id répétés, reviews FULL)",
         "severity": "medium" if n_unique_users < 0.7 * n_total else "low",
         "n_total": int(n_total),
         "n_unique_users": int(n_unique_users),
@@ -187,7 +187,7 @@ def detect_user_leakage(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
 
 def detect_title_duplicates(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     if "title" not in reviews_lf.collect_schema().names():
-        return {"label": "L3 — titres", "severity": "n/a"}
+        return {"label": "L3 - titres", "severity": "n/a"}
     stats = (
         reviews_lf.select(
             n_total=pl.len(),
@@ -198,7 +198,7 @@ def detect_title_duplicates(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     )
     n_dup = int(stats["n_total"]) - int(stats["n_unique_title"])
     return {
-        "label": "L3 — leakage par titres identiques (reviews FULL)",
+        "label": "L3 - leakage par titres identiques (reviews FULL)",
         "severity": "medium" if n_dup > 50 else "low",
         "n_total": int(stats["n_total"]),
         "n_unique_titles": int(stats["n_unique_title"]),

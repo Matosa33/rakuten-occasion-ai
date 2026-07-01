@@ -1,4 +1,4 @@
-"""rf-embed — RandomForest sur embeddings text (Cycle 3.1 / C12).
+"""rf-embed - RandomForest sur embeddings text (Cycle 3.1 / C12).
 
 RandomForest est non-linéaire interprétable. Avantages :
 - Capture des interactions non-linéaires entre dimensions d'embeddings
@@ -13,7 +13,7 @@ Inconvénients :
 Hyperparams choisis pour tenir RAM et temps :
 - n_estimators=300 (compromis variance vs durée)
 - max_depth=20 (évite l'overfit massif sur 1024 dim)
-- max_features='sqrt' (32 dim par split — réduction nécessaire en haute dim)
+- max_features='sqrt' (32 dim par split - réduction nécessaire en haute dim)
 
 Sortie :
 - `data/models/rf-embed_v1.joblib`

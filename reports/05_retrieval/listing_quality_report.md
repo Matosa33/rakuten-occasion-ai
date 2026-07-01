@@ -1,4 +1,4 @@
-# Qualité de fiche et richesse d'entrée — résultats
+# Qualité de fiche et richesse d'entrée - résultats
 
 - **558 fiches** (produits × conditions) · métrique principale : `completeness` · statistiques sur échantillons appariés.
 

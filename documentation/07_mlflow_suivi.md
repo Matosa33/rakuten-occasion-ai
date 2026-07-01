@@ -136,7 +136,7 @@ remplacement involontaire d'un bon modèle par un moins bon.
 
 ## 4. Résultats (mesurés et vérifiables)
 
-- **13 runs** enregistrés dans l'expérience `rakuten-mvp`. Ils couvrent les six modèles de
+- **13 runs** enregistrés dans l'expérience `rakuten-mvp`. Ils couvrent les cinq modèles de
   classification comparés (du plus simple, une recherche par plus proches voisins, jusqu'à une
   fusion de plusieurs approches), le modèle de prédiction de prix, et quelques ré-essais. Chacun
   porte ses métriques réelles (F1 pondéré, F1 macro, exactitude, ECE qui mesure la fiabilité des
@@ -152,8 +152,8 @@ remplacement involontaire d'un bon modèle par un moins bon.
   fichier du modèle étant rangé dans MinIO). En parallèle, le stockage local dans `mlflow.db`
   reste la référence complète du projet.
 
-> Drapeau slide. Chiffres à afficher : « 13 entraînements tracés (réglages + scores + commit
-> git) », « 6 modèles comparés dans MLflow », « modèle `@Production` = le SVM sur représentation
+> Chiffres clés à retenir : « 13 entraînements tracés (réglages + scores + commit
+> git) », « 5 modèles comparés dans MLflow », « modèle `@Production` = le SVM sur représentation
 > TF-IDF ». Capture d'écran à
 > montrer : l'interface MLflow (lancée par la commande `mlflow ui --backend-store-uri
 > sqlite:///mlflow.db`) avec la liste des runs triable par F1, et la page des modèles affichant
@@ -203,7 +203,7 @@ remplacement involontaire d'un bon modèle par un moins bon.
 
 ### En une phrase (pour la soutenance)
 
-*Chaque entraînement est tracé dans MLflow (13 runs, 6 modèles comparés, réglages et scores plus
+*Chaque entraînement est tracé dans MLflow (13 runs, 5 modèles comparés, réglages et scores plus
 le commit git pour la reproductibilité), avec un catalogue de modèles et l'étiquette `@Production`
 qui désigne le modèle réellement servi. L'adresse de stockage est paramétrable (base SQLite en
 local ou serveur PostgreSQL et MinIO), et j'ai aligné le serveur conteneur sur la version 3 de

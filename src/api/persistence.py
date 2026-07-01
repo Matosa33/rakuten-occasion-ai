@@ -1,4 +1,4 @@
-"""Cycle 9.5 — Persistence SQLAlchemy + SQLite.
+"""Cycle 9.5 - Persistence SQLAlchemy + SQLite.
 
 Historise les identifications et annonces générées pour :
 - traçabilité (audit des suggestions faites au vendeur)

@@ -1,8 +1,8 @@
-"""Étape 4/5 du cleaning — Cap longueurs textes + flags qualité.
+"""Étape 4/5 du cleaning - Cap longueurs textes + flags qualité.
 
 Cap obligatoire :
 - `description` à 8192 caractères (max audit mesuré : 1 476 557 chars,
-  outlier énorme — sans cap, l'encoder texte plante ou ralentit
+  outlier énorme - sans cap, l'encoder texte plante ou ralentit
   drastiquement).
 - `title` à 1024 caractères (max audit mesuré : 2000, déjà raisonnable,
   cap par sécurité).

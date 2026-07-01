@@ -6,7 +6,7 @@ Prompt validé par le PoC 17.0 (format « titre Amazon » : same-model@5 ≈ 52 
 en conditions réelles, `reports/11_poc_photo/poc_photo_bench.md`).
 
 Dégradation propre (D-013) : sans OPENROUTER_API_KEY, `extract()` lève
-`PhotoExtractionUnavailable` — le caller (API) renvoie un 503 explicite invitant
+`PhotoExtractionUnavailable` - le caller (API) renvoie un 503 explicite invitant
 à la saisie texte (le flow text-only reste fonctionnel).
 """
 
@@ -28,7 +28,7 @@ _log = get_logger(__name__)
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 VLM_MODEL = os.environ.get("PHOTO_VLM_MODEL", "qwen/qwen3.5-flash-02-23")
 # Déterminisme (repro protocole D-042) : température 0 + seed fixe. Provider épinglable
-# (fixe la quantization) via env `PHOTO_VLM_PROVIDER` — sinon routing OpenRouter par défaut.
+# (fixe la quantization) via env `PHOTO_VLM_PROVIDER` - sinon routing OpenRouter par défaut.
 VLM_TEMPERATURE = float(os.environ.get("PHOTO_VLM_TEMPERATURE", "0"))
 VLM_SEED = int(os.environ.get("PHOTO_VLM_SEED", "42"))
 VLM_PROVIDER = os.environ.get("PHOTO_VLM_PROVIDER", "")
@@ -52,7 +52,10 @@ def post_with_retry(payload: dict, key: str, timeout: int = TIMEOUT_SEC) -> requ
     for attempt in range(MAX_RETRIES):
         try:
             r = requests.post(
-                OPENROUTER_URL, headers={"Authorization": f"Bearer {key}"}, json=payload, timeout=timeout
+                OPENROUTER_URL,
+                headers={"Authorization": f"Bearer {key}"},
+                json=payload,
+                timeout=timeout,
             )
             if r.status_code in (429, 500, 502, 503) and attempt < MAX_RETRIES - 1:
                 last = requests.HTTPError(f"HTTP {r.status_code}")
@@ -68,6 +71,7 @@ def post_with_retry(payload: dict, key: str, timeout: int = TIMEOUT_SEC) -> requ
             raise
     raise last
 
+
 _MIME_BY_EXT = {
     ".jpg": "image/jpeg",
     ".png": "image/png",
@@ -81,7 +85,7 @@ EXTRACTION_PROMPT = (
     "You are looking at photo(s) of ONE second-hand product a seller wants to list. "
     "Reply in strict JSON with two fields:\n"
     '{"title": "<the most likely Amazon product listing title: brand, model name/number, '
-    'key specs, color — use any text visible in the images>",\n'
+    'key specs, color - use any text visible in the images>",\n'
     ' "attributes": {"brand": "...", "color": "...", "capacity": "...", "model": "...", '
     '"visible_text": "..."}}\n'
     "Omit attribute keys you cannot observe. JSON only, no markdown."
@@ -115,7 +119,7 @@ def extract(photo_paths: list[Path]) -> PhotoExtraction:
     """
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
-        raise PhotoExtractionUnavailable("OPENROUTER_API_KEY absente — branche photo indisponible")
+        raise PhotoExtractionUnavailable("OPENROUTER_API_KEY absente - branche photo indisponible")
 
     content: list[dict] = [{"type": "text", "text": EXTRACTION_PROMPT}]
     for p in photo_paths[:MAX_PHOTOS_PER_CALL]:

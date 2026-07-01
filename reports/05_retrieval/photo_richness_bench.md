@@ -1,14 +1,14 @@
-# Phase 2 — richesse d'entrée (1 photo < N photos < N + métadonnée)
+# Phase 2 - richesse d'entrée (1 photo < N photos < N + métadonnée)
 
 - **92 produits réels** d'éval · extraction VLM Gemma 4 31B · retrieval + vote knn-vote.
 - multi-photo-meta=métadonnée brute FR (sans traduction) ; multi-photo-meta-fr-en=métadonnée traduite FR→EN (production)
 
 | Condition | macro_acc | fine_overlap | confiance |
 |---|---|---|---|
-| one-photo — 1 photo | 0.815 | 0.315 | 0.628 |
-| multi-photo — N photos | 0.891 | 0.361 | 0.667 |
-| multi-photo-meta — N + métadonnée brute (FR) | 0.902 | 0.371 | 0.648 |
-| **multi-photo-meta-fr-en — N + métadonnée traduite (prod)** | 0.848 | 0.340 | 0.651 |
+| one-photo - 1 photo | 0.815 | 0.315 | 0.628 |
+| multi-photo - N photos | 0.891 | 0.361 | 0.667 |
+| multi-photo-meta - N + métadonnée brute (FR) | 0.902 | 0.371 | 0.648 |
+| **multi-photo-meta-fr-en - N + métadonnée traduite (prod)** | 0.848 | 0.340 | 0.651 |
 
 ## Gain multi-photo-metat−multi-photo (métadonnée traduite) par qualité de métadonnée (`metadata_quality` /5)
 

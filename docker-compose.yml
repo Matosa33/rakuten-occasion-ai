@@ -1,4 +1,4 @@
-# Stack Rakuten — Compose unifié (Cycle 13.2, D-025).
+# Stack Rakuten - Compose unifié (Cycle 13.2, D-025).
 #
 # Démarrage (depuis la racine du repo) :
 #   docker compose up -d --build       # construit et démarre tout
@@ -6,9 +6,9 @@
 #   docker compose logs -f api         # suit les logs d'un service
 #   docker compose down                # arrête (préserve les volumes)
 #
-# UI — DEUX modes d'accès (depuis C13.3, D-026) :
+# UI - DEUX modes d'accès (depuis C13.3, D-026) :
 #
-# (a) Direct sur chaque service (debug, dev) — ports customisables via .env :
+# (a) Direct sur chaque service (debug, dev) - ports customisables via .env :
 #   - Frontend         : http://localhost:8082   (var FRONTEND_PORT)
 #   - API              : http://localhost:8010   (var API_PORT)
 #   - Airflow UI       : http://localhost:8088   (var AIRFLOW_PORT)  admin/admin
@@ -30,7 +30,7 @@
 # Overlay prod : `docker compose -f docker-compose.yml -f docker-compose.prod.yml up`.
 
 # ─────────────────────────────────────────────────────────────────────────────
-# YAML anchors — config Airflow partagée par init/scheduler/webserver.
+# YAML anchors - config Airflow partagée par init/scheduler/webserver.
 # ─────────────────────────────────────────────────────────────────────────────
 x-airflow-env: &airflow-env
   AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -116,7 +116,7 @@ services:
       retries: 5
 
   # MLflow tracking server : backend Postgres + artifacts S3 (MinIO). Rembourse
-  # D-023 — les runs in-container peuvent enfin pousser leurs artefacts.
+  # D-023 - les runs in-container peuvent enfin pousser leurs artefacts.
   mlflow-server:
     image: rakuten/mlflow:dev
     build:
@@ -131,6 +131,9 @@ services:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      # Hôtes autorisés (protection DNS-rebinding de MLflow 3.x) : sans le nom de
+      # service Docker, les appels des tâches Airflow sont rejetés en 403.
+      MLFLOW_SERVER_ALLOWED_HOSTS: "localhost:5000,127.0.0.1:5000,mlflow-server:5000,mlflow.localhost:8090"
     command:
       - mlflow
       - server
@@ -169,7 +172,7 @@ services:
       - "--api.insecure=true"      # dashboard sans auth en dev ; à fermer en prod
       - "--ping=true"               # endpoint /ping pour healthcheck
       - "--log.level=INFO"
-      # Métriques Prometheus (Cycle 14.2, D-030) — scraping par le service `prometheus`
+      # Métriques Prometheus (Cycle 14.2, D-030) - scraping par le service `prometheus`
       # sur le port admin 8080 (interne). Labels enrichis = panels Grafana plus utiles.
       - "--metrics.prometheus=true"
       - "--metrics.prometheus.addEntryPointsLabels=true"
@@ -204,7 +207,7 @@ services:
     build:
       context: .
       dockerfile: infra/docker/Dockerfile.api
-    # Propage le .env hôte au container — sinon `OPENROUTER_API_KEY` n'arrive pas et
+    # Propage le .env hôte au container - sinon `OPENROUTER_API_KEY` n'arrive pas et
     # `/describe` dégrade silencieusement en mock (D-013) au lieu d'utiliser Gemma E4.
     # Finding C14.X test interface : .env gitignored (R2 ok), expose juste la clé runtime.
     env_file:
@@ -441,5 +444,5 @@ volumes:
   grafana-data:
   # Nouveau volume pour la stack C14.3 (Pushgateway métriques batch, D-031).
   pushgateway-data:
-  # Photos vendeur (C17, D-035) — writable par-dessus le data RO de l'api.
+  # Photos vendeur (C17, D-035) - writable par-dessus le data RO de l'api.
   uploads-data:

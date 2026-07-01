@@ -77,7 +77,7 @@ def test_jwt_decode_tampered_signature_raises(monkeypatch):
 @pytest.fixture
 def client():
     """TestClient de l'app FastAPI réelle (lifespan tronqué : services peuvent
-    être indispo, on s'en fiche — on teste l'auth, pas le pipeline ML)."""
+    être indispo, on s'en fiche - on teste l'auth, pas le pipeline ML)."""
     from fastapi.testclient import TestClient
 
     from src.api.main import app
@@ -144,12 +144,12 @@ def test_endpoints_metier_tous_proteges(client):
 
 def test_token_valide_accede_aux_endpoints_proteges(client):
     """Un token valide passe la dependency (même si l'endpoint plante après en
-    503 pour service indispo — c'est l'auth qu'on teste ici, pas le service)."""
+    503 pour service indispo - c'est l'auth qu'on teste ici, pas le service)."""
     # Récupère un vrai token via /auth/login
     login = client.post("/auth/login", data={"username": "demo", "password": "demo"})
     token = login.json()["access_token"]
 
     # /history n'a pas de pré-condition métier → si auth passe, on doit avoir 200
     r = client.get("/history", headers={"Authorization": f"Bearer {token}"})
-    # 200 si la DB est OK, 503 si KO — l'important : PAS 401.
+    # 200 si la DB est OK, 503 si KO - l'important : PAS 401.
     assert r.status_code != 401, f"token valide refusé par /history (vu {r.status_code})"

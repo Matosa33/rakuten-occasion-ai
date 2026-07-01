@@ -1,4 +1,4 @@
-"""Tests anti-leakage CI (sous-todo 1.3) — vérifie P1, P3, P5 rapidement.
+"""Tests anti-leakage CI (sous-todo 1.3) - vérifie P1, P3, P5 rapidement.
 
 Ces tests sont **conditionnels** : ils s'exécutent si les parquets
 `data/processed/products/*.parquet` existent (run après sous-todo 1.2),
@@ -6,9 +6,9 @@ sinon ils sont skipped (garde la CI rapide pour les développeurs qui
 n'ont pas le full dataset local).
 
 Patterns testés en CI :
-- P1 : Doublons parent_asin train/test (0 overlap exigé) — ~5 sec
-- P3 : Fuite temporelle (spread médianes < 1 an) — ~5 sec
-- P5 : Feature engineering stateless (grep static) — ~ms
+- P1 : Doublons parent_asin train/test (0 overlap exigé) - ~5 sec
+- P3 : Fuite temporelle (spread médianes < 1 an) - ~5 sec
+- P5 : Feature engineering stateless (grep static) - ~ms
 
 P2 (metadata contient label) et P4 (overlap user_id) sont **lourds**
 (scan tous reviews_index, ~1 min) → exclus de la CI mais vérifiés en
@@ -28,7 +28,7 @@ FE_SOURCE = REPO_ROOT / "src" / "data" / "clean" / "05_feature_engineering.py"
 METRICS_JSON = REPO_ROOT / "reports" / "02_cleaning" / "anti_leakage_metrics.json"
 
 # Skipper si les parquets ne sont pas générés (cas CI sans données)
-SKIP_REASON = "data/processed/products/ vide — lance d'abord sous-todo 1.2"
+SKIP_REASON = "data/processed/products/ vide - lance d'abord sous-todo 1.2"
 
 
 def _products_available() -> bool:
@@ -39,7 +39,7 @@ def _products_available() -> bool:
 
 @pytest.mark.skipif(not _products_available(), reason=SKIP_REASON)
 def test_p1_no_parent_asin_overlap_train_test():
-    """P1 — 0 overlap parent_asin train/test (group split strict)."""
+    """P1 - 0 overlap parent_asin train/test (group split strict)."""
     import polars as pl
 
     train = (
@@ -61,7 +61,7 @@ def test_p1_no_parent_asin_overlap_train_test():
 
 @pytest.mark.skipif(not _products_available(), reason=SKIP_REASON)
 def test_p1_no_parent_asin_overlap_train_val():
-    """P1 — 0 overlap parent_asin train/val."""
+    """P1 - 0 overlap parent_asin train/val."""
     import polars as pl
 
     train = (
@@ -80,7 +80,7 @@ def test_p1_no_parent_asin_overlap_train_val():
 
 @pytest.mark.skipif(not _products_available(), reason=SKIP_REASON)
 def test_p3_temporal_distribution_aligned():
-    """P3 — Médianes year_last_review proches entre splits (< 1 an d'écart)."""
+    """P3 - Médianes year_last_review proches entre splits (< 1 an d'écart)."""
     import polars as pl
 
     medians = []
@@ -101,7 +101,7 @@ def test_p3_temporal_distribution_aligned():
 
 
 def test_p5_feature_engineering_stateless():
-    """P5 — Aucun stateful global (mean/std/quantile) dans 05_feature_engineering.py."""
+    """P5 - Aucun stateful global (mean/std/quantile) dans 05_feature_engineering.py."""
     if not FE_SOURCE.exists():
         pytest.skip("05_feature_engineering.py absent")
     source = FE_SOURCE.read_text(encoding="utf-8")

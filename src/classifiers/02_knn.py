@@ -1,11 +1,11 @@
-"""knn-faiss — k-NN sur embeddings text via FAISS HNSW (Cycle 3.1 / C12).
+"""knn-faiss - k-NN sur embeddings text via FAISS HNSW (Cycle 3.1 / C12).
 
 Baseline non-paramétrique : pour chaque produit du val/test, trouver ses
 k plus proches voisins dans le train (par cosine sim sur embeddings text
 Arctic), puis voter pour la catégorie pondérée par similarité.
 
 **Implémentation** : FAISS HNSW (déjà bâti par Cycle 4.1) au lieu de
-`sklearn.neighbors.KNeighborsClassifier(algorithm='brute')` — gain 1000×+
+`sklearn.neighbors.KNeighborsClassifier(algorithm='brute')` - gain 1000×+
 en latence. Les embeddings Arctic sont déjà L2-normalized donc IP = cosine.
 
 Donne un upper bound de la qualité retrieval pour la classification :
@@ -217,7 +217,7 @@ def main() -> None:
         "ef_search": HNSW_EF_SEARCH,
         "index_path": str(text_index_path),
         "labels_sorted": labels_sorted,
-        "note": "Predict via FAISS index search — refer to data/index/text_arctic_hnsw.index",
+        "note": "Predict via FAISS index search - refer to data/index/text_arctic_hnsw.index",
     }
     joblib.dump(placeholder, OUT_MODEL)
 

@@ -1,4 +1,4 @@
-# PoC bench — branche photo : VLM-extraction vs SigLIP
+# PoC bench - branche photo : VLM-extraction vs SigLIP
 
 > 2026-06-11. Exigence : scorer « très factuellement, en induisant la solution
 > et pas en la déduisant ». Tous les chiffres ci-dessous sont MESURÉS sur notre
@@ -20,18 +20,18 @@
 | hit@1 (asin exact) | 4 % | 9 % | **75 %** |
 | hit@5 (asin exact) | 16 % | 24 % | **88 %** |
 | hit@30 (asin exact) | 24 % | 36 % | 94 % |
-| **same-model@5** (le bon produit ou variante quasi-identique dans l'écran de choix) | — | **≈ 52 %** | — |
-| Latence / query | ~2,2 s (VLM) + retrieval | idem | ~0,1 s (encode) |
+| **same-model@5** (le bon produit ou variante quasi-identique dans l'écran de choix) | - | **≈ 52 %** | - |
+| Latence / query | ~3,3 s (VLM) + retrieval | idem | ~0,1 s (encode) |
 | Dispo aujourd'hui | ✅ immédiate | ✅ | ❌ (catalogue non encodé) |
 
-**⚠ Les colonnes ne sont PAS directement comparables** — c'est le cœur de la lecture honnête :
+**⚠ Les colonnes ne sont PAS directement comparables** - c'est le cœur de la lecture honnête :
 - PoC B cherche dans un espace **1 580× plus petit** que la prod (2 k vs 3,16 M) → optimiste.
 - PoC B est **studio→studio** : la vraie photo utilisateur (lumière jaune, fond chaotique, angle) introduit un **domain shift jamais mesuré**, identifié comme le risque n°1 dès la conception de la branche photo. Aucun de nos jeux de données ne contient de vraies photos utilisateur → ce risque est **non mesurable avant d'avoir investi**.
 - PoC A est mesuré dans les **conditions réelles exactes** de la prod (index complet, chemin API complet).
 
 ## Lecture qualitative (inspection des 33 cas déménagement)
 
-- Les descriptions VLM sont **excellentes** (« Apple iPhone 8 Plus, Fully Unlocked, 256GB - Gold » lu sur la photo) — le maillon faible n'est PAS le VLM.
+- Les descriptions VLM sont **excellentes** (« Apple iPhone 8 Plus, Fully Unlocked, 256GB - Gold » lu sur la photo) - le maillon faible n'est PAS le VLM.
 - Les échecs exact-asin viennent de la **confusion inter-générations dans le matching texte** (iPhone 7 vs 8 Plus, JBL Flip 5 vs Charge 5, ThinkPad E495 vs P15s) : des produits visuellement et textuellement quasi identiques.
 - Or ce problème est EXACTEMENT ce que le produit traite déjà par design : facettes Akinator (capacité, génération) + visionneuse + **validation humaine** (c'est l'humain qui tranche au final). La métrique produit pertinente est « le bon produit est dans l'écran de sélection » (~52 % direct, plus avec une boucle facette), pas « asin exact en top-1 ».
 
@@ -40,10 +40,10 @@
 Fait mesuré dans MLflow : **3 entraînements réels** trackés (svm-embed SVM 596 s, mlp-embed MLP 399 s,
 tfidf-svm TF-IDF+LinearSVC+Platt 1 585 s) + bench comparatif 5 modèles + calibration (ECE)
 + Registry @Production + **boucle de ré-entraînement automatisée** (Airflow,
-champion/challenger — des retrains réels ont créé les versions v4/v5 du registry).
+champion/challenger - des retrains réels ont créé les versions v4/v5 du registry).
 **SigLIP n'ajouterait RIEN ici : c'est un encoder FROZEN** (inférence + indexation,
 zéro entraînement). Le seul vrai « plus d'entraînement » serait le fine-tuning du VLM
-en QLoRA, conditionnel à une preuve de gain — indépendant du choix ci-dessous.
+en QLoRA, conditionnel à une preuve de gain - indépendant du choix ci-dessous.
 
 ## Scoring final
 
@@ -66,5 +66,5 @@ en QLoRA, conditionnel à une preuve de gain — indépendant du choix ci-dessou
    la plus petite catégorie (Video_Games, 2,9 GB) → encoder → mesurer le multi-view
    RRF réel et surtout tester le domain shift avec quelques vraies photos prises au
    téléphone. GO/NO-GO sur les 73 h complètes seulement après CE chiffre.
-3. Ni l'un ni l'autre ne change la réponse jury « entraînement » — elle est déjà
+3. Ni l'un ni l'autre ne change la réponse jury « entraînement » - elle est déjà
    couverte (svm-embed/mlp-embed/tfidf-svm + boucle retrain) et le seul levier serait le fine-tuning du VLM en QLoRA (hors décision).

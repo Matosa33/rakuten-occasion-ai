@@ -51,7 +51,9 @@ DATA_RAW_FULL = DATA_RAW / "full"
 DATA_RAW_FULL_REVIEWS = DATA_RAW_FULL / "reviews"
 DATA_RAW_FULL_META = DATA_RAW_FULL / "meta"
 DATA_PROCESSED = DATA_DIR / "processed"  # P02 sortie cleaning + split
-DATA_PROCESSED_PRODUCTS = DATA_PROCESSED / "products"  # product-level enrichi (knn-faiss à pricing-cascade carburant)
+DATA_PROCESSED_PRODUCTS = (
+    DATA_PROCESSED / "products"
+)  # product-level enrichi (knn-faiss à pricing-cascade carburant)
 DATA_PROCESSED_REVIEWS_INDEX = DATA_PROCESSED / "reviews_index"  # index split-aware (RAG Cycle 6)
 DATA_PROCESSED_INTERMEDIATE = (
     DATA_PROCESSED / "intermediate"
@@ -78,10 +80,10 @@ DOCS_DIR = REPO_ROOT / "docs"
 # Reproductibilité
 # ─────────────────────────────────────────────────────────────────────────────
 
-SEED = 42  # R8 — seed unique partagée par tous les sous-processus
+SEED = 42  # R8 - seed unique partagée par tous les sous-processus
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Périmètre données — re-export depuis le package audit (D-008 single source of truth)
+# Périmètre données - re-export depuis le package audit (D-008 single source of truth)
 # ─────────────────────────────────────────────────────────────────────────────
 
 from src.data.audit import CATEGORIES, COMPLEX_COLS_TO_DROP  # noqa: E402

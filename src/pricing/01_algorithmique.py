@@ -1,4 +1,4 @@
-"""Cycle 7.1 — Pricing algorithmique transparent (pricing-cascade).
+"""Cycle 7.1 - Pricing algorithmique transparent (pricing-cascade).
 
 Système déterministe (aucun ML opaque) qui retourne un **prix indicatif**
 + **niveau de confiance** + **explication lisible**. Préféré à un modèle
@@ -148,7 +148,7 @@ UNDERPRICING_FLOOR_RATIO = 0.25
 # DRASTIQUEMENT en-dessous (< ce ratio × ancre), le top-1 est probablement un ACCESSOIRE mal apparié
 # (coque à 43 $ pour un iPhone à 598 $) → on ignore ce prix catalogue pollué et on bascule sur L1.5.
 # Ratio volontairement BAS : un prix catalogue est un FAIT (refurb/promo/génération antérieure
-# peuvent être légitimement plus bas que l'estimation IA) — on ne l'écarte que s'il est aberrant.
+# peuvent être légitimement plus bas que l'estimation IA) - on ne l'écarte que s'il est aberrant.
 L1_ANCHOR_MIN_RATIO = 0.2
 
 # Garde-fou data-quality : un prix catalogue très AU-DESSUS de la médiane des voisins est une
@@ -212,9 +212,7 @@ def suggest_price(
     _anchor_valid = llm_anchor_price is not None and llm_anchor_price >= MIN_VALID_PRICE_USD
     _catalog_valid = catalog_price is not None and catalog_price >= MIN_VALID_PRICE_USD
     _catalog_polluted = (
-        _anchor_valid
-        and _catalog_valid
-        and catalog_price < llm_anchor_price * L1_ANCHOR_MIN_RATIO  # type: ignore[operator]
+        _anchor_valid and _catalog_valid and catalog_price < llm_anchor_price * L1_ANCHOR_MIN_RATIO  # type: ignore[operator]
     )
     # Prix catalogue aberrant (>> médiane des voisins) = donnée polluée → on l'écarte.
     _catalog_outlier = False
@@ -281,7 +279,7 @@ def suggest_price(
             if floored:
                 explanation += (
                     " (Prix relevé : la médiane des voisins était incohérente avec le prix "
-                    "neuf attendu — voisins probablement pollués par des accessoires.)"
+                    "neuf attendu - voisins probablement pollués par des accessoires.)"
                 )
             return PricingResult(
                 suggested_price_eur=round(suggested, 2),
@@ -334,7 +332,7 @@ def main() -> None:
     # Import lazy : mlflow n'est nécessaire qu'au train standalone (cf. note module).
     from src.mlops.mlflow_utils import log_training_run
 
-    log.info("=== Cycle 7.1 — Pricing algorithmique transparent (pricing-cascade) ===")
+    log.info("=== Cycle 7.1 - Pricing algorithmique transparent (pricing-cascade) ===")
     REPORTS_PRICING.mkdir(parents=True, exist_ok=True)
     DATA_MODELS.mkdir(parents=True, exist_ok=True)
 
@@ -352,7 +350,7 @@ def main() -> None:
         columns=["parent_asin", "_source_category", "price_num"],
     )
 
-    # Médianes catégorie (train) — calibration L3
+    # Médianes catégorie (train) - calibration L3
     category_medians = (
         train.filter(pl.col("price_num") >= MIN_VALID_PRICE_USD)
         .group_by("_source_category")

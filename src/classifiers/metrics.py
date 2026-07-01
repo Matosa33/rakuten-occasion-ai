@@ -8,7 +8,7 @@ Métriques disponibles
 - compute_classification_metrics : F1 weighted/macro, accuracy, top-K accuracy
 - compute_calibration_ece        : Expected Calibration Error (10 bins)
 - compute_per_class_f1           : F1 par classe (utile pour identifier
-                                   cat sous-performantes — anti-B1)
+                                   cat sous-performantes - anti-B1)
 - format_classification_report   : DataFrame polars synthèse pour rapport markdown
 
 Toutes les fonctions sont **stateless** (R3 anti-leakage).
@@ -40,9 +40,9 @@ def compute_classification_metrics(
     """Calcule F1 weighted/macro, accuracy, top-K accuracy.
 
     Args:
-        y_true: shape (N,) — labels vrais
-        y_pred: shape (N,) — labels prédits (top-1)
-        y_proba: shape (N, C) — probabilités par classe (pour top-K)
+        y_true: shape (N,) - labels vrais
+        y_pred: shape (N,) - labels prédits (top-1)
+        y_proba: shape (N, C) - probabilités par classe (pour top-K)
         top_k: tuple des K à mesurer
         labels: liste des labels possibles (sinon inféré)
 
@@ -71,8 +71,8 @@ def compute_calibration_ece(y_true: np.ndarray, y_proba: np.ndarray, n_bins: int
     Cible : < 0,05 pour svm-embed (LinearSVC + Platt) et tfidf-svm (TF-IDF + Platt).
 
     Args:
-        y_true: shape (N,) — labels vrais (ou indices)
-        y_proba: shape (N, C) — probabilités par classe
+        y_true: shape (N,) - labels vrais (ou indices)
+        y_proba: shape (N, C) - probabilités par classe
         n_bins: nombre de bins pour le binning des probas
 
     Returns:
@@ -96,7 +96,7 @@ def compute_calibration_ece(y_true: np.ndarray, y_proba: np.ndarray, n_bins: int
 def compute_per_class_f1(
     y_true: np.ndarray, y_pred: np.ndarray, labels: list[str] | None = None
 ) -> dict[str, float]:
-    """F1 par classe — utile pour identifier les cat sous-performantes.
+    """F1 par classe - utile pour identifier les cat sous-performantes.
 
     Returns dict {label: f1_score}.
     """

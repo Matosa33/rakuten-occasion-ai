@@ -333,7 +333,7 @@ mesurer sur de VRAIES sorties.
 > (anti sous-évaluation, cohérence L1, prix catalogue aberrant) », « décote différenciée par catégorie
 > et coefficients d'état (dont « pour pièces / HS » à 0,15) », « niveau L1 à 232 €, expliqué dans les
 > deux devises », « erreur MAPE d'environ 62 % assumée (neuf contre occasion) », « identification
-> mesurée à 90,3 % sur 94 produits réels, complétude de fiche 0,84 ». Capture d'écran à montrer : la
+> mesurée à 90,3 % sur 93 produits réels, complétude de fiche 0,84 ». Capture d'écran à montrer : la
 > carte de prix de l'application (prix conseillé, fourchette, badge d'état et explication, libellé du
 > niveau).
 

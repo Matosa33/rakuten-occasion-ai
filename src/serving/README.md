@@ -1,4 +1,4 @@
-# Serving BentoML — classifieur `@Production`
+# Serving BentoML - classifieur `@Production`
 
 Sert le modèle promu `@Production` du Registry MLflow (classifieur SVM sur TF-IDF) via BentoML,
 avec **métriques Prometheus natives** sur `/metrics`. Découplage API ↔ modèle : le
@@ -17,7 +17,7 @@ make bento-serve    # sert sur http://localhost:8500 (UI OpenAPI à la racine)
 
 ## Endpoint
 
-`POST /classify` — corps `{"texts": ["...", "..."]}` → `[{"category", "confidence"}, ...]`
+`POST /classify` - corps `{"texts": ["...", "..."]}` → `[{"category", "confidence"}, ...]`
 
 ```bash
 curl -s -X POST http://localhost:8500/classify -H "Content-Type: application/json" \
@@ -25,14 +25,14 @@ curl -s -X POST http://localhost:8500/classify -H "Content-Type: application/jso
 # [{"category":"Cell_Phones_and_Accessories","confidence":0.998}, {"category":"Tools_and_Home_Improvement","confidence":0.995}]
 ```
 
-`GET /metrics` — métriques Prometheus (`bentoml_service_request_total`,
+`GET /metrics` - métriques Prometheus (`bentoml_service_request_total`,
 `bentoml_service_request_duration_seconds`, `..._request_in_progress`).
 
 ## Fichiers
 
-- `import_model.py` — importe le modèle `@Production` dans le store BentoML.
-- `service.py` — service BentoML (`@bentoml.service`), endpoint `classify` (catégorie + confiance).
-- `bentofile.yaml` (racine) — config de build (`bentoml build`).
+- `import_model.py` - importe le modèle `@Production` dans le store BentoML.
+- `service.py` - service BentoML (`@bentoml.service`), endpoint `classify` (catégorie + confiance).
+- `bentofile.yaml` (racine) - config de build (`bentoml build`).
 
 ## Suite
 

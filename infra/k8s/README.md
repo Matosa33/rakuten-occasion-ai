@@ -61,12 +61,12 @@ make k8s-down      # supprime le cluster (idempotent)
 ```
 
 Tous les services dans le namespace `rakuten`. ConfigMap (URLs internes) + Secret
-(MinIO creds, Postgres password) — `secrets.yaml` est **gitignored** (jamais commité).
+(MinIO creds, Postgres password) - `secrets.yaml` est **gitignored** (jamais commité).
 
 ## Limitations
 
 - **API sans données ML** : pas de PVC pour `data/embeddings` ni `data/index`
-  (13,8 Go via `kind load` = trop lent et hors-scope). `/health` → 200 (services
+  (13,2 Go via `kind load` = trop lent et hors-scope). `/health` → 200 (services
   marqués `false`), `/identify` retournerait 503. Pour une vraie démo K8s,
   monter les artefacts via un PVC initialisé (hors scope actuel).
 - **HPA custom metric** Prometheus = différé (volet observabilité).

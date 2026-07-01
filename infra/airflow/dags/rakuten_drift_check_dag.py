@@ -1,4 +1,4 @@
-"""DAG `rakuten_drift_check` — boucle fermée MLOps (Cycle 12.3, D-024).
+"""DAG `rakuten_drift_check` - boucle fermée MLOps (Cycle 12.3, D-024).
 
 Quotidien. Calcule la dérive (Evidently) entre `train` (référence) et un échantillon
 courant. Si la part de features driftées dépasse le seuil → **déclenche
@@ -32,6 +32,14 @@ def detect_drift_callable() -> bool:
         result["drift_share"],
         result["drifted_columns_count"],
     )
+    # Push des métriques batch vers le Pushgateway (dashboard Grafana "drift"),
+    # que le drift soit détecté ou non. Best-effort : jamais bloquant (R15).
+    try:
+        from src.monitoring.push_metrics import push_drift_metrics
+
+        push_drift_metrics(result)
+    except Exception as e:  # noqa: BLE001 - observabilité best-effort
+        log.warning("push_drift_metrics KO (non bloquant) : %s", e)
     return bool(result["drift_detected"])
 
 

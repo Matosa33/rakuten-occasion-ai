@@ -1,7 +1,7 @@
 """Tests d'intégration des VRAIS services pipeline (Cycle 15.3, D-034).
 
 L'audit 15.0 (P0 tests) : `IdentificationService.load()`, `PricingService.load()`,
-`DescribeService.load()` n'étaient JAMAIS appelés en test — seuls des fakes
+`DescribeService.load()` n'étaient JAMAIS appelés en test - seuls des fakes
 étaient injectés dans APP_STATE. Ici on charge les vrais services, avec skipif
 sur les artefacts lourds (absents en CI, présents en local → R13 vérifiable).
 """
@@ -83,7 +83,7 @@ class TestDescribeServiceReal:
     @pytest.mark.slow
     def test_load_et_describe_mock_grounded(self, monkeypatch):
         """Sans clé OpenRouter, DescribeService bascule sur MockLLMWriter (D-013)
-        — le pipeline complet (catalogue → grounding → writer) doit produire
+        - le pipeline complet (catalogue → grounding → writer) doit produire
         un listing parseable."""
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         svc = DescribeService()

@@ -1,4 +1,4 @@
-"""Cycle 9.3b — Client OpenRouter (chat completions) pour VLM + LLM.
+"""Cycle 9.3b - Client OpenRouter (chat completions) pour VLM + LLM.
 
 Wrapper httpx minimal autour de l'API OpenRouter (compatible OpenAI
 chat/completions). Utilisé par :
@@ -8,7 +8,7 @@ chat/completions). Utilisé par :
 Active uniquement si `OPENROUTER_API_KEY` présent dans l'env (sinon raise
 RuntimeError clair → l'endpoint bascule sur un mock). Mock-first par défaut.
 
-Modèle par défaut : google/gemma-4-31b-it (vision-capable) — sert le rédacteur
+Modèle par défaut : google/gemma-4-31b-it (vision-capable) - sert le rédacteur
 LLM, l'extraction photo et le validateur VLM. Surchargeable par variable d'env.
 """
 
@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 # Modèle vérifié dispo sur OpenRouter (query /models 2026-05). Gemma 4 31B IT
-# (tier payant, pas de rate-limit free) — text-only, suffisant pour le rédacteur llm-writer.
+# (tier payant, pas de rate-limit free) - text-only, suffisant pour le rédacteur llm-writer.
 DEFAULT_LLM_MODEL = "google/gemma-4-31b-it"
 DEFAULT_TIMEOUT_SEC = 30.0
 
@@ -116,7 +116,7 @@ def translate_to_english(text: str, timeout: float = 15.0) -> str:
     """Traduit une requête produit FR → EN pour l'aligner sur le catalogue anglais.
 
     Aligne le décalage cross-lingue mesuré (requête FR score ~0.08 plus bas qu'EN
-    sur catalogue Amazon US). Raises OpenRouterError si clé absente / appel KO —
+    sur catalogue Amazon US). Raises OpenRouterError si clé absente / appel KO -
     l'appelant doit gérer le fallback (requête brute).
     """
     raw = chat_completion(

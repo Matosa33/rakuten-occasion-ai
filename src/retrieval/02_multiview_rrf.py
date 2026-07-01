@@ -1,4 +1,4 @@
-"""Cycle 4.2 — Multi-view retrieval avec RRF (Reciprocal Rank Fusion).
+"""Cycle 4.2 - Multi-view retrieval avec RRF (Reciprocal Rank Fusion).
 
 Fusionne les top-K de plusieurs indices (text Arctic + vision SigLIP si
 dispo) via RRF de Cormack 2009 :
@@ -102,7 +102,7 @@ def _compute_recall_per_query(
 
 
 def main() -> None:
-    log.info("=== Cycle 4.2 — Multi-view RRF ===")
+    log.info("=== Cycle 4.2 - Multi-view RRF ===")
 
     REPORTS_RETRIEVAL.mkdir(parents=True, exist_ok=True)
 

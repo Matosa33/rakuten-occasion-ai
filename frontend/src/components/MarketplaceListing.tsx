@@ -1,4 +1,4 @@
-// Cycle 17.4b (D-035) — l'écran final est une VRAIE annonce d'occasion :
+// Cycle 17.4b (D-035) - l'écran final est une VRAIE annonce d'occasion :
 // breadcrumb catégorie (le rangement marketplace visible), photos vendeur en
 // galerie, prix + badge état, tableau de caractéristiques structurées (la
 // metadata parfaite), titre/description éditables (IKEA effect), copie enrichie.
@@ -140,7 +140,7 @@ export function MarketplaceListing({
     const priceLine =
       price.suggested_price_eur > 0
         ? `Prix : ${price.suggested_price_eur.toFixed(2)} € (${conditionLabel})`
-        : `Prix : à fixer (saisie manuelle) — ${conditionLabel}`;
+        : `Prix : à fixer (saisie manuelle) - ${conditionLabel}`;
     await navigator.clipboard.writeText(
       [
         title,
@@ -163,7 +163,7 @@ export function MarketplaceListing({
 
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-      {/* Breadcrumb catégorie — la preuve du rangement marketplace parfait */}
+      {/* Breadcrumb catégorie - la preuve du rangement marketplace parfait */}
       {breadcrumb && (
         <nav className="border-b border-slate-100 bg-slate-50 px-5 py-2 text-xs text-slate-500">
           {breadcrumb.split(" > ").map((part, i, arr) => (
@@ -181,7 +181,7 @@ export function MarketplaceListing({
       {reasoned?.catalog_miss && (
         <div className="border-b border-amber-200 bg-amber-50 px-5 py-2.5 text-sm text-amber-800">
           ⚠ Produit <strong>estimé</strong>
-          {reasoned.product_family ? ` « ${reasoned.product_family} »` : ""} — absent du catalogue.
+          {reasoned.product_family ? ` « ${reasoned.product_family} »` : ""} - absent du catalogue.
           Prix et caractéristiques à vérifier.
         </div>
       )}
@@ -276,7 +276,7 @@ export function MarketplaceListing({
           </div>
           {price.range_high > 0 && (
             <span className="mt-1 text-sm text-slate-400">
-              Fourchette conseillée : {price.range_low.toFixed(0)}–{price.range_high.toFixed(0)} €
+              Fourchette conseillée : {price.range_low.toFixed(0)}-{price.range_high.toFixed(0)} €
             </span>
           )}
           <div className="mt-2 flex items-center gap-2">
@@ -291,11 +291,11 @@ export function MarketplaceListing({
           {/* Âge supposé par défaut (2 ans) quand le vendeur n'a pas saisi l'année → on l'indique. */}
           {!purchaseYear && price.suggested_price_eur > 0 && (
             <p className="mt-1 text-xs italic text-slate-400">
-              Âge supposé : 2 ans — saisis l'année d'achat pour affiner le prix.
+              Âge supposé : 2 ans - saisis l'année d'achat pour affiner le prix.
             </p>
           )}
 
-          {/* Informations clés — la metadata structurée à facettes, façon marketplace.
+          {/* Informations clés - la metadata structurée à facettes, façon marketplace.
               Chaque champ porte sa provenance (observé / catalogue / typique-à-vérifier),
               et la complétude indique le remplissage sur le schéma attendu de la catégorie. */}
           <div className="mt-4">
@@ -339,7 +339,7 @@ export function MarketplaceListing({
         </div>
       </div>
 
-      {/* Cycle 36 : checklist d'état SPÉCIFIQUE au type DÉRIVÉ de la catégorie identifiée — affichée
+      {/* Cycle 36 : checklist d'état SPÉCIFIQUE au type DÉRIVÉ de la catégorie identifiée - affichée
           au bon moment (après l'identification), plus de « type d'objet » deviné par le vendeur. */}
       {kindQuestions.length > 0 && (
         <div className="border-t border-slate-100 p-5">

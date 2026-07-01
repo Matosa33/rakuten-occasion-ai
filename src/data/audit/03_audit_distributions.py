@@ -1,4 +1,4 @@
-"""Étape 3/4 — Audit distributions sur le périmètre actif D-008 (polars lazy + streaming).
+"""Étape 3/4 - Audit distributions sur le périmètre actif D-008 (polars lazy + streaming).
 
 Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet
 Écrit:
@@ -99,10 +99,10 @@ def price_stats_from_meta(meta_lf: pl.LazyFrame) -> dict[str, Any]:
     axes[0].hist(np.clip(sample, 0, p99v), bins=80, color="#16a34a")
     axes[0].set_xlabel("Prix ($, clip p99)")
     axes[0].set_ylabel("Effectif")
-    axes[0].set_title("Distribution prix (linéaire) — meta FULL")
+    axes[0].set_title("Distribution prix (linéaire) - meta FULL")
     axes[1].hist(np.log1p(sample), bins=80, color="#16a34a")
     axes[1].set_xlabel("log(1 + prix)")
-    axes[1].set_title("Distribution prix (log) — meta FULL")
+    axes[1].set_title("Distribution prix (log) - meta FULL")
     fig.tight_layout()
     fig.savefig(FIG_DIR / "03c_distribution_prix_meta.png", dpi=120)
     plt.close(fig)
@@ -136,7 +136,7 @@ def ratings_distribution(reviews_lf: pl.LazyFrame) -> dict[str, int]:
     ax.bar(list(counts.keys()), list(counts.values()), color="#f59e0b")
     ax.set_xlabel("Note (1-5)")
     ax.set_ylabel("Effectif")
-    ax.set_title("Distribution des ratings — reviews FULL")
+    ax.set_title("Distribution des ratings - reviews FULL")
     fig.tight_layout()
     fig.savefig(FIG_DIR / "03d_distribution_ratings_reviews.png", dpi=120)
     plt.close(fig)
@@ -173,7 +173,7 @@ def temporal_distribution(reviews_lf: pl.LazyFrame) -> dict[str, Any]:
     ax.bar(list(counts.keys()), list(counts.values()), color="#7c3aed")
     ax.set_xlabel("Année")
     ax.set_ylabel("Reviews / an")
-    ax.set_title("Distribution temporelle — reviews FULL")
+    ax.set_title("Distribution temporelle - reviews FULL")
     ax.tick_params(axis="x", rotation=45)
     fig.tight_layout()
     fig.savefig(FIG_DIR / "03e_distribution_temporelle_reviews.png", dpi=120)

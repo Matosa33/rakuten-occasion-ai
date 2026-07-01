@@ -72,7 +72,7 @@ charge sur plusieurs machines.
 | Étape attendue | Statut | Où c'est livré dans le dépôt |
 |---|---|---|
 | Pipeline de ré-entraînement complet avec Airflow | Livré | dossier `infra/airflow/dags/`, une chaîne de cinq étapes enchaînées. Airflow est un chef d'orchestre qui lance des tâches dans le bon ordre et au bon moment |
-| Chaîne d'intégration continue et tests automatisés | Livré | `.github/workflows/ci.yml` : vérification du style de code, exécution de 352 tests automatisés, analyse des failles de sécurité connues, et fabrication des images logicielles |
+| Chaîne d'intégration continue et tests automatisés | Livré | `.github/workflows/ci.yml` : vérification du style de code, exécution de 406 tests automatisés, analyse des failles de sécurité connues, et fabrication des images logicielles |
 | Interface de programmation optimisée et sécurisée | Livré | jeton d'authentification JWT, protection contre la traversée de chemin, adresses imprévisibles pour les photos, traitement non bloquant des requêtes (détaillés en section 5) |
 | Capacité de montée en charge avec Docker et Kubernetes | Livré | dossier `infra/k8s/` (déclarations de déploiements, de services à état, de point d'entrée réseau, et mise à l'échelle automatique des copies de l'API : de 2 à 5 copies dès que l'usage processeur dépasse 70 %). Kubernetes est un système qui répartit et gère automatiquement des conteneurs sur un ensemble de machines |
 
@@ -124,7 +124,7 @@ première apparition.
 | Mesures et tableaux de bord | Quatre indicateurs fondamentaux visualisés en continu | Prometheus et Grafana |
 | Détection de dérive | Comparaison statistique entre les données récentes et les données de référence | Evidently |
 | Intégration et livraison continues | Vérifications automatiques à chaque modification, puis publication d'images datées selon le standard de numérotation sémantique | GitHub Actions, registre d'images GHCR |
-| Tests et contrôle de sécurité | 352 tests automatisés et une analyse des failles connues des dépendances | pytest et l'outil pip-audit |
+| Tests et contrôle de sécurité | 406 tests automatisés et une analyse des failles connues des dépendances | pytest et l'outil pip-audit |
 
 ---
 

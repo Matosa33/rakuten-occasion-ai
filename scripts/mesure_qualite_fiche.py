@@ -1,4 +1,4 @@
-"""Cycle 36 — protocole de MESURE de la qualité de fiche (rigueur R21, pas d'anecdotes).
+"""Cycle 36 - protocole de MESURE de la qualité de fiche (rigueur R21, pas d'anecdotes).
 
 Fait passer le panel réel `data/photos_eval/` (noms de dossiers = vérité-terrain) par l'API
 (/upload → /identify → /price) et mesure, de façon reproductible et chiffrée :
@@ -27,13 +27,13 @@ from pathlib import Path
 
 import requests
 
-import src.config  # noqa: F401 — charge .env (clé API, secret JWT) avant le reste
+import src.config  # noqa: F401 - charge .env (clé API, secret JWT) avant le reste
 from src.auth.jwt_utils import create_access_token
 from src.config import REPORTS_DIR
 
 EVAL_DIR = Path("data/photos_eval")
 OUT_DIR = REPORTS_DIR / "09_fiche_quality"
-# Mots non discriminants (présents dans les noms mais pas identifiants) — retirés du rappel tokens.
+# Mots non discriminants (présents dans les noms mais pas identifiants) - retirés du rappel tokens.
 _STOPWORDS = {"and", "the", "with", "of", "et", "le", "la", "les", "complete", "pour"}
 _IMG_GLOB = ("*.jpg", "*.jpeg", "*.png", "*.webp")
 _MAX_PHOTOS = 2
@@ -130,7 +130,7 @@ def main() -> None:
     for i, folder in enumerate(folders, 1):
         try:
             row = _measure_one(args.base, auth, folder)
-        except Exception as e:  # noqa: BLE001 — best-effort par produit
+        except Exception as e:  # noqa: BLE001 - best-effort par produit
             row = {"folder": folder, "status": "error", "error": str(e)[:120]}
         rows.append(row)
         m = row.get("token_recall")
@@ -178,7 +178,7 @@ def main() -> None:
     ]
     for r in rows:
         if r["status"] != "ok":
-            md.append(f"| {r['folder']} | — | {r['status']} | — | — | — |")
+            md.append(f"| {r['folder']} | - | {r['status']} | - | - | - |")
             continue
         md.append(
             f"| {r['folder']} | {r['token_recall']:.0%} | {'✅' if r['identified_ok'] else '❌'} "

@@ -1,4 +1,4 @@
-"""Étape 5/5 du cleaning — Feature engineering numérique.
+"""Étape 5/5 du cleaning - Feature engineering numérique.
 
 Features dérivées :
 - `price_num` : prix parsé en Float64 (regex `[^\\d.]` pour virer "$",

@@ -19,14 +19,14 @@ scrape_configs:
     static_configs:
       - targets: ["api:8000"]
 
-  # Traefik (Cycle 13.3) — métriques exposées sur le port admin 8080 interne
+  # Traefik (Cycle 13.3) - métriques exposées sur le port admin 8080 interne
   # via `--metrics.prometheus=true` ajouté au command Traefik (D-030).
   - job_name: traefik
     metrics_path: /metrics
     static_configs:
       - targets: ["traefik:8080"]
 
-  # Pushgateway (Cycle 14.3, D-031) — métriques batch (drift Evidently +
+  # Pushgateway (Cycle 14.3, D-031) - métriques batch (drift Evidently +
   # promote_gate). Les jobs Python pushent ; Prometheus scrape la gateway.
   # `honor_labels: true` → garde le label `job=rakuten_batch` envoyé par
   # les pushers (sinon Prometheus l'écrase par `job=pushgateway`).

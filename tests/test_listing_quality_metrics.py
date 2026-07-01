@@ -1,4 +1,4 @@
-"""Tests des métriques dures de qualité de fiche (Cycle 34.5) — fonctions pures."""
+"""Tests des métriques dures de qualité de fiche (Cycle 34.5) - fonctions pures."""
 
 from __future__ import annotations
 

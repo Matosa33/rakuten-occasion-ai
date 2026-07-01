@@ -3,7 +3,7 @@
 Découplage API ↔ modèle (R5/D-020) : le service charge le pipeline sklearn du
 modèle importé depuis le Registry MLflow (`src.serving.import_model`), sans coder
 en dur de chemin de fichier. Métriques **Prometheus natives** exposées sur `/metrics`
-(compteurs requêtes, latence, in-progress — fournis par BentoML).
+(compteurs requêtes, latence, in-progress - fournis par BentoML).
 
 `bentoml.mlflow.load_model` renvoie un pyfunc (predict seul) ; on charge donc le
 pipeline sklearn natif (`predict_proba`) depuis le dossier MLflow du store BentoML

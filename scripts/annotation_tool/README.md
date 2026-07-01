@@ -1,9 +1,9 @@
-# Interface d'annotation — photos d'éval (Phase 2)
+# Interface d'annotation - photos d'éval (Phase 2)
 
 Outil pour constituer **vite** le jeu de produits réels qui prouvera la chaîne de valeur
 photo-first (**1 photo < N photos < N photos + métadonnée**).
 
-## 0) Le plus rapide — ingestion de PDF scrappés — `ingest_pdf.py`
+## 0) Le plus rapide - ingestion de PDF scrappés - `ingest_pdf.py`
 
 Avec l'extension **Lebonscrap** (Chrome), exporte chaque annonce leboncoin en PDF dans
 `~/Downloads` (nom `LBC-*.pdf`). Puis :
@@ -25,7 +25,7 @@ l'impact réel de la métadonnée** selon sa richesse (Phase 2, condition C3).
 
 > Besoin des extras `[annotation]` (pymupdf, pillow) + `[api]` (requests) + clé OpenRouter.
 
-## 1) Alternative manuelle — saisie rapide (humain) — `app.py`
+## 1) Alternative manuelle - saisie rapide (humain) - `app.py`
 
 ```bash
 .venv/Scripts/python.exe scripts/annotation_tool/app.py     # http://127.0.0.1:8200
@@ -43,7 +43,7 @@ data/photos_eval/<NN>_<slug>/
 Astuce : <kbd>Ctrl/Cmd + Entrée</kbd> enregistre. Le tableau de bord suit l'avancement
 (objectif ~100 produits, alerte « <2 photos »).
 
-## 2) Dérivation des métadonnées (auto) — `derive_meta.py`
+## 2) Dérivation des métadonnées (auto) - `derive_meta.py`
 
 ```bash
 .venv/Scripts/python.exe scripts/annotation_tool/derive_meta.py          # les non-annotés
@@ -63,9 +63,9 @@ Idempotent (skip les déjà annotés), tolérant (un échec n'arrête pas le lot
 ## Pour un jeu « bien rempli »
 
 - **~100 produits**, répartis sur les 4 macro-catégories ;
-- des **near-duplicates** (iPhone 13 vs 14, deux consoles proches…) — c'est là que N photos +
+- des **near-duplicates** (iPhone 13 vs 14, deux consoles proches…) - c'est là que N photos +
   métadonnée prouvent leur valeur ;
 - **≥ 2 photos** par produit (sinon le test 1 vs N ne montre rien) ;
 - la **photo principale** doit être la plus représentative.
 
-> Les photos restent **locales** (`data/photos_eval/` gitignoré) — rien n'est publié.
+> Les photos restent **locales** (`data/photos_eval/` gitignoré) - rien n'est publié.

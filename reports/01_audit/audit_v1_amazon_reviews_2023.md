@@ -1,4 +1,4 @@
-# Audit dataset — Amazon Reviews 2023 (intégralité des 15 catégories revente d'occasion)
+# Audit dataset - Amazon Reviews 2023 (intégralité des 15 catégories revente d'occasion)
 
 > **Note de périmètre (à lire en premier).** Cet audit explore le dataset large (15 catégories)
 > tel qu'il était au moment de l'exploration des données. Le **périmètre FINAL du projet a ensuite
@@ -8,7 +8,7 @@
 > d'entraînement, de recherche et la documentation finale portent, eux, sur les 4 catégories.
 
 > Chiffres mesurés le 2026-04-30 sur les 15 catégories complètes.
-> Statut : terminé — chiffres issus des 3 fichiers JSON dans `reports/`
+> Statut : terminé - chiffres issus des 3 fichiers JSON dans `reports/`
 > (`audit_qualite_metrics.json`, `audit_distributions_metrics.json`,
 > `audit_biais_leakage_metrics.json`). Tous les chiffres sont mesurés, aucun n'est inventé.
 >
@@ -224,13 +224,13 @@ Avant 2010 : moins de 1,5 % du total. Reviews sur les 3 dernières années (2021
 |----|-------|----------|------------------|
 | **L1** | variantes (asin / parent_asin) | **high** | duplication factor **13,21** (348,4 M reviews / 26,36 M parent_asin uniques) |
 | **L2** | user_id répétés | medium | 48,8 M users uniques → **36,2 M users avec > 1 review** (74,2 %) |
-| **L3** | titres identiques | medium | **214,9 M** titres dupliqués sur 348,4 M (61,7 %) — typiquement "Five Stars", "Great", etc. |
+| **L3** | titres identiques | medium | **214,9 M** titres dupliqués sur 348,4 M (61,7 %) - typiquement "Five Stars", "Great", etc. |
 
 **Interprétation L1** : duplication factor de 13,21 = chaque produit a en moyenne 13 reviews. Sans précaution au split (groupage par `parent_asin`), un produit pourra apparaître dans train ET test → leakage massif.
 
 **Interprétation L2** : 36,2 M users (74,2 %) ont > 1 review. Si on splitte aléatoirement, ces users feront fuiter leur préférence entre train et test (fuite par groupe). À corriger au moment du split avec `GroupKFold(group=user_id)`.
 
-**Interprétation L3** : 61,7 % de titres dupliqués est énorme (vs 57,3 % sur le périmètre à 3 catégories). Largement dû aux titres ultra-courts ("Five Stars", "Great product", etc.). À investiguer au nettoyage — la médiane de longueur titre = 17 chars, donc beaucoup de titres minimaux.
+**Interprétation L3** : 61,7 % de titres dupliqués est énorme (vs 57,3 % sur le périmètre à 3 catégories). Largement dû aux titres ultra-courts ("Five Stars", "Great product", etc.). À investiguer au nettoyage - la médiane de longueur titre = 17 chars, donc beaucoup de titres minimaux.
 
 ## 8. Verdict
 

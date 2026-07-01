@@ -1,4 +1,4 @@
-"""Sous-todo 1.4 — Valide les sorties du pipeline 1.2 contre les schemas Pandera.
+"""Sous-todo 1.4 - Valide les sorties du pipeline 1.2 contre les schemas Pandera.
 
 Pour chaque split (train/val/test), valide :
 - products/{split}.parquet contre ProductSchema
@@ -170,7 +170,7 @@ def _validate_reviews_index_sample(split_name: str, n_sample: int = 100_000) -> 
 
 
 def main() -> None:
-    log.info("=== Sous-todo 1.4 — Validation Pandera des sorties pipeline 1.2 ===")
+    log.info("=== Sous-todo 1.4 - Validation Pandera des sorties pipeline 1.2 ===")
 
     REPORTS_CLEANING.mkdir(parents=True, exist_ok=True)
 
@@ -192,7 +192,7 @@ def main() -> None:
     for category in ("products", "reviews_index"):
         for split, r in results[category].items():
             status = r.get("status", "?")
-            log.info("  [%s] %s/%s — %s", status, category, split, r.get("schema", "?"))
+            log.info("  [%s] %s/%s - %s", status, category, split, r.get("schema", "?"))
             if status == "ok":
                 n_ok += 1
             elif status == "ko":
@@ -200,9 +200,9 @@ def main() -> None:
 
     log.info("Total : %d OK / %d KO sur 6 validations", n_ok, n_ko)
     if n_ko > 0:
-        log.warning("⚠️ %d validation(s) KO — voir %s pour détails", n_ko, OUT_JSON)
+        log.warning("⚠️ %d validation(s) KO - voir %s pour détails", n_ko, OUT_JSON)
     else:
-        log.info("Sous-todo 1.4 OK — tous les schemas validés.")
+        log.info("Sous-todo 1.4 OK - tous les schemas validés.")
 
 
 if __name__ == "__main__":

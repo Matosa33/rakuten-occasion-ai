@@ -59,9 +59,9 @@ clean:  ## Nettoie les caches Python/pytest/ruff
 	rm -rf .pytest_cache .ruff_cache .mypy_cache htmlcov .coverage
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-# === Cycle 12 — Orchestration Airflow (D-022) ===
+# === Cycle 12 - Orchestration Airflow (D-022) ===
 
-# === Cycle 13.2 — Stack unifiée (D-025) ===
+# === Cycle 13.2 - Stack unifiée (D-025) ===
 
 up:  ## C13.2 - build + démarre TOUTE la stack (api, frontend, airflow, postgres)
 	$(COMPOSE) up -d --build
@@ -92,7 +92,7 @@ prod-down:  ## C13.2 - arrête la stack prod
 airflow-trigger:  ## C12 - déclenche manuellement le DAG rakuten_retrain
 	$(COMPOSE) exec airflow-scheduler airflow dags trigger rakuten_retrain
 
-# === Cycle 12.2 — Serving BentoML (D-022) ===
+# === Cycle 12.2 - Serving BentoML (D-022) ===
 
 bento-import:  ## C12.2 - importe le modèle @Production MLflow dans le store BentoML
 	BENTOML_DO_NOT_TRACK=1 python -m src.serving.import_model
@@ -100,7 +100,7 @@ bento-import:  ## C12.2 - importe le modèle @Production MLflow dans le store Be
 bento-serve:  ## C12.2 - sert le classifieur (API :8500, métriques Prometheus /metrics)
 	BENTOML_DO_NOT_TRACK=1 bentoml serve src/serving/service.py:RakutenClassifier --port 8500
 
-# === Cycle 12.3 — Boucle fermée (D-024) ===
+# === Cycle 12.3 - Boucle fermée (D-024) ===
 
 drift-check:  ## C12.3 - détection de drift Evidently (rapport HTML monitoring/evidently/reports/)
 	python -m src.monitoring.drift_detection
@@ -108,7 +108,7 @@ drift-check:  ## C12.3 - détection de drift Evidently (rapport HTML monitoring/
 promote-gate:  ## C12.3 - champion/challenger : bouge @Production si nouveau modèle meilleur
 	python -m src.mlops.promote_gate
 
-# === Cycle 13.1 — Images Docker API + Frontend ===
+# === Cycle 13.1 - Images Docker API + Frontend ===
 
 api-build:  ## C13.1 - build image API (multi-stage CPU, ~quelques min)
 	docker build -f infra/docker/Dockerfile.api -t rakuten/api:dev .
@@ -116,7 +116,7 @@ api-build:  ## C13.1 - build image API (multi-stage CPU, ~quelques min)
 frontend-build:  ## C13.1 - build image Frontend (Node→nginx, ~1-2 min)
 	docker build -f infra/docker/Dockerfile.frontend -t rakuten/frontend:dev .
 
-# === Cycle 13.5 — Kubernetes (kind cluster local) — D-028 ===
+# === Cycle 13.5 - Kubernetes (kind cluster local) - D-028 ===
 
 $(KIND):  ## Télécharge le binaire kind si absent (idempotent)
 	@mkdir -p $(dir $(KIND))

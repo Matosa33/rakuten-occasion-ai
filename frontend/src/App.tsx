@@ -135,7 +135,7 @@ export default function App() {
         describe(asin, condition),
       ]);
       setPrice(p);
-      // 17.3 (D-035) : la checklist état (les « bābā ») enrichit la description —
+      // 17.3 (D-035) : la checklist état (les « bābā ») enrichit la description -
       // l'annonce finale porte l'état détaillé déclaré par le vendeur.
       setListing({ ...l, description: l.description + checklistToText(checklist) });
       setStep(3);
@@ -224,7 +224,7 @@ export default function App() {
             exit={{ opacity: 0, y: -12 }}
             className="mt-6 rounded-2xl bg-white p-6 shadow-sm"
           >
-            {/* 17.3 (D-035) : la PHOTO d'abord — preuve acheteur + entrée du pipeline */}
+            {/* 17.3 (D-035) : la PHOTO d'abord - preuve acheteur + entrée du pipeline */}
             <PhotoUploader photos={photos} onChange={setPhotos} disabled={loading} />
 
             <ConditionChecklist answers={checklist} onAnswersChange={setChecklist} />
@@ -260,7 +260,7 @@ export default function App() {
             <div className="mt-4">
               <label className="block text-sm font-medium text-slate-700">
                 Année d'achat{" "}
-                <span className="font-normal text-slate-400">(facultatif — affine la décote)</span>
+                <span className="font-normal text-slate-400">(facultatif - affine la décote)</span>
               </label>
               <input
                 type="number"
@@ -312,7 +312,7 @@ export default function App() {
             exit={{ opacity: 0, y: -12 }}
             className="mt-6 space-y-4"
           >
-            {/* 17.4b (D-035) : l'écran final EST l'annonce d'occasion —
+            {/* 17.4b (D-035) : l'écran final EST l'annonce d'occasion -
                 breadcrumb catégorie, photos vendeur, prix + badge état,
                 caractéristiques structurées, description éditable. */}
             <MarketplaceListing
@@ -364,7 +364,7 @@ export default function App() {
       </AnimatePresence>
 
       <footer className="mt-10 text-center text-xs text-slate-400">
-        Identification ancrée sur catalogue (RAG-grounded) — chaque champ porte sa source, aucune
+        Identification ancrée sur catalogue (RAG-grounded) - chaque champ porte sa source, aucune
         valeur inventée.
       </footer>
         </>

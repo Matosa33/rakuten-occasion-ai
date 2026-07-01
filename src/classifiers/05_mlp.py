@@ -1,4 +1,4 @@
-"""mlp-embed — MLP head sur embeddings text (Cycle 3.1 / C12).
+"""mlp-embed - MLP head sur embeddings text (Cycle 3.1 / C12).
 
 MLP simple (2 couches) sur les embeddings text Arctic 1024 dim. Cible :
 F1 ≥ 0,90 (meilleur attendu de les modèles sur embeddings sur embeddings denses).
@@ -9,7 +9,7 @@ Optimizer : Adam, early stopping sur val loss
 
 Plus rapide que RF (rf-embed) sur grand volume car GPU-friendly via PyTorch.
 Mais on utilise sklearn MLPClassifier ici par simplicité (CPU mais plus
-simple qu'une boucle PyTorch custom — Cycle 3 = baselines, pas SOTA).
+simple qu'une boucle PyTorch custom - Cycle 3 = baselines, pas SOTA).
 
 Sortie :
 - `data/models/mlp-embed_v1.joblib`
@@ -224,7 +224,9 @@ def main() -> None:
         n_train=int(X_train.shape[0]),
         duration_train_sec=duration_train,
         cycle="3",
-        register=True,
+        # Tracé dans MLflow (métriques + commit) mais HORS registre : seul le challenger
+        # officiel (tfidf-svm) y est versionné - un « latest » déterministe pour la gate.
+        register=False,
     )
 
     log.info("\nM4 MLP OK.")

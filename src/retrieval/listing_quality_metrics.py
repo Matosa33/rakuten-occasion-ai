@@ -36,7 +36,7 @@ REPORT_DIR = REPO_ROOT / "reports" / "05_retrieval"
 RAW_IN = REPORT_DIR / "listing_quality_raw.jsonl"
 BASE_LABELS = ["Type de produit", "État", "Marque"]
 # Attributs DISCRIMINANTS qu'une bonne fiche devrait porter mais que le catalogue (facettes
-# génériques) ne contient quasi jamais — ajoutés au schéma pour créditer ce qui compte vraiment
+# génériques) ne contient quasi jamais - ajoutés au schéma pour créditer ce qui compte vraiment
 # (extrait par le VLM depuis les photos) et rendre `completeness` plus discriminante entre conditions.
 DISCRIMINATING_FACETS = ["model", "capacity", "size"]
 # stopwords taxonomie : mots de structure trop génériques (gonflent le Jaccard sans info)
@@ -180,8 +180,17 @@ def main() -> None:
         json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     print("expected_facets (induit, >=50%):", dict(expected))
-    print(f"\n{'cond':5} {'macro':6} {'leaf':6} {'lf_ov':6} {'entity':7} {'brand':6} {'compl':6} usable")
-    for cond in ["text-only", "text-fr-en", "one-photo", "multi-photo", "multi-photo-meta", "multi-photo-meta-fr-en"]:
+    print(
+        f"\n{'cond':5} {'macro':6} {'leaf':6} {'lf_ov':6} {'entity':7} {'brand':6} {'compl':6} usable"
+    )
+    for cond in [
+        "text-only",
+        "text-fr-en",
+        "one-photo",
+        "multi-photo",
+        "multi-photo-meta",
+        "multi-photo-meta-fr-en",
+    ]:
         m = agg.get(cond)
         if m:
             print(

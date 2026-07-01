@@ -1,4 +1,4 @@
-# Model Card — knn-faiss_v1
+# Model Card - knn-faiss_v1
 
 **Type** : k-NN cosine weighted
 **Tâche** : Classification multi-catégories (4 catégories)
@@ -21,8 +21,8 @@
 - **top_1_accuracy** : 0.9537
 - **top_3_accuracy** : 0.9881
 - **ece** : 0.0069
-- **duration_eval_sec** : 142.4000
+- **duration_eval_sec** : 116.19 (test)
 
 ## Source de vérité métriques
 
-`reports/04_classifiers_bench/knn-faiss_v1.json`
+`reports/04_classifiers_bench/m1_knn_v1.json`

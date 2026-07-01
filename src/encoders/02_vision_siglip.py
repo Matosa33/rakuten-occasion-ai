@@ -1,4 +1,4 @@
-"""Sous-todo 2.2 — Encoder vision SigLIP base sur images Amazon CDN.
+"""Sous-todo 2.2 - Encoder vision SigLIP base sur images Amazon CDN.
 
 Pour chaque produit (`parent_asin`) du périmètre actif (4 cat D-011, ~4,5 M
 items), on récupère son image principale depuis l'URL CDN Amazon et on
@@ -7,7 +7,7 @@ l'encode via SigLIP en un vecteur 1024-dim normalisé L2.
 Modèle externe siglip (cf. docs/modeles.md) :
     google/siglip-base-patch16-224
     - Architecture : ViT-B/16, sigmoid loss (vs softmax CLIP)
-    - Output dim : 768 (base) ou 1024 (large) selon variant — base ici
+    - Output dim : 768 (base) ou 1024 (large) selon variant - base ici
     - Image input : 224×224 RGB
     - Licence : Apache 2.0
     - Frozen (pas de fine-tune, cf. ADR D-009)
@@ -139,7 +139,7 @@ def _process_batch_images(
                 if img_bytes:
                     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
                     images_pil[pa] = img
-            except Exception as e:  # noqa: BLE001 — une image corrompue ne doit pas tuer le batch
+            except Exception as e:  # noqa: BLE001 - une image corrompue ne doit pas tuer le batch
                 log.debug("Image %s corrompue, skip : %s", pa, e)
 
     if not images_pil:
@@ -307,7 +307,7 @@ def _concat_checkpoints() -> None:
 
 
 def main() -> None:
-    log.info("=== Sous-todo 2.2 — Encoder vision SigLIP base ===")
+    log.info("=== Sous-todo 2.2 - Encoder vision SigLIP base ===")
     log.info("Modèle : %s (frozen, FP16, normalize L2)", MODEL_NAME)
     log.info("Périmètre actif : %d catégories (D-011 MVP)", len(CATEGORIES))
 

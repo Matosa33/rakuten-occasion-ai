@@ -1,4 +1,4 @@
-"""Étape 2/4 — Audit qualité sur le périmètre actif D-008 (polars lazy + streaming).
+"""Étape 2/4 - Audit qualité sur le périmètre actif D-008 (polars lazy + streaming).
 
 Lit  : data/raw/full/{reviews,meta}/<Cat>.parquet (15 reviews + 15 meta)
 Écrit:
@@ -136,7 +136,7 @@ def plot_length_hist(lf: pl.LazyFrame, col: str, out: Path) -> None:
     ax.hist(lengths.clip(max=p99) if p99 > 0 else lengths, bins=50, color="#2563eb")
     ax.set_xlabel(f"Longueur de '{col}' (caractères, clip p99)")
     ax.set_ylabel("Effectif")
-    ax.set_title(f"Distribution longueur — {col}")
+    ax.set_title(f"Distribution longueur - {col}")
     fig.tight_layout()
     fig.savefig(out, dpi=120)
     plt.close(fig)
@@ -176,7 +176,7 @@ def main() -> None:
         FIG_DIR / "02b_nan_par_colonne_meta.png",
     )
 
-    # Doublons sur reviews (clés stratégiques) — n_unique colonne par colonne en streaming
+    # Doublons sur reviews (clés stratégiques) - n_unique colonne par colonne en streaming
     log.info("Calcul doublons reviews…")
     reviews_cols = reviews_lf.collect_schema().names()
     rev_uniq: dict[str, int | None] = {"n_total": int(n_reviews)}
