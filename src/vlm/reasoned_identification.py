@@ -93,6 +93,12 @@ IDENTIFY_PROMPT = (
     "ANALOGY: take the comparable candidates' prices and ADJUST for the difference (a newer/higher "
     "model is worth MORE, an older/lower one LESS). Still fill price_anchor_evidence with the analog "
     "indices.\n"
+    "- ACCESSORY TRAP: when you SEE a full product (a laptop, a phone, a console...) but the "
+    "candidates are accessories, spare parts or add-ons FOR that product (a case, screen, trackpad, "
+    "battery, charger 'for MacBook Pro...'), that IS a catalog miss: the accessory is NOT the "
+    "product. Set catalog_miss: true and describe the product you SEE - never anchor the listing on "
+    "an accessory of the observed product. (If the item for sale IS itself an accessory or spare "
+    "part, this rule does not apply.)\n"
     "- If a single discriminating facet (capacity, color, exact model variant) would change the "
     'family or the price, set "ask_question": true and put ONE short buyer-facing question in '
     '"facet_question".\n'
